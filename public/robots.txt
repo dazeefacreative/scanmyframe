@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Block admin from indexing
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /onboarding
+Disallow: /signin
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /verify-email
+Disallow: /verify-email-pending
+Disallow: /auth/
+
+# Sitemap
+Sitemap: https://scanframe.co/sitemap.xml
+# Fallback: https://kbqgclcpdljobnbcctpo.supabase.co/functions/v1/sitemap

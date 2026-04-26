@@ -1,0 +1,48 @@
+# Dependencies
+node_modules
+
+# Environment variables — never commit secrets
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+.env.*.local
+
+# Build output
+dist
+build
+
+# Vite cache
+.vite
+
+# Editor
+.vscode
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local Supabase (if you ever run it locally)
+.supabase
+
+# Documents / investor decks — keep off git
+*.pdf
+*.docx
+*.doc
+*.zip
+
+# Microsoft Office temp files
+~$*
+*.tmp

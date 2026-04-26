@@ -1,0 +1,27 @@
+/* Import Google Fonts first */
+@import url('https://fonts.googleapis.com/css2?family=Poltawski+Nowy:wght@400;700&family=Montserrat+Alternates:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+/* Then Tailwind directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Apply fonts globally */
+body {
+  @apply font-montserrat;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  @apply font-poltawski;
+}
+
+/* Prevent iOS Safari from zooming into the page when an input is focused.
+   The browser only zooms when the input font-size is below 16px.
+   This rule forces 16px on mobile while leaving desktop untouched. */
+@media (max-width: 768px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
