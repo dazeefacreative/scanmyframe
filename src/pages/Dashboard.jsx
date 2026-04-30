@@ -803,6 +803,7 @@ function AnalyticsTab({ frames, isDark, planId, notificationData }) {
   const [geoData,      setGeoData]      = useState({});
   const [scanTotals,   setScanTotals]   = useState({});
   const [geoLoading,   setGeoLoading]   = useState(true);
+  const [deviceData,   setDeviceData]   = useState({ devices: {}, browsers: {} });
   const [tooltip,         setTooltip]        = useState(null); // {x, y, text} | null
   const [activity,        setActivity]       = useState([]);
   const [activityLoading, setActivityLoading] = useState(true);
@@ -851,13 +852,26 @@ function AnalyticsTab({ frames, isDark, planId, notificationData }) {
     const ids = frames.map(f => f.id);
     supabase
       .from('scan_logs')
-      .select('frame_id, city, country')
+      .select('frame_id, city, country, device_type, user_agent')
       .in('frame_id', ids)
       .then(({ data }) => {
         if (!data) { setGeoLoading(false); return; }
         const geoMap   = {};
         const totalMap = {};
-        data.forEach(({ frame_id, city, country }) => {
+        const devices  = {};
+        const browsers = {};
+
+        const parseBrowser = (ua = '') => {
+          if (!ua) return 'Unknown';
+          if (/Edg\//i.test(ua))         return 'Edge';
+          if (/OPR\/|Opera/i.test(ua))   return 'Opera';
+          if (/Firefox\//i.test(ua))     return 'Firefox';
+          if (/Chrome\//i.test(ua))      return 'Chrome';
+          if (/Safari\//i.test(ua))      return 'Safari';
+          return 'Other';
+        };
+
+        data.forEach(({ frame_id, city, country, device_type, user_agent }) => {
           totalMap[frame_id] = (totalMap[frame_id] || 0) + 1;
           if (city) {
             if (!geoMap[frame_id]) geoMap[frame_id] = {};
@@ -865,13 +879,19 @@ function AnalyticsTab({ frames, isDark, planId, notificationData }) {
             if (!geoMap[frame_id][key]) geoMap[frame_id][key] = { city, country, count: 0 };
             geoMap[frame_id][key].count += 1;
           }
+          const dev = device_type ? (device_type.charAt(0).toUpperCase() + device_type.slice(1)) : 'Desktop';
+          devices[dev] = (devices[dev] || 0) + 1;
+          const br = parseBrowser(user_agent);
+          browsers[br] = (browsers[br] || 0) + 1;
         });
+
         const result = {};
         Object.keys(geoMap).forEach(fid => {
           result[fid] = Object.values(geoMap[fid]).sort((a, b) => b.count - a.count);
         });
         setScanTotals(totalMap);
         setGeoData(result);
+        setDeviceData({ devices, browsers });
         setGeoLoading(false);
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1154,6 +1174,62 @@ function AnalyticsTab({ frames, isDark, planId, notificationData }) {
           ))}
         </div>
       </div>
+
+      {/* Device & browser breakdown */}
+      {!geoLoading && (Object.keys(deviceData.devices).length > 0 || Object.keys(deviceData.browsers).length > 0) && (() => {
+        const devEntries = Object.entries(deviceData.devices).sort((a, b) => b[1] - a[1]);
+        const brEntries  = Object.entries(deviceData.browsers).sort((a, b) => b[1] - a[1]);
+        const devTotal   = devEntries.reduce((s, [, n]) => s + n, 0) || 1;
+        const brTotal    = brEntries.reduce((s, [, n]) => s + n, 0) || 1;
+        const devColors  = ['#0F4C3A', '#D4AF37', '#6B7280'];
+        const brColors   = ['#0F4C3A', '#D4AF37', '#6B7280', '#9CA3AF', '#D1D5DB'];
+        return (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}
+               className="db-analytics-twoup">
+            {/* Devices */}
+            <div style={{ background: t.cardBg(isDark), border: `1px solid ${t.border(isDark)}`, borderRadius: 16, padding: 24 }}>
+              <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.textMuted(isDark) }}>Who</p>
+              <h3 style={{ margin: '0 0 20px', fontFamily: 'Poltawski Nowy, serif', fontSize: 18, fontWeight: 700 }}
+                  className={isDark ? 'text-white' : 'text-primary'}>Devices</h3>
+              {devEntries.map(([name, count], i) => {
+                const pct = Math.round((count / devTotal) * 100);
+                return (
+                  <div key={name} style={{ marginBottom: i < devEntries.length - 1 ? 16 : 0 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: t.textPrimary(isDark) }}>{name}</span>
+                      <span style={{ fontSize: 12, color: t.textSub(isDark), fontFamily: 'ui-monospace, monospace' }}>{pct}% · {count.toLocaleString()}</span>
+                    </div>
+                    <div style={{ height: 6, background: isDark ? '#2a2a2a' : '#e8e8e4', borderRadius: 99, overflow: 'hidden' }}>
+                      <div style={{ width: `${pct}%`, height: '100%', background: devColors[i] || '#9CA3AF', borderRadius: 99 }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Browsers */}
+            <div style={{ background: t.cardBg(isDark), border: `1px solid ${t.border(isDark)}`, borderRadius: 16, padding: 24 }}>
+              <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.textMuted(isDark) }}>How</p>
+              <h3 style={{ margin: '0 0 20px', fontFamily: 'Poltawski Nowy, serif', fontSize: 18, fontWeight: 700 }}
+                  className={isDark ? 'text-white' : 'text-primary'}>Browsers</h3>
+              {brEntries.map(([name, count], i) => {
+                const pct = Math.round((count / brTotal) * 100);
+                return (
+                  <div key={name} style={{ marginBottom: i < brEntries.length - 1 ? 16 : 0 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: t.textPrimary(isDark) }}>{name}</span>
+                      <span style={{ fontSize: 12, color: t.textSub(isDark), fontFamily: 'ui-monospace, monospace' }}>{pct}% · {count.toLocaleString()}</span>
+                    </div>
+                    <div style={{ height: 6, background: isDark ? '#2a2a2a' : '#e8e8e4', borderRadius: 99, overflow: 'hidden' }}>
+                      <div style={{ width: `${pct}%`, height: '100%', background: brColors[i] || '#9CA3AF', borderRadius: 99 }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Recent activity */}
       <div style={{ background: t.cardBg(isDark), border: `1px solid ${t.border(isDark)}`, borderRadius: 16, padding: 24 }}>

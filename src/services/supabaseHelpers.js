@@ -715,7 +715,7 @@ export const adminCreatePost = async (postData) => {
         cover_image: postData.cover_image || null,
         body: postData.body || [],
         tags: postData.tags || [],
-        author: postData.author || 'ScanFrame',
+        author: postData.author || 'ScanMyFrame',
         status: postData.status || 'draft',
         published_at: postData.status === 'published' ? now : null,
         updated_at: now,

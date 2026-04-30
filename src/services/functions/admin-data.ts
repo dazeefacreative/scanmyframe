@@ -2,7 +2,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 const ADMIN_PASSWORD = 'Scanframe@2025';
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') ?? '';
-const FROM_EMAIL     = Deno.env.get('FROM_EMAIL') ?? 'ScanFrame <noreply@dazeefa.com>';
+const FROM_EMAIL     = Deno.env.get('FROM_EMAIL') ?? 'ScanMyFrame <noreply@dazeefa.com>';
 const SITE_URL       = 'https://scanframe.ng';
 
 function esc(s: string) {
