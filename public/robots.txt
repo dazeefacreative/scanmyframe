@@ -14,4 +14,3 @@ Disallow: /auth/
 
 # Sitemap
 Sitemap: https://scanframe.co/sitemap.xml
-# Fallback: https://kbqgclcpdljobnbcctpo.supabase.co/functions/v1/sitemap

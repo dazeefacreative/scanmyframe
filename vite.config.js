@@ -8,7 +8,7 @@ export default defineConfig({
     proxy: {
       '/api': 'http://localhost:4000',
       '/sitemap.xml': {
-        target: 'https://kbqgclcpdljobnbcctpo.supabase.co/functions/v1/sitemap',
+        target: `${process.env.VITE_SUPABASE_URL}/functions/v1/sitemap`,
         changeOrigin: true,
         rewrite: () => '',
       },
