@@ -31,7 +31,7 @@ const PLAN_META = {
       '1 extra image per frame',
       '20MB max video upload',
       'PNG QR code download',
-      'Last 30 days analytics data',
+      'Basic analytics data',
     ],
   },
   pro: {
@@ -46,7 +46,7 @@ const PLAN_META = {
       'Vendor card on public frame page',
       'Password-protect frames',
       'AI Story Assistant',
-      'Analytics - last 6 months',
+      'Real-time analytics data',
     ],
   },
   business: {
@@ -61,7 +61,7 @@ const PLAN_META = {
       'Vendor card on public frame page',
       'Password-protect frames',
       'AI Story Assistant',
-      'All-time analytics data',
+      'Real-time analytics data',
       '24/7 priority support',
     ],
   },
@@ -295,10 +295,11 @@ export default function BillingTab() {
   }
 
   const rawPlanId    = sub?.plan_id || 'free';
-  const periodEnded  = sub?.status === 'cancelled' &&
+  // Period has ended if current_period_end is in the past — regardless of status field
+  const periodEnded  = rawPlanId !== 'free' && rawPlanId !== 'trial' &&
     sub?.current_period_end &&
     new Date(sub.current_period_end) < new Date();
-  // Trial expires after 30 days; once current_period_end passes, drop to free
+  // Trial drops to free once its period ends
   const trialExpired = rawPlanId === 'trial' &&
     sub?.current_period_end &&
     new Date(sub.current_period_end) < new Date();
@@ -323,14 +324,16 @@ export default function BillingTab() {
               <h3 className={`text-xl font-bold font-[Poltawski_Nowy,serif] ${text}`}>
                 {planInfo?.name || 'Trial'}
               </h3>
-              <StatusBadge status={rawPlanId === 'trial' && !trialExpired ? 'trial' : (sub?.status || 'free')} />
+              {currentPlanId !== 'free' && (
+                <StatusBadge status={rawPlanId === 'trial' && !trialExpired ? 'trial' : (sub?.status || 'active')} />
+              )}
             </div>
             {rawPlanId === 'trial' && !trialExpired && sub?.current_period_end && (
               <p className={`text-xs mt-1 ${muted}`}>
                 Trial ends {new Date(sub.current_period_end).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
               </p>
             )}
-            {rawPlanId !== 'trial' && sub?.current_period_end && (
+            {rawPlanId !== 'trial' && currentPlanId !== 'free' && sub?.current_period_end && (
               <p className={`text-xs mt-1 ${muted}`}>
                 Renews {new Date(sub.current_period_end).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
               </p>
@@ -348,11 +351,25 @@ export default function BillingTab() {
             <p className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mt-2">
               Your plan remains active until{' '}
               {new Date(sub.current_period_end).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.
-              After that your account moves to the Free plan and unused QR credits will be cleared.
+              After that your account moves to the Free plan and unused QR credits will be locked until you resubscribe.
             </p>
           )}
         </div>
-        <QRBar used={sub?.qr_used || 0} allocated={sub?.qr_allocated ?? 10} isDark={isDark} />
+        {currentPlanId === 'free' && (sub?.qr_allocated ?? 0) > 0 ? (
+          <div className="mt-5 opacity-60">
+            <QRBar used={sub?.qr_used || 0} allocated={sub?.qr_allocated} isDark={isDark} />
+            <p className={`text-[11px] mt-2 flex items-center gap-1 ${muted}`}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              Credits locked, subscribe to a plan to use them
+            </p>
+          </div>
+        ) : currentPlanId !== 'free' ? (
+          <QRBar
+            used={sub?.qr_used || 0}
+            allocated={sub?.qr_allocated ?? 10}
+            isDark={isDark}
+          />
+        ) : null}
       </div>
 
       {/* ── Highest plan message ── */}
@@ -520,7 +537,7 @@ export default function BillingTab() {
                 Cancel subscription?
               </p>
               <p className={`text-sm leading-relaxed mb-6 ${muted}`}>
-            You’ll retain access until the end of your billing period. After that, your subscription will be cancelled and any remaining QR credits will be cleared. <strong>Note that this can not be undone.</strong>
+            You’ll retain access until the end of your billing period. After that, your subscription will be cancelled and any remaining QR credits will be locked until you resubscribe. <strong>Note that this can not be undone.</strong>
             </p>
               <div className="flex gap-3">
                 <button

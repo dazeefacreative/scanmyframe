@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getBlogPostBySlug } from '../services/supabaseHelpers';
+import { getBlogPostBySlug, getRelatedPosts } from '../services/supabaseHelpers';
 import { useTheme } from '../context/ThemeContext';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -89,21 +89,25 @@ export default function BlogPost() {
   const { slug }    = useParams();
   const navigate    = useNavigate();
   const { isDark }  = useTheme();
-  const [post, setPost]       = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
+  const [post,         setPost]         = useState(null);
+  const [loading,      setLoading]      = useState(true);
+  const [notFound,     setNotFound]     = useState(false);
+  const [relatedPosts, setRelatedPosts] = useState([]);
 
   useEffect(() => {
     getBlogPostBySlug(slug).then(({ post: data, error }) => {
       if (error || !data) {
         setNotFound(true);
+        setLoading(false);
       } else {
         setPost(data);
-        document.title = `${data.title} | ScanFrameNG`;
+        document.title = `${data.title} | ScanMyFrame`;
+        setLoading(false);
+        // Fetch related posts non-blocking
+        getRelatedPosts(data.id, data.tags || []).then(({ posts }) => setRelatedPosts(posts));
       }
-      setLoading(false);
     });
-    return () => { document.title = 'ScanFrameNG | Smart QR Frames'; };
+    return () => { document.title = 'ScanMyFrame | Smart QR Frames'; };
   }, [slug]);
 
   const pageBg   = isDark ? 'bg-[#0a0a0a]' : 'bg-[#fafaf8]';
@@ -137,7 +141,7 @@ export default function BlogPost() {
     <div className={`min-h-screen ${pageBg}`}>
       <SEO
         title={post.title}
-        description={post.excerpt || `Read "${post.title}" on the ScanFrameNG blog.`}
+        description={post.excerpt || `Read "${post.title}" on the ScanMyFrame blog.`}
         image={post.cover_image || undefined}
         url={postUrl}
         type="article"
@@ -226,6 +230,52 @@ export default function BlogPost() {
           </Link>
         </div>
       </article>
+
+      {/* Related posts */}
+      {relatedPosts.length > 0 && (
+        <section className={`py-14 px-4 border-t ${border} ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#f5f9f7]'}`}>
+          <div className="max-w-2xl mx-auto">
+            <p className={`text-[11px] font-bold uppercase tracking-[0.3em] mb-1 ${isDark ? 'text-[#D4AF37]' : 'text-[#0F4C3A]'}`}>
+              You might also like
+            </p>
+            <h2 className={`text-xl font-bold font-[Poltawski_Nowy,serif] mb-6 ${textPrim}`}>
+              Related articles
+            </h2>
+            <div className="flex flex-col gap-4">
+              {relatedPosts.map(p => (
+                <Link
+                  key={p.id}
+                  to={`/blog/${p.slug}`}
+                  className={`group flex gap-4 rounded-2xl border p-4 transition-all hover:-translate-y-0.5 hover:shadow-md
+                    ${isDark ? 'bg-[#111] border-white/10 hover:border-white/20' : 'bg-white border-[#0F4C3A]/10 hover:border-[#0F4C3A]/25'}`}
+                >
+                  {p.cover_image && (
+                    <img
+                      src={p.cover_image}
+                      alt={p.title}
+                      className="w-20 h-20 rounded-xl object-cover flex-shrink-0"
+                    />
+                  )}
+                  <div className="flex flex-col justify-center min-w-0">
+                    {p.tags?.length > 0 && (
+                      <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${isDark ? 'text-[#D4AF37]' : 'text-[#0F4C3A]/60'}`}>
+                        {p.tags[0]}
+                      </p>
+                    )}
+                    <p className={`text-sm font-bold leading-snug line-clamp-2 mb-1 transition-colors
+                      ${isDark ? 'text-white group-hover:text-[#D4AF37]' : 'text-[#0F4C3A] group-hover:text-[#0a3329]'}`}>
+                      {p.title}
+                    </p>
+                    {p.excerpt && (
+                      <p className={`text-xs line-clamp-1 ${textSub}`}>{p.excerpt}</p>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <Footer />
     </div>

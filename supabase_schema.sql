@@ -30,9 +30,11 @@ CREATE TABLE IF NOT EXISTS frames (
   qr_code_url TEXT UNIQUE,
   frame_slug TEXT UNIQUE NOT NULL, -- URL: /frame/frame_slug
   status TEXT DEFAULT 'active', -- active, archived, deleted
+  comments_enabled BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+-- Run on existing DB: ALTER TABLE frames ADD COLUMN IF NOT EXISTS comments_enabled BOOLEAN DEFAULT TRUE;
 
 -- 4. Media table (photos and videos)
 CREATE TABLE IF NOT EXISTS media (

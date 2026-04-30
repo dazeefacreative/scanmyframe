@@ -21,7 +21,7 @@ const SECTIONS = [
     id: 'who-we-are',
     title: '1. Who We Are',
     content: [
-      `ScanFrameNG ("ScanFrame", "we", "us", or "our") is a platform that connects frame vendors with buyers by linking physical artwork frames to digital content through unique QR codes. We are registered in Nigeria and operate the website at ${SITE}.`,
+      `ScanMyFrame ("ScanFrame", "we", "us", or "our") is a platform that connects frame vendors with buyers by linking physical artwork frames to digital content through unique QR codes. We are registered in Nigeria and operate the website at ${SITE}.`,
       'This Privacy Policy describes how we collect, use, store, and share your personal data when you use our website, dashboard, or any related services (collectively, the "Service"). It is written in compliance with the Nigeria Data Protection Regulation (NDPR) 2019 and, where applicable, the EU General Data Protection Regulation (GDPR).',
     ],
   },
@@ -151,7 +151,7 @@ const SECTIONS = [
     id: 'children',
     title: "9. Children's Privacy",
     content: [
-      'ScanFrameNG is not directed at children under the age of 13. We do not knowingly collect personal data from children. If you believe a child has provided us with personal information, please contact us and we will delete it promptly.',
+      'ScanMyFrame is not directed at children under the age of 13. We do not knowingly collect personal data from children. If you believe a child has provided us with personal information, please contact us and we will delete it promptly.',
     ],
   },
   {
@@ -167,7 +167,7 @@ const SECTIONS = [
     title: '11. Contact Us',
     content: [
       `If you have questions, concerns, or requests regarding this Privacy Policy or your personal data, please contact our Data Protection Officer at: ${CONTACT_EMAIL}`,
-      `Or write to: ScanFrameNG, Lagos, Nigeria.`,
+      `Or write to: ScanMyFrame, Lagos, Nigeria.`,
     ],
   },
 ];
@@ -277,7 +277,7 @@ export default function PrivacyPolicy() {
     <main className={`${bg} min-h-screen transition-colors duration-200`}>
       <SEO
         title="Privacy Policy | ScanFrame"
-        description="Learn how ScanFrameNG collects, uses, and protects your personal data in compliance with the Nigeria Data Protection Regulation (NDPR)."
+        description="Learn how ScanMyFrame collects, uses, and protects your personal data in compliance with the Nigeria Data Protection Regulation (NDPR)."
         url="/privacy"
       />
       <Header />

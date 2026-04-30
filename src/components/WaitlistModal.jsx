@@ -35,7 +35,7 @@ export default function WaitlistModal({ isOpen, onClose, userEmail = '' }) {
 
         <h2 className="text-2xl font-poltawski font-bold mb-2">Join the Waitlist</h2>
         <p className="text-sm text-secondary/70 mb-6">
-          Be the first to know when the ScanFrameNG marketplace launches. Enter your email and we'll keep you posted.
+          Be the first to know when the ScanMyFrame marketplace launches. Enter your email and we'll keep you posted.
         </p>
 
         <NewsletterForm initialEmail={userEmail} />

@@ -60,6 +60,7 @@ const t = {
   // backgrounds
   pageBg:      (d) => d ? '#0a0a0a' : '#f5f5f0',
   sidebarBg:   (d) => d ? '#111111' : '#ffffff',
+  switchBG:    (d) => d ? '#a2a0a0' : '#ffffff',
   cardBg:      (d) => d ? '#1a1a1a' : '#ffffff',
   inputBg:     (d) => d ? '#111111' : '#ffffff',
   chipBg:      (d) => d ? '#222222' : '#f0efe9',
@@ -85,8 +86,59 @@ const Skeleton = ({ isDark, style }) => (
   }} />
 );
 
-// ─── Stat card ────────────────────────────────────────────────────────────────
-function StatCard({ label, value, sub, icon, accentBg, delay, isDark, onClick, active }) {
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+const trunc = (str, n = 20) => str && str.length > n ? str.slice(0, n) + '…' : (str ?? '');
+
+function TitleTooltip({ full, children }) {
+  const [show, setShow] = useState(false);
+  if (!full || full.length <= 20) return children;
+  return (
+    <div style={{ position: 'relative', display: 'inline-flex', maxWidth: '100%' }}
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+    >
+      {children}
+      {show && (
+        <div style={{
+          position: 'absolute', bottom: '100%', left: 0, marginBottom: 6,
+          background: '#1a1a1a', color: '#fff', fontSize: 11, padding: '5px 10px',
+          borderRadius: 7, whiteSpace: 'nowrap', zIndex: 200,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.35)', pointerEvents: 'none',
+          border: '1px solid rgba(255,255,255,0.1)',
+        }}>
+          {full}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MsgTooltip({ full, limit = 60, children }) {
+  const [show, setShow] = useState(false);
+  if (!full || full.length <= limit) return children;
+  return (
+    <div style={{ position: 'relative', display: 'block', maxWidth: '100%' }}
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+    >
+      {children}
+      {show && (
+        <div style={{
+          position: 'absolute', bottom: '100%', left: 0, marginBottom: 6,
+          background: '#1a1a1a', color: '#fff', fontSize: 11, padding: '7px 10px',
+          borderRadius: 7, zIndex: 200, maxWidth: 260, whiteSpace: 'normal',
+          lineHeight: 1.5, boxShadow: '0 4px 12px rgba(0,0,0,0.35)',
+          border: '1px solid rgba(255,255,255,0.1)', pointerEvents: 'none',
+        }}>
+          {full}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatCard({ label, value, sub, icon, accentBg, delay, isDark, onClick, active, valueTooltip }) {
+  const [showTip, setShowTip] = useState(false);
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
@@ -111,7 +163,24 @@ function StatCard({ label, value, sub, icon, accentBg, delay, isDark, onClick, a
         </div>
       </div>
       <div>
-        <p style={{ fontSize: 26, fontWeight: 700, color: t.textPrimary(isDark), fontFamily: 'Poltawski Nowy, serif', lineHeight: 1 }}>{value}</p>
+        <div style={{ position: 'relative' }}>
+          <p
+            onMouseEnter={() => valueTooltip && setShowTip(true)}
+            onMouseLeave={() => setShowTip(false)}
+            style={{ fontSize: 26, fontWeight: 700, color: t.textPrimary(isDark), fontFamily: 'Poltawski Nowy, serif', lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: valueTooltip ? 'default' : undefined }}
+          >{value}</p>
+          {showTip && valueTooltip && (
+            <div style={{
+              position: 'absolute', top: '100%', left: 0, marginTop: 6,
+              background: '#1a1a1a', color: '#fff', fontSize: 11, padding: '5px 10px',
+              borderRadius: 7, whiteSpace: 'nowrap', zIndex: 200,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.35)', pointerEvents: 'none',
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}>
+              {valueTooltip}
+            </div>
+          )}
+        </div>
         {sub && <p style={{ fontSize: 11, marginTop: 4, color: t.textMuted(isDark) }}>{sub}</p>}
       </div>
     </motion.div>
@@ -238,13 +307,188 @@ function DeleteModal({ frame, onConfirm, onCancel, isDark }) {
 }
 
 // ─── Overview tab ─────────────────────────────────────────────────────────────
-function OverviewTab({ stats, frames, isDark, onNavigate, canViewAnalytics }) {
+function timeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1)  return 'just now';
+  if (mins < 60) return `${mins} min ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs  < 24) return `${hrs} hr${hrs > 1 ? 's' : ''} ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days} day${days > 1 ? 's' : ''} ago`;
+}
+
+// Build an SVG polyline + filled-area path from an array of daily bucket counts.
+function buildSparkPath(buckets) {
+  if (!buckets || buckets.length < 2) return null;
+  const W = 600, H = 160, PAD = 14;
+  const max = Math.max(...buckets, 1);
+  const n   = buckets.length;
+  const pts = buckets.map((v, i) => [
+    Math.round((i / (n - 1)) * W),
+    Math.round(H - PAD - ((v / max) * (H - PAD * 2))),
+  ]);
+  const d = pts.map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x},${y}`).join(' ');
+  return { line: d, fill: `${d} L${W},${H} L0,${H} Z` };
+}
+
+function OverviewTab({ stats, frames, isDark, onNavigate, canViewAnalytics, notificationData }) {
+  const [scanPeriod,     setScanPeriod]     = useState('30d');
+  const [chartBuckets,   setChartBuckets]   = useState([]);
+  const [chartLoading,   setChartLoading]   = useState(false);
+  const [comparison,     setComparison]     = useState(null); // { pct, up } | null
+  const [recentActivity,   setRecentActivity]   = useState([]);
+  const [activityLoading,  setActivityLoading]  = useState(false);
+  const [showUpgradeNudge, setShowUpgradeNudge] = useState(false);
+  const [scanLogsTotal,    setScanLogsTotal]    = useState(null);
+
   const greeting = () => {
     const h = new Date().getHours();
     if (h < 12) return 'Good morning';
     if (h < 17) return 'Good afternoon';
     return 'Good evening';
   };
+
+  const topFrame    = [...frames].sort((a, b) => (b.total_scans ?? 0) - (a.total_scans ?? 0))[0];
+  const totalScansNum = scanLogsTotal !== null
+    ? scanLogsTotal
+    : typeof stats.totalScans === 'number'
+      ? stats.totalScans
+      : parseInt(String(stats.totalScans).replace(/,/g, ''), 10) || 0;
+
+  // Fetch scan_logs whenever frames or period changes
+  const frameIdsKey = frames.map(f => f.id).join(',');
+
+  // All-time total from scan_logs — filter nulls so it matches the chart's .gte() behaviour
+  useEffect(() => {
+    if (!frames.length) { setScanLogsTotal(0); return; }
+    const ids = frames.map(f => f.id);
+    supabase
+      .from('scan_logs')
+      .select('scanned_at')
+      .in('frame_id', ids)
+      .not('scanned_at', 'is', null)
+      .then(({ data }) => { if (data) setScanLogsTotal(data.length); });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [frameIdsKey]);
+
+  useEffect(() => {
+    if (!frames.length) { setChartBuckets([]); setComparison(null); return; }
+    const ids  = frames.map(f => f.id);
+    const days = scanPeriod === '7d' ? 7 : scanPeriod === '30d' ? 30 : 90;
+
+    setChartLoading(true);
+    setComparison(null);
+
+    const now         = new Date();
+    const periodStart = new Date(now);
+    periodStart.setDate(now.getDate() - days);
+
+    // For 7d fetch an extra week back so we can compare
+    const fetchFrom = new Date(periodStart);
+    if (scanPeriod === '7d') fetchFrom.setDate(fetchFrom.getDate() - 7);
+
+    supabase
+      .from('scan_logs')
+      .select('scanned_at')
+      .in('frame_id', ids)
+      .gte('scanned_at', fetchFrom.toISOString())
+      .then(({ data, error }) => {
+        if (error || !data) { setChartLoading(false); return; }
+
+        // Build empty day buckets for the current period — d <= days so today is always included
+        const bucket = {};
+        for (let d = 0; d <= days; d++) {
+          const day = new Date(periodStart);
+          day.setDate(day.getDate() + d);
+          bucket[day.toISOString().slice(0, 10)] = 0;
+        }
+
+        let currCount = 0;
+        let prevCount = 0;
+
+        data.forEach(({ scanned_at }) => {
+          if (!scanned_at) return;
+          const scanDate = new Date(scanned_at);
+          if (scanDate >= periodStart) {
+            const key = scanned_at.slice(0, 10);
+            if (key in bucket) { bucket[key]++; }
+            currCount++;
+          } else if (scanPeriod === '7d') {
+            prevCount++;
+          }
+        });
+
+        setChartBuckets(Object.values(bucket));
+
+        if (scanPeriod === '7d') {
+          const raw = prevCount === 0
+            ? (currCount > 0 ? 100 : 0)
+            : Math.round(((currCount - prevCount) / prevCount) * 100);
+          setComparison({ pct: Math.abs(raw), up: raw >= 0, curr: currCount, prev: prevCount });
+        }
+
+        setChartLoading(false);
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [frameIdsKey, scanPeriod]);
+
+  // Fetch recent activity — comments + inactive + milestones (no individual scans)
+  useEffect(() => {
+    if (!frames.length) { setRecentActivity([]); setActivityLoading(false); return; }
+    const frameMap   = Object.fromEntries(frames.map(f => [f.id, f]));
+    const ids        = frames.map(f => f.id);
+    const MILESTONES = [10, 50, 100, 250, 500, 1000, 2500, 5000, 10000];
+    setActivityLoading(true);
+
+    supabase
+      .from('frame_comments')
+      .select('frame_id, name, created_at')
+      .in('frame_id', ids)
+      .order('created_at', { ascending: false })
+      .limit(20)
+      .then(({ data: commentData }) => {
+        const commentItems = (commentData || [])
+          .filter(row => frameMap[row.frame_id])
+          .map(row => ({ type: 'comment', frame: frameMap[row.frame_id], name: row.name, time: row.created_at }));
+
+        const inactiveItems = frames
+          .filter(f => f.status === 'inactive' && f.updated_at)
+          .map(f => ({ type: 'inactive', frame: f, time: f.updated_at }));
+
+        const milestoneItems = frames
+          .flatMap(f => {
+            const reached = MILESTONES.filter(m => (f.total_scans ?? 0) >= m);
+            if (!reached.length || !(f.updated_at || f.created_at)) return [];
+            return [{ type: 'milestone', frame: f, scans: reached[reached.length - 1], time: f.updated_at || f.created_at }];
+          });
+
+        const merged = [...commentItems, ...inactiveItems, ...milestoneItems]
+          .sort((a, b) => new Date(b.time) - new Date(a.time));
+
+        setRecentActivity(merged);
+        setActivityLoading(false);
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [frameIdsKey]);
+
+  const notifItems = (notificationData || []).map(n => ({
+    type: 'notification',
+    notifType: n.type,
+    message: n.message,
+    time: n.created_at,
+    isRead: n.is_read,
+    frame: null,
+  }));
+  const displayActivity = [...recentActivity, ...notifItems]
+    .sort((a, b) => new Date(b.time) - new Date(a.time))
+    .slice(0, 5);
+
+  const periodDays  = scanPeriod === '7d' ? 7 : scanPeriod === '30d' ? 30 : 90;
+  const periodTotal = chartBuckets.reduce((s, v) => s + v, 0);
+  const sparkPaths  = buildSparkPath(chartBuckets);
+  const sparkStroke = isDark ? '#D4AF37' : '#0F4C3A';
+  const sparkFillId = `sparkfill-${isDark ? 'd' : 'l'}`;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
@@ -255,12 +499,174 @@ function OverviewTab({ stats, frames, isDark, onNavigate, canViewAnalytics }) {
         <p style={{ fontSize: 13, color: t.textSub(isDark), marginTop: 4 }}>Here's what's happening with your frames today.</p>
       </motion.div>
 
-      {/* Stats */}
+      {/* Stat row */}
       <div className="db-stat-grid">
-        <StatCard label="Total Frames"    value={stats.totalFrames}  sub="frames created"          icon="frame"   accentBg="#0F4C3A"  delay={0.05} isDark={isDark} />
-        <StatCard label="All-Time Scans"  value={stats.totalScans}   sub="QR code scans"            icon="scan"    accentBg="#D4AF37"  delay={0.10} isDark={isDark} />
-        <StatCard label="Active QR Codes" value={stats.activeFrames} sub="live & accessible"        icon="qr"      accentBg="#16a34a"  delay={0.15} isDark={isDark} />
-        <StatCard label="Current Plan"    value={stats.plan}         sub={`${stats.plan === 'Business' ? 'Unlimited QR credits' : `${stats.qrCodeLeft} QR left`}`} icon="billing" accentBg="#7c3aed" delay={0.20} isDark={isDark} />
+        <StatCard label="Total Scans"   value={totalScansNum.toLocaleString()} sub="all-time QR scans"          icon="scan"    accentBg="#D4AF37"  delay={0.05} isDark={isDark} />
+        <StatCard label="Active Frames" value={stats.activeFrames}             sub={`of ${stats.totalFrames} created`} icon="frame"   accentBg="#0F4C3A"  delay={0.10} isDark={isDark} />
+        <StatCard label="Top Frame"     value={trunc(topFrame?.title) || '—'}  sub={`${(topFrame?.total_scans ?? 0).toLocaleString()} scans`} icon="chart" accentBg="#7c3aed" delay={0.15} isDark={isDark} valueTooltip={topFrame?.title} />
+        <StatCard label="Current Plan"  value={stats.plan}                     sub={stats.plan === 'Business' ? 'Unlimited QR credits' : stats.plan === 'Free' ? (stats.qrCodeLeft > 0 ? `${stats.qrCodeLeft} QR locked` : 'Upgrade to create frames') : `${stats.qrCodeLeft} QR left`} icon="billing" accentBg="#162722" delay={0.20} isDark={isDark} />
+      </div>
+
+      {/* Two-up: live sparkline chart + recent activity */}
+      <div className="db-overview-twoup">
+        {/* Sparkline */}
+        <div style={{ background: t.cardBg(isDark), border: `1px solid ${t.border(isDark)}`, borderRadius: 16, padding: 24 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+            <div>
+              <p style={{ margin: '0 0 6px', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.textMuted(isDark) }}>
+                Scans, last {periodDays} days
+              </p>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+                <h2 style={{ margin: 0, fontFamily: 'Poltawski Nowy, serif', fontSize: 22, color: t.textPrimary(isDark), fontWeight: 700, lineHeight: 1 }}>
+                  {chartLoading ? '…' : periodTotal.toLocaleString()}
+                </h2>
+                {/* 7-day comparison badge */}
+                {scanPeriod === '7d' && !chartLoading && comparison !== null && (
+                  <span style={{
+                    fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
+                    background: comparison.up ? 'rgba(74,222,128,0.12)' : 'rgba(239,68,68,0.12)',
+                    color:      comparison.up ? '#4ade80'                : '#ef4444',
+                    border:     `1px solid ${comparison.up ? 'rgba(74,222,128,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {comparison.up ? '↑' : '↓'} {comparison.pct}% vs last week
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Period toggle */}
+            <div style={{ display: 'flex', gap: 4, padding: 4, background: isDark ? '#1e1e1e' : '#f0efe9', borderRadius: 99, fontSize: 11, flexShrink: 0 }}>
+              {['7d', '30d', '90d'].map(r => (
+                <button key={r} onClick={() => setScanPeriod(r)} style={{
+                  padding: '4px 12px', borderRadius: 99, border: 'none',
+                  background: r === scanPeriod ? t.cardBg(isDark) : 'transparent',
+                  color:      r === scanPeriod ? t.textPrimary(isDark) : t.textMuted(isDark),
+                  fontWeight: 600, cursor: 'pointer', fontSize: 11, fontFamily: 'inherit',
+                  transition: 'background 0.15s, color 0.15s',
+                }}>{r}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Chart */}
+          <svg viewBox="0 0 600 160" style={{ width: '100%', height: 160, opacity: chartLoading ? 0.35 : 1, transition: 'opacity 0.2s' }}>
+            <defs>
+              <linearGradient id={sparkFillId} x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0" stopColor={sparkStroke} stopOpacity="0.18" />
+                <stop offset="1" stopColor={sparkStroke} stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            {sparkPaths ? (
+              <>
+                <path d={sparkPaths.fill} fill={`url(#${sparkFillId})`} />
+                <path d={sparkPaths.line} fill="none" stroke={sparkStroke} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+              </>
+            ) : (
+              /* flat baseline when no data */
+              <path d="M0,140 L600,140" fill="none" stroke={sparkStroke} strokeWidth="1.5" strokeDasharray="4 4" opacity="0.3" />
+            )}
+          </svg>
+        </div>
+
+        {/* Recent activity */}
+        <div style={{ background: t.cardBg(isDark), border: `1px solid ${t.border(isDark)}`, borderRadius: 16, padding: 24 }}>
+          <p style={{ margin: '0 0 4px', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.textMuted(isDark) }}>Recent activity</p>
+          <h3 style={{ margin: '0 0 14px', fontFamily: 'Poltawski Nowy, serif', fontSize: 16, color: t.textPrimary(isDark), fontWeight: 700 }}>What's happening</h3>
+          {activityLoading ? (
+            <p style={{ fontSize: 11, color: t.textMuted(isDark) }}>Loading…</p>
+          ) : displayActivity.length === 0 ? (
+            <p style={{ fontSize: 11, color: t.textMuted(isDark) }}>No activity yet.</p>
+          ) : displayActivity.map((a, i) => {
+            const isNotif = a.type === 'notification';
+            const suffix =
+              a.type === 'comment'   ? ` · new comment from ${a.name || 'a visitor'}` :
+              a.type === 'milestone' ? ` · reached ${a.scans.toLocaleString()} scans` :
+              a.type === 'inactive'  ? ' · is inactive' :
+                                       '';
+            const dot =
+              a.type === 'comment'      ? '#D4AF37'  :
+              a.type === 'milestone'    ? '#7c3aed'  :
+              a.type === 'notification' ? (
+                a.notifType === 'success' ? '#4ade80' :
+                a.notifType === 'error'   ? '#f87171' :
+                a.notifType === 'alert'   ? '#fb923c' :
+                a.notifType === 'update'  ? '#60a5fa' :
+                '#D4AF37'
+              ) :
+                                          '#888';
+            return (
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 0', borderBottom: i < displayActivity.length - 1 ? `1px dashed ${t.border(isDark)}` : 'none' }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: dot, marginTop: 4, flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  {isNotif ? (
+                    <MsgTooltip full={a.message}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: t.textSub(isDark), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                        {trunc(a.message, 60)}
+                      </span>
+                    </MsgTooltip>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'baseline', minWidth: 0, gap: 0 }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: t.textSub(isDark), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, flexShrink: 1, maxWidth: '60%' }}>
+                        {trunc(a.frame.title, 16)}
+                      </span>
+                      <span style={{ fontSize: 11, color: t.textMuted(isDark), whiteSpace: 'nowrap', flexShrink: 0 }}>
+                        {suffix}
+                      </span>
+                    </div>
+                  )}
+                  <p style={{ margin: '2px 0 0', fontSize: 10, color: t.textMuted(isDark) }}>{timeAgo(a.time)}</p>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* View all footer */}
+          {!activityLoading && (
+            <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${t.border(isDark)}` }}>
+              {showUpgradeNudge ? (
+                <div style={{ borderRadius: 10, background: isDark ? 'rgba(212,175,55,0.08)' : 'rgba(15,76,58,0.06)', border: `1px solid ${isDark ? 'rgba(212,175,55,0.2)' : 'rgba(15,76,58,0.15)'}`, padding: '10px 12px' }}>
+                  <p style={{ fontSize: 11, fontWeight: 600, color: t.textPrimary(isDark), margin: '0 0 6px' }}>
+                    Upgrade to Pro for full activity
+                  </p>
+                  <p style={{ fontSize: 10, color: t.textMuted(isDark), margin: '0 0 8px', lineHeight: 1.5 }}>
+                    See your complete activity history, every scan, comment, and milestone across all frames.
+                  </p>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button
+                      onClick={() => onNavigate('billing')}
+                      style={{ flex: 1, padding: '6px 0', borderRadius: 8, background: '#0F4C3A', color: '#FAF5DD', fontSize: 11, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
+                      Upgrade now
+                    </button>
+                    <button
+                      onClick={() => setShowUpgradeNudge(false)}
+                      style={{ padding: '6px 10px', borderRadius: 8, background: 'transparent', color: t.textMuted(isDark), fontSize: 11, border: `1px solid ${t.border(isDark)}`, cursor: 'pointer' }}>
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => canViewAnalytics ? onNavigate('analytics') : setShowUpgradeNudge(true)}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: isDark ? '#D4AF37' : '#0F4C3A' }}>
+                    View all activity
+                  </span>
+                  <span style={{ fontSize: 11, color: t.textMuted(isDark), display: 'flex', alignItems: 'center', gap: 4 }}>
+                    {canViewAnalytics ? '→' : (
+                      <>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+                        </svg>
+                        Pro
+                      </>
+                    )}
+                  </span>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Quick actions */}
@@ -292,33 +698,17 @@ function OverviewTab({ stats, frames, isDark, onNavigate, canViewAnalytics }) {
 
       {/* Recent frames */}
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-          <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: t.textMuted(isDark) }}>Recent frames</p>
-          <button onClick={() => onNavigate('frames')} style={{ fontSize: 12, color: '#D4AF37', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}>View all</button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
+          <h2 style={{ margin: 0, fontFamily: 'Poltawski Nowy, serif', fontSize: 20, color: t.textPrimary(isDark), fontWeight: 700 }}>Recent frames</h2>
+          <button onClick={() => onNavigate('frames')} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: t.textPrimary(isDark), fontWeight: 600, fontSize: 12 }}>
+            View all →
+          </button>
         </div>
         {frames.length === 0
           ? <EmptyFrames onCreateFrame={() => onNavigate('create')} isDark={isDark} />
-          : <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {frames.slice(0, 4).map(frame => (
-                <div key={frame.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 12, border: `1px solid ${t.border(isDark)}`, background: t.cardBg(isDark) }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
-                    <div style={{ width: 34, height: 34, borderRadius: 8, background: '#0F4C3A', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#ffffff' }}>
-                      <Icon path={icons.frame} size={14} />
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: t.textPrimary(isDark), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{frame.title}</p>
-                      <p style={{ fontSize: 11, color: t.textMuted(isDark), overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', wordBreak: 'break-all' }}>/{frame.frame_slug}</p>
-                    </div>
-                  </div>
-                  <div className="db-overview-frame-right">
-                    <span style={{ fontSize: 12, color: t.textSub(isDark), fontWeight: 600 }}>{frame.total_scans ?? 0} scans</span>
-                    <span style={{
-                      fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 20,
-                      background: frame.status === 'active' ? 'rgba(34,197,94,0.12)' : 'rgba(120,120,120,0.12)',
-                      color: frame.status === 'active' ? '#4ade80' : '#888888',
-                    }}>{frame.status || 'active'}</span>
-                  </div>
-                </div>
+          : <div className="db-frame-grid">
+              {frames.slice(0, 3).map(frame => (
+                <FrameCard key={frame.id} frame={frame} isDark={isDark} onEdit={() => onNavigate('frames')} onDelete={() => {}} />
               ))}
             </div>
         }
@@ -406,19 +796,59 @@ function CreateTab({ editingFrame, onSaved, isDark, onNavigateToBilling, planId 
 }
 
 // ─── Analytics tab ────────────────────────────────────────────────────────────
-function AnalyticsTab({ frames, isDark, planId }) {
-  const RETENTION_LABEL = (planId === 'business' || planId === 'trial') ? 'All time' : planId === 'pro' ? 'Last 6 months' : 'Last 30 days';
-  const [geoData,      setGeoData]      = useState({}); // { [frameId]: [{city, country, count}] }
-  const [scanTotals,   setScanTotals]   = useState({}); // { [frameId]: number } — from scan_logs (ground truth)
+function AnalyticsTab({ frames, isDark, planId, notificationData }) {
+  const [chartPeriod,  setChartPeriod]  = useState(30);
+  const [chartData,    setChartData]    = useState([]); // [{date, total, unique}]
+  const [chartLoading, setChartLoading] = useState(true);
+  const [geoData,      setGeoData]      = useState({});
+  const [scanTotals,   setScanTotals]   = useState({});
   const [geoLoading,   setGeoLoading]   = useState(true);
-  const [expandedGeo,  setExpandedGeo]  = useState({}); // { [frameId]: bool }
-  const [viewMode,     setViewMode]     = useState('recent'); // 'recent' | 'top-frame' | 'top-location'
+  const [tooltip,         setTooltip]        = useState(null); // {x, y, text} | null
+  const [activity,        setActivity]       = useState([]);
+  const [activityLoading, setActivityLoading] = useState(true);
+  const chartContainerRef = useRef(null);
 
+  const frameIdsKey = frames.map(f => f.id).join(',');
+
+  // Fetch recent activity — comments + inactive + milestones (no individual scans)
+  useEffect(() => {
+    if (!frames.length) { setActivity([]); setActivityLoading(false); return; }
+    const ids        = frames.map(f => f.id);
+    const frameMap   = Object.fromEntries(frames.map(f => [f.id, f]));
+    const MILESTONES = [10, 50, 100, 250, 500, 1000, 2500, 5000, 10000];
+    setActivityLoading(true);
+
+    supabase.from('frame_comments')
+      .select('frame_id, name, created_at')
+      .in('frame_id', ids)
+      .order('created_at', { ascending: false })
+      .limit(30)
+      .then(({ data: commentData }) => {
+        const commentItems = (commentData || [])
+          .filter(r => frameMap[r.frame_id])
+          .map(r => ({ type: 'comment', frame: frameMap[r.frame_id], name: r.name, time: r.created_at }));
+        const inactiveItems = frames
+          .filter(f => f.status === 'inactive' && f.updated_at)
+          .map(f => ({ type: 'inactive', frame: f, time: f.updated_at }));
+        const milestoneItems = frames
+          .flatMap(f => {
+            const reached = MILESTONES.filter(m => (f.total_scans ?? 0) >= m);
+            if (!reached.length || !(f.updated_at || f.created_at)) return [];
+            return [{ type: 'milestone', frame: f, scans: reached[reached.length - 1], time: f.updated_at || f.created_at }];
+          });
+        setActivity(
+          [...commentItems, ...inactiveItems, ...milestoneItems]
+            .sort((a, b) => new Date(b.time) - new Date(a.time))
+        );
+        setActivityLoading(false);
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [frameIdsKey]);
+
+  // Fetch geo + frame totals (all-time, for top locations + top frames)
   useEffect(() => {
     if (!frames.length) { setGeoLoading(false); return; }
     const ids = frames.map(f => f.id);
-    // Fetch ALL scan_logs (no city filter) so total and geo come from the same source.
-    // This makes geo > total mathematically impossible.
     supabase
       .from('scan_logs')
       .select('frame_id, city, country')
@@ -432,7 +862,7 @@ function AnalyticsTab({ frames, isDark, planId }) {
           if (city) {
             if (!geoMap[frame_id]) geoMap[frame_id] = {};
             const key = `${city}||${country}`;
-            geoMap[frame_id][key] = (geoMap[frame_id][key] || { city, country, count: 0 });
+            if (!geoMap[frame_id][key]) geoMap[frame_id][key] = { city, country, count: 0 };
             geoMap[frame_id][key].count += 1;
           }
         });
@@ -444,207 +874,349 @@ function AnalyticsTab({ frames, isDark, planId }) {
         setGeoData(result);
         setGeoLoading(false);
       });
-  }, [frames]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [frameIdsKey]);
 
-  // scan_logs-derived total per frame (ground truth), falls back to analytics value while loading
-  const frameTotal = (f) => scanTotals[f.id] ?? f.total_scans ?? 0;
-  const totalScans = frames.reduce((s, f) => s + frameTotal(f), 0);
-  const topFrame   = [...frames].sort((a, b) => frameTotal(b) - frameTotal(a))[0];
+  // Fetch daily bucketed chart data (total + unique) for selected period
+  useEffect(() => {
+    if (!frames.length) { setChartData([]); setChartLoading(false); return; }
+    setChartLoading(true);
+    const ids   = frames.map(f => f.id);
+    const since = new Date();
+    since.setDate(since.getDate() - chartPeriod);
 
-  // Flatten all geo entries across every frame → global location list
+    supabase
+      .from('scan_logs')
+      .select('scanned_at, visitor_id, ip_address')
+      .in('frame_id', ids)
+      .gte('scanned_at', since.toISOString())
+      .then(({ data }) => {
+        if (!data) { setChartLoading(false); return; }
+        const buckets = {};
+        for (let d = 0; d <= chartPeriod; d++) {
+          const day = new Date(since);
+          day.setDate(day.getDate() + d);
+          buckets[day.toISOString().slice(0, 10)] = { total: 0, devices: new Set() };
+        }
+        data.forEach(({ scanned_at, visitor_id, ip_address }) => {
+          const key = scanned_at?.slice(0, 10);
+          if (key && buckets[key]) {
+            buckets[key].total += 1;
+            const uid = visitor_id || ip_address;
+            if (uid) buckets[key].devices.add(uid);
+          }
+        });
+        setChartData(
+          Object.entries(buckets).map(([date, { total, devices }]) => ({ date, total, unique: devices.size }))
+        );
+        setChartLoading(false);
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [frameIdsKey, chartPeriod]);
+
+  // Merge notifications into activity feed
+  const analyticsNotifItems = (notificationData || []).map(n => ({
+    type: 'notification',
+    notifType: n.type,
+    message: n.message,
+    time: n.created_at,
+    isRead: n.is_read,
+    frame: null,
+  }));
+  const displayActivity = [...activity, ...analyticsNotifItems]
+    .sort((a, b) => new Date(b.time) - new Date(a.time))
+    .slice(0, 30);
+
+  // Chart stats
+  const periodTotal = chartData.reduce((s, d) => s + d.total, 0);
+  const half        = Math.floor(chartData.length / 2);
+  const firstHalf   = chartData.slice(0, half).reduce((s, d) => s + d.total, 0);
+  const secondHalf  = chartData.slice(half).reduce((s, d) => s + d.total, 0);
+  const growthPct   = firstHalf > 0 ? ((secondHalf - firstHalf) / firstHalf * 100).toFixed(1) : null;
+
+  // Top locations (flattened, all-time)
   const allLocations = (() => {
     const map = {};
-    Object.entries(geoData).forEach(([, entries]) => {
+    Object.values(geoData).forEach(entries =>
       entries.forEach(({ city, country, count }) => {
         const key = `${city}||${country}`;
         if (!map[key]) map[key] = { city, country, count: 0 };
         map[key].count += count;
-      });
-    });
-    return Object.values(map).sort((a, b) => b.count - a.count);
+      })
+    );
+    return Object.values(map).sort((a, b) => b.count - a.count).slice(0, 5);
   })();
-  const topLocation = allLocations[0];
+  const maxLocCount = allLocations[0]?.count || 1;
 
-  // Frame list ordered by view mode
-  const sortedFrames = viewMode === 'top-frame'
-    ? [...frames].sort((a, b) => frameTotal(b) - frameTotal(a))
-    : frames; // 'recent' keeps original created_at DESC order from the query
+  // Top frames (sorted by scan_logs total)
+  const frameTotal = (f) => scanTotals[f.id] ?? f.total_scans ?? 0;
+  const topFrames  = [...frames].sort((a, b) => frameTotal(b) - frameTotal(a)).slice(0, 5);
 
-  // Panel header labels
-  const panelLabel = viewMode === 'top-location' ? 'Top locations' : 'Frame performance';
+  // SVG grouped bar chart
+  const showTooltip = (e, text) => {
+    const container = chartContainerRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    setTooltip({ x: e.clientX - rect.left, y: e.clientY - rect.top, text });
+  };
+
+  const renderChart = () => {
+    if (!chartData.length) return null;
+    const maxVal = Math.max(...chartData.map(d => d.total), 1);
+    const W = 800, H = 200, padL = 32, padR = 12, padT = 10, padB = 28;
+    const chartW  = W - padL - padR;
+    const chartH  = H - padT - padB;
+    const groupW  = chartW / chartData.length;
+    const barW    = Math.max(2, Math.min(9, groupW * 0.36));
+    const gap     = 1.5;
+    const labelEvery = chartPeriod <= 7 ? 1 : chartPeriod <= 30 ? 5 : 15;
+    const gridPcts   = [0.25, 0.5, 0.75, 1];
+
+    return (
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: H }} onMouseLeave={() => setTooltip(null)}>
+        {gridPcts.map(pct => {
+          const y = padT + chartH * (1 - pct);
+          return (
+            <g key={pct}>
+              <line x1={padL} x2={W - padR} y1={y} y2={y}
+                stroke={isDark ? '#2a2a2a' : '#e8e8e4'} strokeDasharray="3 4" />
+              <text x={padL - 4} y={y + 4} fontSize="9" fill={t.textMuted(isDark)} textAnchor="end">
+                {Math.round(maxVal * pct)}
+              </text>
+            </g>
+          );
+        })}
+        {chartData.map((d, i) => {
+          const cx  = padL + i * groupW + (groupW - barW * 2 - gap) / 2;
+          const h1  = Math.max(1, chartH * (d.total  / maxVal));
+          const h2  = Math.max(1, chartH * (d.unique / maxVal));
+          const showLabel = i % labelEvery === 0;
+          const label = d.date.slice(5).replace('-', '/');
+          return (
+            <g key={d.date}>
+              <rect
+                x={cx} y={padT + chartH - h1} width={barW} height={h1}
+                fill="#0F4C3A" rx="2" style={{ cursor: 'crosshair' }}
+                onMouseEnter={(e) => showTooltip(e, `${d.total.toLocaleString()} scans`)}
+                onMouseMove={(e)  => showTooltip(e, `${d.total.toLocaleString()} scans`)}
+              />
+              <rect
+                x={cx + barW + gap} y={padT + chartH - h2} width={barW} height={h2}
+                fill="#D4AF37" rx="2" style={{ cursor: 'crosshair' }}
+                onMouseEnter={(e) => showTooltip(e, `${d.unique.toLocaleString()} devices`)}
+                onMouseMove={(e)  => showTooltip(e, `${d.unique.toLocaleString()} devices`)}
+              />
+              {showLabel && (
+                <text x={cx + barW} y={H - 2} fontSize="10" fill={t.textMuted(isDark)}
+                  textAnchor="middle" fontFamily="ui-monospace, monospace">{label}</text>
+              )}
+            </g>
+          );
+        })}
+      </svg>
+    );
+  };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-        <h2 className="db-tab-h2" style={{ fontWeight: 700, color: t.textPrimary(isDark), fontFamily: 'Poltawski Nowy, serif', marginBottom: 0 }}>Analytics</h2>
-        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '3px 10px', borderRadius: 20, background: planId === 'business' ? 'rgba(212,175,55,0.15)' : planId === 'pro' ? 'rgba(124,58,237,0.12)' : 'rgba(120,120,120,0.1)', color: planId === 'business' ? '#a8862a' : planId === 'pro' ? '#7c3aed' : t.textMuted(isDark), border: `1px solid ${planId === 'business' ? 'rgba(212,175,55,0.3)' : planId === 'pro' ? 'rgba(124,58,237,0.25)' : 'rgba(120,120,120,0.2)'}` }}>
-          {RETENTION_LABEL}
-        </span>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* Big chart card */}
+      <div style={{ background: t.cardBg(isDark), border: `1px solid ${t.border(isDark)}`, borderRadius: 16, padding: 28 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.textMuted(isDark) }}>Scan volume</p>
+            <h2 style={{ margin: 0, fontFamily: 'Poltawski Nowy, serif', fontSize: 28, fontWeight: 700 }}
+                className={`${isDark? 'text-white' : 'text-primary'}`}>
+              {periodTotal.toLocaleString()}
+              {growthPct !== null && (
+                <span style={{ fontSize: 13, fontWeight: 600, marginLeft: 10, color: Number(growthPct) >= 0 ? '#4ade80' : '#f87171' }}>
+                  {Number(growthPct) >= 0 ? '↑' : '↓'} {Math.abs(Number(growthPct))}%
+                </span>
+              )}
+            </h2>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 12, fontSize: 12 }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: t.textSub(isDark) }}>
+                <span style={{ width: 10, height: 10, background: '#0F4C3A', borderRadius: 2, flexShrink: 0 }} /> Scans
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: t.textSub(isDark) }}>
+                <span style={{ width: 10, height: 10, background: '#D4AF37', borderRadius: 2, flexShrink: 0 }} /> Unique
+              </span>
+            </div>
+            <div style={{ display: 'flex', gap: 3, background: isDark ? '#111' : '#f0efe9', borderRadius: 8, padding: 3 }}>
+              {[7, 30, 90].map(p => (
+                <button key={p} onClick={() => setChartPeriod(p)} style={{
+                  fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+                  background: chartPeriod === p ? t.cardBg(isDark) : 'transparent',
+                  color:      chartPeriod === p ? t.textPrimary(isDark) : t.textMuted(isDark),
+                  boxShadow:  chartPeriod === p ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                  transition: 'background 0.15s, color 0.15s',
+                }}>{p}d</button>
+              ))}
+            </div>
+          </div>
+        </div>
+        {chartLoading ? (
+          <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: 13, color: t.textMuted(isDark) }}>Loading…</span>
+          </div>
+        ) : chartData.every(d => d.total === 0) ? (
+          <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: 13, color: t.textMuted(isDark) }}>No scans in this period.</span>
+          </div>
+        ) : (
+          <div ref={chartContainerRef} style={{ position: 'relative' }}>
+            {renderChart()}
+            {tooltip && (
+              <div style={{
+                position: 'absolute',
+                left: tooltip.x,
+                top: tooltip.y - 38,
+                transform: 'translateX(-50%)',
+                background: isDark ? '#1a1a1a' : '#ffffff',
+                border: `1px solid ${t.border(isDark)}`,
+                borderRadius: 8,
+                padding: '5px 10px',
+                fontSize: 12,
+                fontWeight: 700,
+                color: t.textPrimary(isDark),
+                pointerEvents: 'none',
+                whiteSpace: 'nowrap',
+                boxShadow: '0 2px 10px rgba(0,0,0,0.18)',
+                zIndex: 10,
+              }}>
+                {tooltip.text}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* ── Clickable stat cards acting as view-mode tabs ── */}
-      <div className="db-stat-grid">
-        <StatCard
-          label="Total Scans" value={totalScans.toLocaleString()} sub="all-time"
-          icon="scan" accentBg="#0F4C3A" delay={0} isDark={isDark}
-          active={viewMode === 'recent'}
-          onClick={() => setViewMode('recent')}
-        />
-        <StatCard
-          label="Top Frame" value={topFrame?.title || '-'} sub={`${topFrame ? frameTotal(topFrame).toLocaleString() : 0} scans`}
-          icon="chart" accentBg="#7c3aed" delay={0.05} isDark={isDark}
-          active={viewMode === 'top-frame'}
-          onClick={() => setViewMode('top-frame')}
-        />
-        <StatCard
-          label="Top Location"
-          value={topLocation ? `${topLocation.city}${topLocation.country ? `, ${topLocation.country}` : ''}` : (geoLoading ? '…' : '—')}
-          sub={topLocation ? `${topLocation.count.toLocaleString()} scans` : 'no data yet'}
-          icon="pin" accentBg="#e2a242" delay={0.1} isDark={isDark}
-          active={viewMode === 'top-location'}
-          onClick={() => setViewMode('top-location')}
-        />
-      </div>
-
-      {/* ── Performance panel ── */}
+      {/* Two-up: top locations + top frames */}
       <style>{`
-        .af-row      { display:flex; align-items:center; gap:14px; padding:12px 20px; }
-        .af-title    { font-size:13px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-        .af-status   { flex-shrink:0; font-size:9px; font-weight:700; padding:2px 7px; border-radius:20px; text-transform:uppercase; letter-spacing:0.06em; }
-        .af-geo-btn  { flex-shrink:0; font-size:10px; font-weight:700; color:#D4AF37; background:rgba(212,175,55,0.12); border:1px solid rgba(212,175,55,0.25); border-radius:6px; padding:2px 7px; cursor:pointer; white-space:nowrap; }
-        .af-geo-btn .af-geo-label { display:inline; }
-        .af-scan-ct  { font-size:14px; font-weight:700; }
-        .af-geo-wrap { padding:0 20px 14px 64px; }
-        .af-loc-name { font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:55%; }
-        .af-loc-ct   { font-size:12px; font-weight:700; flex-shrink:0; }
-        @media(max-width:479px){
-          .af-row      { gap:8px; padding:10px 12px; }
-          .af-title    { font-size:11px; }
-          .af-status   { display:none; }
-          .af-geo-btn  { padding:2px 5px; font-size:9px; }
-          .af-geo-btn .af-geo-label { display:none; }
-          .af-scan-ct  { font-size:12px; }
-          .af-geo-wrap { padding:0 12px 12px 40px; }
-          .af-loc-name { font-size:11px; max-width:50%; }
-          .af-loc-ct   { font-size:11px; }
-        }
+        .db-analytics-twoup { display:grid; grid-template-columns:1.2fr 1fr; gap:16px; }
+        @media(max-width:639px){ .db-analytics-twoup { grid-template-columns:1fr; } }
+        .db-activity-scroll::-webkit-scrollbar { width: 4px; }
+        .db-activity-scroll::-webkit-scrollbar-track { background: transparent; }
+        .db-activity-scroll::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.35); border-radius: 99px; }
+        .db-activity-scroll::-webkit-scrollbar-thumb:hover { background: rgba(212,175,55,0.65); }
+        .db-activity-scroll { scrollbar-width: thin; scrollbar-color: rgba(212,175,55,0.35) transparent; }
       `}</style>
-
-      <div style={{ background: t.cardBg(isDark), border: `1px solid ${t.border(isDark)}`, borderRadius: 16, overflow: 'hidden' }}>
-        <div style={{ padding: '12px 20px', borderBottom: `1px solid ${t.border(isDark)}`, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: t.textMuted(isDark) }}>
-          {panelLabel}
+      <div className="db-analytics-twoup">
+        {/* Top locations */}
+        <div style={{ background: t.cardBg(isDark), border: `1px solid ${t.border(isDark)}`, borderRadius: 16, padding: 24 }}>
+          <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.textMuted(isDark) }}>Where</p>
+          <h3 style={{ margin: '0 0 20px', fontFamily: 'Poltawski Nowy, serif', fontSize: 18, fontWeight: 700 }}
+              className={`${isDark? 'text-white' : 'text-primary'}`}>Top locations</h3>
+          {geoLoading ? (
+            <p style={{ fontSize: 13, color: t.textMuted(isDark) }}>Loading…</p>
+          ) : allLocations.length === 0 ? (
+            <p style={{ fontSize: 13, color: t.textMuted(isDark) }}>No location data yet.</p>
+          ) : allLocations.map((loc, i) => {
+            const pct = Math.round((loc.count / maxLocCount) * 100);
+            return (
+              <div key={`${loc.city}-${loc.country}`} style={{ marginBottom: i < allLocations.length - 1 ? 16 : 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span style={{ fontSize: 13, color: t.textPrimary(isDark) }}>
+                    <span style={{ fontWeight: 600 }}>{loc.city}</span>
+                    {loc.country && <span style={{ color: t.textMuted(isDark), marginLeft: 6 }}>· {loc.country}</span>}
+                  </span>
+                  <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12, color: t.textSub(isDark) }}>{loc.count.toLocaleString()}</span>
+                </div>
+                <div style={{ height: 6, background: isDark ? '#2a2a2a' : '#e8e8e4', borderRadius: 99, overflow: 'hidden' }}>
+                  <div style={{ width: `${pct}%`, height: '100%', background: i === 0 ? '#D4AF37' : '#0F4C3A', borderRadius: 99 }} />
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        {/* ── Top locations view ── */}
-        {viewMode === 'top-location' && (
-          geoLoading
-            ? <p style={{ textAlign: 'center', padding: '48px 0', fontSize: 13, color: t.textSub(isDark) }}>Loading…</p>
-            : allLocations.length === 0
-              ? <p style={{ textAlign: 'center', padding: '48px 0', fontSize: 13, color: t.textSub(isDark) }}>No location data yet.</p>
-              : allLocations.map(({ city, country, count }, i) => {
-                  const locLabel = `${city}${country ? `, ${country}` : ''}`;
-                  const pct = totalScans > 0 ? Math.round((count / totalScans) * 100) : 0;
-                  return (
-                    <div key={`${city}-${country}`} className="af-row" style={{ borderBottom: i < allLocations.length - 1 ? `1px solid ${t.border(isDark)}` : 'none' }}>
-                      <div style={{ width: 30, height: 30, borderRadius: 8, background: '#e2a242', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#ffffff' }}>
-                        <Icon path={icons.pin} size={13} />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 5, gap: 8 }}>
-                          <span className="af-title" style={{ color: t.textPrimary(isDark) }} title={locLabel}>{locLabel}</span>
-                          <span className="af-scan-ct" style={{ color: t.textPrimary(isDark), flexShrink: 0 }}>{count.toLocaleString()}</span>
-                        </div>
-                        <div style={{ height: 5, borderRadius: 99, background: isDark ? '#2a2a2a' : '#e8e8e4', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${pct}%`, background: '#e2a242', borderRadius: 99 }} />
-                        </div>
-                      </div>
-                      <div style={{ textAlign: 'right', flexShrink: 0, minWidth: 36 }}>
-                        <p style={{ fontSize: 10, color: t.textMuted(isDark) }}>{pct}%</p>
-                      </div>
-                    </div>
-                  );
-                })
-        )}
+        {/* Top frames */}
+        <div style={{ background: t.cardBg(isDark), border: `1px solid ${t.border(isDark)}`, borderRadius: 16, padding: 24 }}>
+          <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.textMuted(isDark) }}>What</p>
+          <h3 style={{ margin: '0 0 20px', fontFamily: 'Poltawski Nowy, serif', fontSize: 18, fontWeight: 700 }}
+            className={`${isDark? 'text-white' : 'text-primary'}`}>Top frames</h3>
+          {topFrames.length === 0 ? (
+            <p style={{ fontSize: 13, color: t.textMuted(isDark) }}>No scan data yet.</p>
+          ) : topFrames.map((frame, i) => (
+            <div key={frame.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: i < topFrames.length - 1 ? `1px dashed ${t.border(isDark)}` : 'none' }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: '#0F4C3A', color: '#D4AF37', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Icon path={icons.frame} size={14} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <TitleTooltip full={frame.title}>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: t.textPrimary(isDark), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{trunc(frame.title)}</p>
+                </TitleTooltip>
+                <p style={{ margin: 0, fontSize: 11, color: t.textMuted(isDark) }}>{frame.type || frame.frame_type || 'Frame'}</p>
+              </div>
+              <p style={{ margin: 0, fontFamily: 'ui-monospace, monospace', fontSize: 13, color: t.textSub(isDark), fontWeight: 600, flexShrink: 0 }}>{frameTotal(frame).toLocaleString()}</p>
+            </div>
+          ))}
+        </div>
+      </div>
 
-        {/* ── Frame performance view (recent or top-frame) ── */}
-        {viewMode !== 'top-location' && (
-          frames.length === 0
-            ? <p style={{ textAlign: 'center', padding: '48px 0', fontSize: 13, color: t.textSub(isDark) }}>No scan data yet. Share your QR codes to start tracking.</p>
-            : sortedFrames.map((frame, i) => {
-                const frameScanCount = frameTotal(frame);
-                const pct       = totalScans > 0 ? Math.round((frameScanCount / totalScans) * 100) : 0;
-                const locations = geoData[frame.id] || [];
-                const expanded  = expandedGeo[frame.id];
-                const hasGeo    = locations.length > 0;
-                const isActive  = frame.status === 'active';
+      {/* Recent activity */}
+      <div style={{ background: t.cardBg(isDark), border: `1px solid ${t.border(isDark)}`, borderRadius: 16, padding: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div>
+            <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.textMuted(isDark) }}>When</p>
+            <h3 style={{ margin: 0, fontFamily: 'Poltawski Nowy, serif', fontSize: 18, color: t.textPrimary(isDark), fontWeight: 700 }}>Recent activity</h3>
+          </div>
+          {displayActivity.length > 0 && (
+            <span style={{ fontSize: 11, color: t.textMuted(isDark) }}>{displayActivity.length} events</span>
+          )}
+        </div>
 
-                return (
-                  <div key={frame.id} style={{ borderBottom: i < sortedFrames.length - 1 ? `1px solid ${t.border(isDark)}` : 'none' }}>
-                    <div className="af-row">
-                      <div style={{ width: 30, height: 30, borderRadius: 8, background: '#0F4C3A', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#ffffff' }}>
-                        <Icon path={icons.frame} size={12} />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
-                          <p className="af-title" style={{ color: t.textPrimary(isDark) }}>{frame.title}</p>
-                          <span
-                            className="af-status"
-                            title={!isActive ? 'No scans on this frame in the past 7 days.' : undefined}
-                            style={{
-                              background: isActive ? 'rgba(34,197,94,0.12)'  : 'rgba(120,120,120,0.12)',
-                              color:      isActive ? '#4ade80'               : '#888888',
-                              border:     `1px solid ${isActive ? 'rgba(34,197,94,0.25)' : 'rgba(120,120,120,0.25)'}`,
-                              cursor:     !isActive ? 'help' : 'default',
-                            }}>
-                            {frame.status || 'inactive'}
-                          </span>
-                          {!geoLoading && hasGeo && (
-                            <button
-                              className="af-geo-btn"
-                              onClick={() => setExpandedGeo(p => ({ ...p, [frame.id]: !p[frame.id] }))}>
-                              {expanded ? '▲' : '▼'}
-                              <span className="af-geo-label">
-                                {expanded ? ' Hide' : ` ${locations.length} region${locations.length > 1 ? 's' : ''}`}
-                              </span>
-                            </button>
-                          )}
-                        </div>
-                        <div style={{ height: 5, borderRadius: 99, background: isDark ? '#2a2a2a' : '#e8e8e4', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${pct}%`, background: '#D4AF37', borderRadius: 99 }} />
-                        </div>
-                      </div>
-                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <p className="af-scan-ct" style={{ color: t.textPrimary(isDark) }}>{frameScanCount.toLocaleString()}</p>
-                        <p style={{ fontSize: 10, color: t.textMuted(isDark) }}>{pct}%</p>
-                      </div>
-                    </div>
-
-                    {/* Per-frame geo breakdown */}
-                    {expanded && hasGeo && (
-                      <div className="af-geo-wrap" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        {locations.map(({ city, country, count }) => {
-                          const locPct = frameScanCount > 0 ? Math.round((count / frameScanCount) * 100) : 0;
-                          const locLabel = `${city}${country ? `, ${country}` : ''}`;
-                          return (
-                            <div key={`${city}-${country}`} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <Icon path={icons.pin} size={14} style={{ color: '#247923' }} />
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 3, gap: 6 }}>
-                                  <span className="af-loc-name" style={{ color: t.textSub(isDark) }} title={locLabel}>{locLabel}</span>
-                                  <span className="af-loc-ct" style={{ color: t.textPrimary(isDark) }}>{count.toLocaleString()}×</span>
-                                </div>
-                                <div style={{ height: 3, borderRadius: 99, background: isDark ? '#2a2a2a' : '#e8e8e4', overflow: 'hidden' }}>
-                                  <div style={{ height: '100%', width: `${locPct}%`, background: '#0F4C3A', borderRadius: 99 }} />
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
+        {activityLoading ? (
+          <p style={{ fontSize: 13, color: t.textMuted(isDark) }}>Loading…</p>
+        ) : displayActivity.length === 0 ? (
+          <p style={{ fontSize: 13, color: t.textMuted(isDark) }}>No activity yet. Share your QR codes to start tracking.</p>
+        ) : (
+          <div className="db-activity-scroll" style={{ overflowY: 'auto', maxHeight: 494, paddingRight: 6 }}>
+            {displayActivity.map((a, i) => {
+              const isNotif = a.type === 'notification';
+              const suffix =
+                a.type === 'comment'   ? ` · comment from ${a.name || 'a visitor'}` :
+                a.type === 'milestone' ? ` · reached ${a.scans.toLocaleString()} scans` :
+                a.type === 'inactive'  ? ' · is inactive' :
+                                         '';
+              const dot =
+                a.type === 'comment'      ? '#D4AF37'  :
+                a.type === 'milestone'    ? '#7c3aed'  :
+                a.type === 'notification' ? (
+                  a.notifType === 'success' ? '#4ade80' :
+                  a.notifType === 'error'   ? '#f87171' :
+                  a.notifType === 'alert'   ? '#fb923c' :
+                  a.notifType === 'update'  ? '#60a5fa' :
+                  '#D4AF37'
+                ) :
+                                            '#888';
+              return (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 0', borderBottom: i < displayActivity.length - 1 ? `1px dashed ${t.border(isDark)}` : 'none' }}>
+                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: dot, marginTop: 5, flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    {isNotif ? (
+                      <MsgTooltip full={a.message}>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: t.textSub(isDark), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                          {trunc(a.message, 60)}
+                        </span>
+                      </MsgTooltip>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'baseline', minWidth: 0, flexWrap: 'wrap', gap: 0 }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: t.textSub(isDark) }}>
+                          {a.frame.title}
+                        </span>
+                        <span style={{ fontSize: 12, color: t.textMuted(isDark), whiteSpace: 'nowrap' }}>
+                          {suffix}
+                        </span>
                       </div>
                     )}
+                    <p style={{ margin: '2px 0 0', fontSize: 10, color: t.textMuted(isDark) }}>{timeAgo(a.time)}</p>
                   </div>
-                );
-              })
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>
@@ -1121,6 +1693,7 @@ export default function Dashboard() {
   }, [notification]);
   const [sidebarOpen,  setSidebarOpen]  = useState(false);
   const [frames,       setFrames]       = useState([]);
+
   const [userProfile,  setUserProfile]  = useState(null);
   const [loadingData,  setLoadingData]  = useState(true);
   const [editingFrame, setEditingFrame] = useState(null);
@@ -1159,29 +1732,60 @@ export default function Dashboard() {
               if (!ip) return;
               const storedIp = profileRes.data.last_known_ip;
 
-              if (storedIp && storedIp !== ip) {
-                // New IP — insert in-app notification
-                const { data: newNotif } = await supabase.from('notification').insert({
-                  user_id:          user.id,
-                  type:             'alert',
-                  message:          'Login from a new device or location detected.',
-                  full_description: `A login to your ScanFrameNG account was detected from IP address ${ip}. If this was you, no action is needed. If you don't recognise this activity, reset your password immediately — go to Settings and click "Request password reset".`,
-                  is_read:          false,
-                }).select().single();
+              if (storedIp === ip) {
+                // Same IP — nothing to do
+              } else {
+                // IP changed or was never stored — build device info then alert (or silently record for brand-new accounts)
+                let locationStr = '';
+                try {
+                  const geoRes = await fetch(`https://ipapi.co/${ip}/json/`, { signal: AbortSignal.timeout(4000) });
+                  if (geoRes.ok) {
+                    const geo = await geoRes.json();
+                    const parts = [geo.city, geo.country_name].filter(Boolean);
+                    if (parts.length) locationStr = parts.join(', ');
+                  }
+                } catch (_) { /* geo lookup optional */ }
 
-                // Update stored IP + prepend notification to list
-                await supabase.from('users').update({ last_known_ip: ip }).eq('id', user.id);
-                if (newNotif) setNotificationData(prev => [newNotif, ...prev]);
+                const ua = navigator.userAgent;
+                const isMobile = /Mobi|Android|iPhone/i.test(ua);
+                const isTablet = /iPad|Tablet/i.test(ua);
+                const device   = isTablet ? 'Tablet' : isMobile ? 'Mobile' : 'Desktop';
+                const browser  =
+                  /Edg\//i.test(ua)              ? 'Edge'    :
+                  /OPR\/|Opera/i.test(ua)        ? 'Opera'   :
+                  /Firefox\//i.test(ua)           ? 'Firefox' :
+                  /Chrome\//i.test(ua)            ? 'Chrome'  :
+                  /Safari\//i.test(ua)            ? 'Safari'  : 'Browser';
 
-                // Fire-and-forget email alert
-                sendLoginAlertEmail({
-                  toEmail:  user.email,
-                  userName: profileRes.data.full_name || profileRes.data.business_name || 'there',
-                  ip,
-                });
-              } else if (!storedIp) {
-                // First login — record IP silently, no alert
+                const deviceInfo = locationStr
+                  ? `${device}, ${browser} in ${locationStr}`
+                  : `${device}, ${browser}`;
+
+                // Always update stored IP
                 await supabase.from('users').update({ last_known_ip: ip }).eq('id', user.id);
+
+                // Send alert — skip only on the very first ever login (no prior IP AND account < 10 min old)
+                const accountAgeMin = (Date.now() - new Date(profileRes.data.created_at).getTime()) / 60000;
+                const isFirstEverLogin = !storedIp && accountAgeMin < 10;
+
+                if (!isFirstEverLogin) {
+                  const { data: newNotif } = await supabase.from('notification').insert({
+                    user_id:          user.id,
+                    type:             'alert',
+                    message:          'We noticed a login to your ScanMyFrame account from a new device or location.',
+                    full_description: `From ${deviceInfo}.\n\nIf this was you, no action is needed. If you don't recognise this activity, reset your password immediately — go to Settings and click "Request password reset".`,
+                    is_read:          false,
+                  }).select().single();
+
+                  if (newNotif) setNotificationData(prev => [newNotif, ...prev]);
+
+                  sendLoginAlertEmail({
+                    toEmail:    user.email,
+                    userName:   profileRes.data.full_name || profileRes.data.business_name || 'there',
+                    deviceInfo,
+                    ip,
+                  });
+                }
               }
             } catch (_) { /* silently ignore IP fetch failures */ }
           })();
@@ -1200,26 +1804,31 @@ export default function Dashboard() {
     })();
   }, [user?.id]);
 
-  const stats = {
-    name:         userProfile?.business_name || userProfile?.full_name?.split(' ')[0] || '',
-    totalFrames:  frames.length,
-    totalScans:   frames.reduce((s, f) => s + (f.total_scans || 0), 0),
-    activeFrames: frames.filter(f => (f.status || 'active') === 'active').length,
-    plan:         sub?.subscription?.plan_id ? sub.subscription.plan_id.charAt(0).toUpperCase() + sub.subscription.plan_id.slice(1) : 'Free',
-    qrCodeLeft:   sub?.subscription?.qr_allocated? sub.subscription.qr_allocated - (sub.subscription.qr_used || 0) : 0,
-  };
-
   const rawPlanId    = sub?.subscription?.plan_id || 'free';
-  // If subscription is cancelled and billing period has already ended, treat as free
-  const periodEnded  = sub?.subscription?.status === 'cancelled' &&
+  // Period has ended if current_period_end is in the past — regardless of status field
+  const periodEnded  = rawPlanId !== 'free' && rawPlanId !== 'trial' &&
     sub?.subscription?.current_period_end &&
     new Date(sub.subscription.current_period_end) < new Date();
-  // Trial is a 30-day onboarding plan — when the period ends it drops to free
+  // Trial drops to free once its period ends
   const trialExpired = rawPlanId === 'trial' &&
     sub?.subscription?.current_period_end &&
     new Date(sub.subscription.current_period_end) < new Date();
   const currentPlanId    = (periodEnded || trialExpired) ? 'free' : rawPlanId;
   const canViewAnalytics = ['trial', 'pro', 'business'].includes(currentPlanId);
+
+  const effectivePlanLabel = currentPlanId.charAt(0).toUpperCase() + currentPlanId.slice(1);
+  const effectiveQrLeft = sub?.subscription?.qr_allocated && sub.subscription.qr_allocated !== -1
+    ? Math.max(0, sub.subscription.qr_allocated - (sub.subscription.qr_used || 0))
+    : 0;
+
+  const stats = {
+    name:         userProfile?.business_name || userProfile?.full_name?.split(' ')[0] || '',
+    totalFrames:  frames.length,
+    totalScans:   frames.reduce((s, f) => s + (f.total_scans || 0), 0),
+    activeFrames: frames.filter(f => (f.status || 'active') === 'active').length,
+    plan:         effectivePlanLabel,
+    qrCodeLeft:   effectiveQrLeft,
+  };
 
   const navTo = (tab) => {
     if (tab === 'analytics' && !canViewAnalytics) { setActiveTab('billing'); setSidebarOpen(false); return; }
@@ -1252,18 +1861,21 @@ export default function Dashboard() {
 
   const handleMarkNotificationRead = async (id, isRead) => {
     setNotificationData(prev => prev.map(n => n.id === id ? { ...n, is_read: isRead } : n));
-    await supabase.from('notification').update({ is_read: isRead }).eq('id', id);
+    const { error } = await supabase.from('notification').update({ is_read: isRead }).eq('id', id).eq('user_id', user.id);
+    if (error) console.error('[notif:markRead]', error.message);
   };
 
   const handleDeleteNotification = async (id) => {
     setNotificationData(prev => prev.filter(n => n.id !== id));
-    await supabase.from('notification').delete().eq('id', id);
+    const { error } = await supabase.from('notification').delete().eq('id', id).eq('user_id', user.id);
+    if (error) console.error('[notif:delete]', error.message);
   };
 
   const handleClearAllNotifications = async () => {
     if (!user) return;
     setNotificationData([]);
-    await supabase.from('notification').delete().eq('user_id', user.id);
+    const { error } = await supabase.from('notification').delete().eq('user_id', user.id);
+    if (error) console.error('[notif:clearAll]', error.message);
   };
 
   const handleEditFrame = (frame) => { setEditingFrame(frame); setActiveTab('create'); };
@@ -1288,7 +1900,7 @@ export default function Dashboard() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '22px 20px 16px', marginBottom: 6 }}>
-        <img src={isDark? scanFrameLogo : scanFrameLogoAlt} alt="ScanFrameNG Logo" style={{ width: 'auto', height: 28 }} />
+        <img src={isDark? scanFrameLogo : scanFrameLogoAlt} alt="ScanMyFrame Logo" style={{ width: 'auto', height: 28 }} />
       </div>
 
       {/* Nav */}
@@ -1316,7 +1928,7 @@ export default function Dashboard() {
       </nav>
 
       {/* Bottom */}
-      <div style={{ padding: '10px 10px 16px', borderTop: `1px solid ${t.border(isDark)}`, marginTop: 8 }}>
+      <div className="db-sidebar-bottom" style={{ padding: '10px 10px 16px', borderTop: `1px solid ${t.border(isDark)}`, marginTop: 8 }}>
         {/* User chip → Settings */}
         <button onClick={() => navTo('settings')}
           style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 10, background: t.chipBg(isDark), marginBottom: 6, border: 'none', cursor: 'pointer', textAlign: 'left', transition: 'opacity 0.15s' }}
@@ -1361,8 +1973,8 @@ export default function Dashboard() {
     <div style={{ minHeight: '100vh', display: 'flex', background: t.pageBg(isDark), transition: 'background 0.2s' }}>
 
       {/* Desktop sidebar */}
-      <aside style={{ width: SIDEBAR_W, flexShrink: 0, position: 'fixed', top: 0, left: 0, height: '100vh', overflow: 'hidden', background: t.sidebarBg(isDark), borderRight: `1px solid ${t.border(isDark)}`, zIndex: 30, display: 'none' }}
-        className="lg-sidebar">
+      <aside style={{ width: SIDEBAR_W, flexShrink: 0, position: 'fixed', top: 0, left: 0, overflow: 'hidden', background: t.sidebarBg(isDark), borderRight: `1px solid ${t.border(isDark)}`, zIndex: 30, display: 'none' }}
+        className="lg-sidebar db-sidebar-h">
         <style>{`.lg-sidebar { display: block !important; } @media(max-width:1023px){.lg-sidebar{display:none!important}}`}</style>
         <SidebarContent />
       </aside>
@@ -1376,7 +1988,8 @@ export default function Dashboard() {
               style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)' }} />
             <motion.aside initial={{ x: -SIDEBAR_W }} animate={{ x: 0 }} exit={{ x: -SIDEBAR_W }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              style={{ position: 'fixed', top: 0, left: 0, height: '100vh', width: SIDEBAR_W, overflow: 'hidden', zIndex: 50, background: t.sidebarBg(isDark), borderRight: `1px solid ${t.border(isDark)}` }}>
+              className="db-sidebar-h"
+              style={{ position: 'fixed', top: 0, left: 0, width: SIDEBAR_W, overflow: 'hidden', zIndex: 50, background: t.sidebarBg(isDark), borderRight: `1px solid ${t.border(isDark)}` }}>
               <SidebarContent />
             </motion.aside>
           </>
@@ -1388,11 +2001,14 @@ export default function Dashboard() {
         className="main-offset">
         <style>{`
           @media(min-width:1024px){.main-offset{margin-left:${SIDEBAR_W}px!important}}
+          .db-sidebar-h { position:fixed; top:0; bottom:0; }
+          @media(max-width:1023px){.db-sidebar-bottom{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))!important;}}
 
           /* ── Responsive grid systems ── */
-          .db-stat-grid    { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; }
-          .db-actions-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
-          .db-frame-grid   { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; }
+          .db-stat-grid      { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; }
+          .db-actions-grid   { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
+          .db-frame-grid     { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; }
+          .db-overview-twoup { display:grid; grid-template-columns:2fr 1fr; gap:16px; }
 
           /* ── Responsive layout helpers ── */
           .db-main     { padding:24px 20px; }
@@ -1406,7 +2022,8 @@ export default function Dashboard() {
 
           /* ── Tablet (≤ 768px) ── */
           @media(max-width:768px){
-            .db-main { padding:20px 16px; }
+            .db-main           { padding:20px 16px; }
+            .db-overview-twoup { grid-template-columns:1fr; }
           }
 
           /* ── Mobile (≤ 600px) ── */
@@ -1489,10 +2106,10 @@ export default function Dashboard() {
                     <Skeleton isDark={isDark} style={{ height: 180 }} />
                   </div>
                 : <>
-                    {activeTab === 'overview'  && <OverviewTab stats={stats} frames={frames} isDark={isDark} onNavigate={navTo} canViewAnalytics={canViewAnalytics} />}
+                    {activeTab === 'overview'  && <OverviewTab stats={stats} frames={frames} isDark={isDark} onNavigate={navTo} canViewAnalytics={canViewAnalytics} notificationData={notificationData} />}
                     {activeTab === 'frames'    && <FramesTab frames={frames} isDark={isDark} onCreateFrame={() => navTo('create')} onEdit={handleEditFrame} onDelete={handleDeleteFrame} />}
                     {activeTab === 'create'    && <CreateTab editingFrame={editingFrame} onSaved={handleFrameSaved} isDark={isDark} onNavigateToBilling={() => navTo('billing')} planId={currentPlanId} />}
-                    {activeTab === 'analytics' && canViewAnalytics && <AnalyticsTab frames={frames} isDark={isDark} planId={currentPlanId} />}
+                    {activeTab === 'analytics' && canViewAnalytics && <AnalyticsTab frames={frames} isDark={isDark} planId={currentPlanId} notificationData={notificationData} />}
                     {activeTab === 'billing'   && <BillingTab />}
                     {activeTab === 'settings'  && <SettingsTab user={user} userProfile={userProfile} isDark={isDark} onResetPassword={handleResetPassword} onDeleteAccount={handleDeleteAccount} onProfileUpdated={setUserProfile} notificationData={notificationData} onMarkNotificationRead={handleMarkNotificationRead} onDeleteNotification={handleDeleteNotification} onClearAllNotifications={handleClearAllNotifications} />}
                   </>

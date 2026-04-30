@@ -22,43 +22,26 @@ const QR_SIZE         = 400;
 const PADDING         = 24;
 
 const FEATURE_SUGGESTIONS = [
-  // Edge colors
   'Acrylic glass', 'Black edges', 'White edges', 'Gold edges', 'Silver edges',
   'Copper edges', 'Rose gold edges', 'Bronze edges', 'Natural wood edges',
-
-  // Mounting
   'Floating hang-type', 'Wall mount', 'Tabletop stand', 'Shadow box',
   'Dual orientation', 'Magnetic mount', 'Flush mount', 'Easel back',
-
-  // Finish
   'Matte finish', 'Gloss finish', 'Satin finish', 'Brushed finish',
   'Rustic finish', 'Metallic finish', 'Distressed finish',
-
-  // Print type
   'UV print', 'Canvas wrap', 'Metal print',
-
-  // Glass
   'Real glass', 'No glass', 'Frosted glass', 'Tempered glass',
   'Anti-reflective', 'Anti-glare', 'UV protection', 'Shatter-resistant',
-
-  // Frame material
   'Wood frame', 'Bamboo frame', 'Aluminum frame', 'MDF frame',
   'Acrylic frame', 'Reclaimed wood', 'Solid oak',
-
-  // Backing
   'Acid-free backing', 'Archival safe', 'Foam core',
-
-  // Assembly
   'Snap-open', 'Tool-free assembly', 'Hinged back',
-
-  // Size & format
   'Square format', 'Panoramic', 'Custom size', 'A4 size', 'A3 size',
-
-  // Special
   'Museum grade', 'Waterproof', 'Limited edition', 'Handmade',
   'Eco-friendly', 'Gift-ready', 'Personalized', 'Outdoor-rated',
   'LED lit', 'Engraved', 'Collage frame', 'Multi-opening',
 ];
+
+const STEPS = ['Content', 'Media', 'Settings'];
 
 async function sha256(str) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
@@ -149,7 +132,6 @@ function FeatureTagsInput({ tags, onChange }) {
 
   function handleInputChange(e) {
     const val = e.target.value;
-    // If user typed a comma, add the tag before the comma
     if (val.endsWith(',')) {
       addTag(val.slice(0, -1).trim());
       return;
@@ -205,7 +187,6 @@ function FeatureTagsInput({ tags, onChange }) {
           className="w-full text-sm text-neutral-900 outline-none bg-transparent placeholder:text-neutral-400"
         />
       </div>
-      {/* Autocomplete suggestions */}
       {suggestions.length > 0 && (
         <div className="mt-1 border border-neutral-200 rounded-xl bg-white shadow-lg overflow-hidden">
           {suggestions.map(s => (
@@ -264,13 +245,42 @@ function AdditionalImagesInput({ files, onChange, imgMaxMB, imgMaxBytes, maxImag
   );
 }
 
+// ─── Step Indicator ───────────────────────────────────────────────────────────
+function StepIndicator({ step }) {
+  return (
+    <div className="flex items-center mb-6">
+      {STEPS.map((label, i) => (
+        <div key={i} className="flex items-center flex-1 last:flex-none">
+          <div className="flex flex-col items-center">
+            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+              i < step  ? 'bg-[#0F4C3A] text-white' :
+              i === step ? 'bg-[#0F4C3A] text-white ring-4 ring-[#0F4C3A]/15' :
+              'bg-neutral-100 text-neutral-400'
+            }`}>
+              {i < step ? (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 13l4 4L19 7"/>
+                </svg>
+              ) : i + 1}
+            </div>
+            <span className={`text-[10px] font-semibold mt-1 whitespace-nowrap ${i === step ? 'text-[#0F4C3A]' : 'text-neutral-400'}`}>
+              {label}
+            </span>
+          </div>
+          {i < STEPS.length - 1 && (
+            <div className={`flex-1 h-0.5 mx-2 mb-4 transition-colors ${i < step ? 'bg-[#0F4C3A]' : 'bg-neutral-200'}`} />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 const DRAFT_KEY    = 'scanframe_qr_draft';
 const DRAFT_PENDING = 'scanframe_qr_pending';
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }) {
-  // Plan-based upload limits
-  // trial gets the same limits as business (full access during onboarding)
   const imgMaxMB    = ['trial', 'pro', 'business'].includes(planId) ? 5 : 2;
   const imgMaxBytes = imgMaxMB * 1024 * 1024;
   const vidMaxMB    = (planId === 'business' || planId === 'trial') ? 50 : planId === 'pro' ? 30 : 20;
@@ -279,7 +289,9 @@ export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }
   const canUsePassword = ['trial', 'pro', 'business'].includes(planId);
   const navigate = useNavigate();
   const rootRef = useRef(null);
-  const [form, setForm] = useState({ title: '', story: '', frameOwner: '', width: '', height: '' });
+
+  const [step,             setStep]             = useState(0);
+  const [form,             setForm]             = useState({ title: '', story: '', frameOwner: '', width: '', height: '' });
   const [artworkFile,      setArtworkFile]      = useState(null);
   const [extraImages,      setExtraImages]      = useState([]);
   const [videoFile,        setVideoFile]        = useState(null);
@@ -292,13 +304,13 @@ export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }
   const [genError,         setGenError]         = useState('');
   const [frameSlug,        setFrameSlug]        = useState('');
   const [modal,            setModal]            = useState(null);
-  const [emailStatus,      setEmailStatus]      = useState(null); // null | 'sending' | 'sent' | 'skipped' | 'failed'
+  const [emailStatus,      setEmailStatus]      = useState(null);
   const [draftRestored,    setDraftRestored]    = useState(false);
   const [passwordEnabled,  setPasswordEnabled]  = useState(false);
   const [passwordValue,    setPasswordValue]    = useState('');
   const [showPassword,     setShowPassword]     = useState(false);
+  const [commentsEnabled,  setCommentsEnabled]  = useState(true);
 
-  // Restore draft saved before the user was redirected to sign in
   useEffect(() => {
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
@@ -309,7 +321,6 @@ export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }
       setDraftRestored(true);
       localStorage.removeItem(DRAFT_KEY);
       localStorage.removeItem(DRAFT_PENDING);
-      // Scroll into view after a short delay so the page has rendered
       setTimeout(() => rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
     } catch (_) {}
   }, []);
@@ -338,18 +349,37 @@ export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }
     setVideoFile(file);
   }
 
-  function validate() {
+  function validateStep(s) {
     const errs = {};
-    if (!form.title.trim())      errs.title      = 'Art title is required.';
-    if (!form.story.trim())      errs.story      = 'Story is required.';
-    if (!form.frameOwner.trim()) errs.frameOwner = 'Frame owner is required.';
-    if (!artworkFile)            errs.artwork    = 'Please upload the frame artwork image.';
+    if (s === 0) {
+      if (!form.title.trim())      errs.title      = 'Art title is required.';
+      if (!form.story.trim())      errs.story      = 'Story is required.';
+      if (!form.frameOwner.trim()) errs.frameOwner = 'Frame owner is required.';
+    }
+    if (s === 1) {
+      if (!artworkFile) errs.artwork = 'Please upload the frame artwork image.';
+    }
     return errs;
   }
 
-  async function handleSubmit() {
-    const errs = validate();
+  function handleNext() {
+    const errs = validateStep(step);
     if (Object.keys(errs).length) { setErrors(errs); return; }
+    setErrors({});
+    setStep(s => s + 1);
+  }
+
+  function handleBack() {
+    setErrors({});
+    setGenError('');
+    setStep(s => s - 1);
+  }
+
+  async function handleSubmit() {
+    // Re-validate all required fields before submitting
+    const errs = { ...validateStep(0), ...validateStep(1) };
+    if (Object.keys(errs).length) { setErrors(errs); setStep(Object.keys(validateStep(0)).length ? 0 : 1); return; }
+
     setLoading(true);
     setGenError('');
     setQrDataUrl(null);
@@ -366,17 +396,17 @@ export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }
         '-' + Date.now();
 
       const { frame, error: frameError } = await createFrame({
-        title:          form.title,
-        description:    form.story,
-        client_name:    form.frameOwner,
-        width:          form.width ? parseInt(form.width) : null,
-        height:         form.height ? parseInt(form.height) : null,
-        frame_slug:     slug,
-        frame_features: featureTags,
+        title:            form.title,
+        description:      form.story,
+        client_name:      form.frameOwner,
+        width:            form.width ? parseInt(form.width) : null,
+        height:           form.height ? parseInt(form.height) : null,
+        frame_slug:       slug,
+        frame_features:   featureTags,
+        comments_enabled: commentsEnabled,
       });
       if (frameError || !frame) throw new Error(frameError || 'Failed to create frame.');
 
-      // Password protection (optional)
       if (passwordEnabled && passwordValue.trim()) {
         const hash = await sha256(passwordValue.trim());
         await supabase.from('frames').update({
@@ -385,12 +415,10 @@ export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }
         }).eq('id', frame.id);
       }
 
-      // Main artwork (required)
       const { url: artUrl, error: artUploadErr } = await uploadMedia(artworkFile, frame.id);
       if (artUploadErr) throw new Error(artUploadErr);
       await addMediaToFrame(frame.id, { media_type: 'image', media_url: artUrl, caption: form.title });
 
-      // Extra images (optional, stored as type 'extra_image')
       for (const imgFile of extraImages) {
         const { url: extraUrl, error: extraErr } = await uploadMedia(imgFile, frame.id);
         if (!extraErr && extraUrl) {
@@ -398,7 +426,6 @@ export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }
         }
       }
 
-      // Video (optional)
       if (videoFile) {
         const { url: vidUrl, error: vidUploadErr } = await uploadMedia(videoFile, frame.id);
         if (!vidUploadErr && vidUrl) {
@@ -412,7 +439,6 @@ export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }
       localStorage.removeItem(DRAFT_KEY);
       localStorage.removeItem(DRAFT_PENDING);
 
-      // Send QR to user's inbox (non-blocking)
       setEmailStatus('sending');
       sendQREmail({
         frameTitle:    form.title,
@@ -448,13 +474,12 @@ export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }
       color: { dark: '#000000', light: '#ffffff' },
       errorCorrectionLevel: 'H',
     });
-    // Extract viewBox size (qrcode uses a small module grid, e.g. "0 0 37 37")
     const vbMatch = svgStr.match(/viewBox="0 0 (\d+(?:\.\d+)?)/);
     const origSize = vbMatch ? parseFloat(vbMatch[1]) : 37;
     const innerMatch = svgStr.match(/<svg[^>]*>([\s\S]*)<\/svg>/);
     const innerSvg = innerMatch ? innerMatch[1] : '';
 
-    const total = QR_SIZE + PADDING * 2 + BORDER_WIDTH * 2; // 460
+    const total = QR_SIZE + PADDING * 2 + BORDER_WIDTH * 2;
     const qrOffset = BORDER_WIDTH + PADDING;
     const scale = QR_SIZE / origSize;
 
@@ -498,7 +523,7 @@ export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }
   <h1>${form.title}</h1>
   <p class="owner">Frame Owner: ${form.frameOwner}</p>
   <p class="url">${frameUrl}</p>
-  <p class="brand">Created with ScanFrameNG</p>
+  <p class="brand">Created with ScanMyFrame</p>
   <script>window.onload = () => window.print();<\/script>
 </body>
 </html>`;
@@ -521,6 +546,7 @@ export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }
     setArtworkError('');
     setVideoError('');
     setEmailStatus(null);
+    setStep(0);
   }
 
   const inputCls = (hasErr) =>
@@ -540,7 +566,6 @@ export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }
           Share or download it for <strong className="text-neutral-800">{form.title}</strong>
         </p>
 
-        {/* Email status banner */}
         <AnimatePresence mode="wait">
           {emailStatus === 'sending' && (
             <motion.div key="sending" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
@@ -615,9 +640,11 @@ export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }
     <motion.div ref={rootRef} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
       className="bg-white rounded-2xl p-4 sm:p-6 w-full max-w-md mx-auto">
 
-      {/* Draft restored banner */}
+      <StepIndicator step={step} />
+
+      {/* Draft restored banner — only on step 0 */}
       <AnimatePresence>
-        {draftRestored && (
+        {draftRestored && step === 0 && (
           <motion.div
             initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className="flex items-start gap-2.5 text-xs text-[#4a7c6f] bg-[#0F4C3A]/6 border border-[#0F4C3A]/20 rounded-xl px-3.5 py-3 mb-4"
@@ -628,190 +655,246 @@ export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }
         )}
       </AnimatePresence>
 
-      <Field label="Art title" error={errors.title}>
-        <div className="relative">
-          <input
-            name="title"
-            placeholder="e.g. Sunset in Lagos, The Golden Bride"
-            value={form.title}
-            onChange={handleChange}
-            maxLength={80}
-            className={inputCls(errors.title)}
-          />
-          <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[11px] pointer-events-none ${form.title.length >= 70 ? 'text-amber-500' : 'text-neutral-300'}`}>
-            {form.title.length}/80
-          </span>
-        </div>
-      </Field>
-
-      <Field label="Story" error={errors.story}>
-        <StoryEditor
-          value={form.story}
-          onChange={val => setForm(f => ({ ...f, story: val }))}
-          error={errors.story}
-          rows={7}
-        />
-      </Field>
-
-      <Field label="Frame owner" error={errors.frameOwner}>
-        <input name="frameOwner" placeholder="Frame Owner (e.g Mr Scan)" value={form.frameOwner} onChange={handleChange} className={inputCls(errors.frameOwner)} />
-      </Field>
-
-      {/* Frame size */}
-      <div className="border border-neutral-300 rounded-xl p-4 mb-3">
-        <p className="text-xs font-bold uppercase tracking-widest text-neutral-400 mb-3">Frame size in inches (optional)</p>
-        <div className="flex flex-wrap items-center gap-4">
-          {['width', 'height'].map(dim => (
-            <div key={dim} className="flex items-center gap-2">
-              <label className="text-sm text-neutral-600 capitalize">{dim}</label>
-              <input name={dim} type="number" placeholder={dim === 'width' ? '24' : '34'} value={form[dim]} onChange={handleChange}
-                className="w-20 border border-neutral-300 rounded-lg px-3 py-2 text-sm text-neutral-900 bg-white outline-none focus:border-[#0F4C3A] transition-colors" />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Artwork (required) */}
-      <div className="border border-neutral-300 rounded-xl p-4 mb-3">
-        <p className="text-xs font-bold uppercase tracking-widest text-neutral-400 mb-1">Artwork <span className="text-red-400">*</span></p>
-        <p className="text-xs text-neutral-500 mb-3">Upload the actual photo of the frame artwork. This is the main image shown on the frame page.</p>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <label className="bg-neutral-100 text-neutral-700 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer hover:bg-neutral-200 transition-colors text-center">
-            {artworkFile ? 'Change artwork' : 'Upload artwork'}
-            <input type="file" accept="image/jpeg,image/png" onChange={handleArtworkChange} className="hidden" />
-          </label>
-          <span className="text-xs text-neutral-400">JPG/PNG, max {imgMaxMB}MB</span>
-        </div>
-        {artworkFile && <p className="text-xs text-emerald-600 mt-2">{artworkFile.name}</p>}
-        {artworkError && <p className="text-xs text-red-500 mt-1">{artworkError}</p>}
-        {errors.artwork && !artworkFile && <p className="text-xs text-red-500 mt-1">{errors.artwork}</p>}
-      </div>
-
-      {/* Additional images */}
-      <AdditionalImagesInput files={extraImages} onChange={setExtraImages} imgMaxMB={imgMaxMB} imgMaxBytes={imgMaxBytes} maxImages={maxImages} />
-
-      {/* Video */}
-      <div className="border border-neutral-300 rounded-xl p-4 mb-3">
-        <p className="text-xs font-bold uppercase tracking-widest text-neutral-400 mb-1">Video <span className="normal-case font-normal text-neutral-400">(optional)</span></p>
-        <p className="text-xs text-neutral-500 mb-3 leading-relaxed">Optional event video for a richer experience</p>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <label className="bg-neutral-100 text-neutral-700 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer hover:bg-neutral-200 transition-colors text-center">
-            {videoFile ? 'Change video' : 'Upload video'}
-            <input type="file" accept="video/mp4,video/mpeg" onChange={handleVideoChange} className="hidden" />
-          </label>
-          <span className="text-xs text-neutral-400">MP4/MPEG, max {vidMaxMB}MB</span>
-        </div>
-        {videoFile && <p className="text-xs text-emerald-600 mt-2">{videoFile.name}</p>}
-        {videoError && <p className="text-xs text-red-500 mt-1">{videoError}</p>}
-      </div>
-
-      {/* Feature tags */}
-      <FeatureTagsInput tags={featureTags} onChange={setFeatureTags} />
-
-      {/* Password protection */}
-      <div className={`border rounded-xl p-4 mb-3 ${canUsePassword ? 'border-neutral-300' : 'border-neutral-200 bg-neutral-50'}`}>
-        <div className="flex items-center justify-between mb-1">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-0.5">
-              <p className="text-xs font-bold uppercase tracking-widest text-neutral-400">
-                Password Protection <span className="normal-case font-normal">(optional)</span>
-              </p>
-              {!canUsePassword && (
-                <span className="text-[9px] font-bold tracking-wide px-1.5 py-0.5 rounded-full bg-[#7c3aed]/10 text-[#7c3aed] border border-[#7c3aed]/20 flex-shrink-0">
-                  PRO
+      {/* ── Step 0: Content ── */}
+      <AnimatePresence mode="wait">
+        {step === 0 && (
+          <motion.div key="step0" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
+            <Field label={<>Art title <span className="text-red-400">*</span></>} error={errors.title}>
+              <div className="relative">
+                <input
+                  name="title"
+                  placeholder="e.g. Sunset in Lagos, The Golden Bride"
+                  value={form.title}
+                  onChange={handleChange}
+                  maxLength={50}
+                  className={`${inputCls(errors.title)} pr-14`}
+                />
+                <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[11px] pointer-events-none ${form.title.length >= 40 ? 'text-amber-500' : 'text-neutral-300'}`}>
+                  {form.title.length}/50
                 </span>
+              </div>
+            </Field>
+
+            <Field label={<>Story <span className="text-red-400">*</span></>} error={errors.story}>
+              <StoryEditor
+                value={form.story}
+                onChange={val => setForm(f => ({ ...f, story: val }))}
+                error={errors.story}
+                rows={7}
+              />
+            </Field>
+
+            <Field label={<>Frame owner <span className="text-red-400">*</span></>} error={errors.frameOwner}>
+              <input name="frameOwner" placeholder="Frame Owner (e.g Mr Scan)" value={form.frameOwner} onChange={handleChange} className={inputCls(errors.frameOwner)} />
+            </Field>
+
+            <div className="border border-neutral-300 rounded-xl p-4">
+              <p className="text-xs font-bold uppercase tracking-widest text-neutral-400 mb-3">Frame size in inches (optional)</p>
+              <div className="flex flex-wrap items-center gap-4">
+                {['width', 'height'].map(dim => (
+                  <div key={dim} className="flex items-center gap-2">
+                    <label className="text-sm text-neutral-600 capitalize">{dim}</label>
+                    <input name={dim} type="number" placeholder={dim === 'width' ? '24' : '34'} value={form[dim]} onChange={handleChange}
+                      className="w-20 border border-neutral-300 rounded-lg px-3 py-2 text-sm text-neutral-900 bg-white outline-none focus:border-[#0F4C3A] transition-colors" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── Step 1: Media ── */}
+        {step === 1 && (
+          <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
+            <div className="border border-neutral-300 rounded-xl p-4 mb-3">
+              <p className="text-xs font-bold uppercase tracking-widest text-neutral-400 mb-1">Artwork <span className="text-red-400">*</span></p>
+              <p className="text-xs text-neutral-500 mb-3">Upload the actual photo of the frame artwork. This is the main image shown on the frame page.</p>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <label className="bg-neutral-100 text-neutral-700 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer hover:bg-neutral-200 transition-colors text-center">
+                  {artworkFile ? 'Change artwork' : 'Upload artwork'}
+                  <input type="file" accept="image/jpeg,image/png" onChange={handleArtworkChange} className="hidden" />
+                </label>
+                <span className="text-xs text-neutral-400">JPG/PNG, max {imgMaxMB}MB</span>
+              </div>
+              {artworkFile && <p className="text-xs text-emerald-600 mt-2">{artworkFile.name}</p>}
+              {artworkError && <p className="text-xs text-red-500 mt-1">{artworkError}</p>}
+              {errors.artwork && !artworkFile && <p className="text-xs text-red-500 mt-1">{errors.artwork}</p>}
+            </div>
+
+            <AdditionalImagesInput files={extraImages} onChange={setExtraImages} imgMaxMB={imgMaxMB} imgMaxBytes={imgMaxBytes} maxImages={maxImages} />
+
+            <div className="border border-neutral-300 rounded-xl p-4 mb-3">
+              <p className="text-xs font-bold uppercase tracking-widest text-neutral-400 mb-1">Video <span className="normal-case font-normal text-neutral-400">(optional)</span></p>
+              <p className="text-xs text-neutral-500 mb-3 leading-relaxed">Optional event video for a richer experience</p>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <label className="bg-neutral-100 text-neutral-700 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer hover:bg-neutral-200 transition-colors text-center">
+                  {videoFile ? 'Change video' : 'Upload video'}
+                  <input type="file" accept="video/mp4,video/mpeg" onChange={handleVideoChange} className="hidden" />
+                </label>
+                <span className="text-xs text-neutral-400">MP4/MPEG, max {vidMaxMB}MB</span>
+              </div>
+              {videoFile && <p className="text-xs text-emerald-600 mt-2">{videoFile.name}</p>}
+              {videoError && <p className="text-xs text-red-500 mt-1">{videoError}</p>}
+            </div>
+
+            <FeatureTagsInput tags={featureTags} onChange={setFeatureTags} />
+          </motion.div>
+        )}
+
+        {/* ── Step 2: Password & Comments ── */}
+        {step === 2 && (
+          <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
+            <div className={`border rounded-xl p-4 mb-3 ${canUsePassword ? 'border-neutral-300' : 'border-neutral-200 bg-neutral-50'}`}>
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <p className="text-xs font-bold uppercase tracking-widest text-neutral-400">
+                      Password Protection <span className="normal-case font-normal">(optional)</span>
+                    </p>
+                    {!canUsePassword && (
+                      <span className="text-[9px] font-bold tracking-wide px-1.5 py-0.5 rounded-full bg-[#7c3aed]/10 text-[#7c3aed] border border-[#7c3aed]/20 flex-shrink-0">
+                        PRO
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-neutral-500 leading-relaxed">
+                    {canUsePassword
+                      ? "Require a password before anyone can view this frame's content. Set it on behalf of your client for private or sensitive deliveries."
+                      : 'Upgrade to Pro or Business to lock frames with a password, ideal for private or sensitive client deliveries.'}
+                  </p>
+                </div>
+
+                {canUsePassword ? (
+                  <button
+                    type="button"
+                    onClick={() => { setPasswordEnabled(v => !v); setPasswordValue(''); }}
+                    style={{
+                      width: 44, height: 24, borderRadius: 12, flexShrink: 0, marginLeft: 16,
+                      background: passwordEnabled ? '#0F4C3A' : '#d1d5db',
+                      border: 'none', cursor: 'pointer', position: 'relative', transition: 'background 0.2s',
+                    }}
+                    aria-checked={passwordEnabled}
+                    role="switch"
+                  >
+                    <span style={{
+                      position: 'absolute', top: 3,
+                      left: passwordEnabled ? 23 : 3,
+                      width: 18, height: 18, borderRadius: 9,
+                      background: '#fff', transition: 'left 0.2s',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                    }} />
+                  </button>
+                ) : (
+                  <div style={{ marginLeft: 16, flexShrink: 0 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                      <path d="M7 11V7a5 5 0 0110 0v4"/>
+                    </svg>
+                  </div>
+                )}
+              </div>
+
+              {canUsePassword && passwordEnabled && (
+                <div className="mt-3">
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={passwordValue}
+                      onChange={e => setPasswordValue(e.target.value)}
+                      placeholder="Set a password for this frame…"
+                      maxLength={72}
+                      className="w-full border border-neutral-300 rounded-xl px-4 py-2.5 text-sm text-neutral-800 pr-12 outline-none focus:border-[#0F4C3A] transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(v => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition-colors"
+                    >
+                      {showPassword ? (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/>
+                          <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/>
+                          <line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                      ) : (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                          <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-neutral-400 mt-1.5">
+                    Share this password privately with your client. ScanMyFrame stores it securely and never shows it again.
+                  </p>
+                </div>
               )}
             </div>
-            <p className="text-xs text-neutral-500 leading-relaxed">
-              {canUsePassword
-                ? 'Require a password before anyone can view this frame\'s content. Set it on behalf of your client for private or sensitive deliveries.'
-                : 'Upgrade to Pro or Business to lock frames with a password, ideal for private or sensitive client deliveries.'}
-            </p>
-          </div>
 
-          {canUsePassword ? (
-            /* Active toggle */
-            <button
-              type="button"
-              onClick={() => { setPasswordEnabled(v => !v); setPasswordValue(''); }}
-              style={{
-                width: 44, height: 24, borderRadius: 12, flexShrink: 0, marginLeft: 16,
-                background: passwordEnabled ? '#0F4C3A' : '#d1d5db',
-                border: 'none', cursor: 'pointer', position: 'relative', transition: 'background 0.2s',
-              }}
-              aria-checked={passwordEnabled}
-              role="switch"
-            >
-              <span style={{
-                position: 'absolute', top: 3,
-                left: passwordEnabled ? 23 : 3,
-                width: 18, height: 18, borderRadius: 9,
-                background: '#fff', transition: 'left 0.2s',
-                boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
-              }} />
-            </button>
-          ) : (
-            /* Locked icon */
-            <div style={{ marginLeft: 16, flexShrink: 0 }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                <path d="M7 11V7a5 5 0 0110 0v4"/>
-              </svg>
+            <div className="border border-neutral-200 rounded-xl p-4 mb-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-[#6b7280] mb-1">Allow comments</p>
+                  <p className="text-xs text-neutral-500 leading-relaxed">
+                    When on, visitors can leave comments on this frame. Turn off to hide the comment section entirely.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCommentsEnabled(v => !v)}
+                  style={{
+                    width: 44, height: 24, borderRadius: 12, flexShrink: 0, marginLeft: 16,
+                    background: commentsEnabled ? '#0F4C3A' : '#d1d5db',
+                    border: 'none', cursor: 'pointer', position: 'relative', transition: 'background 0.2s',
+                  }}
+                  aria-checked={commentsEnabled}
+                  role="switch"
+                >
+                  <span style={{
+                    position: 'absolute', top: 3,
+                    left: commentsEnabled ? 23 : 3,
+                    width: 18, height: 18, borderRadius: 9,
+                    background: '#fff', transition: 'left 0.2s',
+                    boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                  }} />
+                </button>
+              </div>
             </div>
-          )}
-        </div>
 
-        {canUsePassword && passwordEnabled && (
-          <div className="mt-3">
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={passwordValue}
-                onChange={e => setPasswordValue(e.target.value)}
-                placeholder="Set a password for this frame…"
-                maxLength={72}
-                className="w-full border border-neutral-300 rounded-xl px-4 py-2.5 text-sm text-neutral-800 pr-12 outline-none focus:border-[#0F4C3A] transition-colors"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(v => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition-colors"
-              >
-                {showPassword ? (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/>
-                    <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/>
-                    <line x1="1" y1="1" x2="23" y2="23"/>
-                  </svg>
-                ) : (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                    <circle cx="12" cy="12" r="3"/>
-                  </svg>
-                )}
-              </button>
-            </div>
-            <p className="text-[11px] text-neutral-400 mt-1.5">
-              Share this password privately with your client. ScanFrameNG stores it securely and never shows it again.
-            </p>
-          </div>
-        )}
-      </div>
-
-      <AnimatePresence>
-        {genError && (
-          <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className="text-xs text-red-500 mb-3 p-3 bg-red-50 rounded-lg border border-red-200">
-            ⚠ {genError}
-          </motion.p>
+            <AnimatePresence>
+              {genError && (
+                <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                  className="text-xs text-red-500 mb-3 p-3 bg-red-50 rounded-lg border border-red-200">
+                  ⚠ {genError}
+                </motion.p>
+              )}
+            </AnimatePresence>
+          </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="flex justify-end">
-        <button onClick={handleSubmit} disabled={loading}
-          className="w-full sm:w-auto bg-[#0F4C3A] text-white rounded-xl px-6 py-2.5 text-sm font-bold disabled:opacity-50 hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
-          {loading ? (<><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Generating…</>) : 'Generate Code'}
-        </button>
+      {/* Navigation */}
+      <div className="flex items-center justify-between mt-5">
+        {step > 0 ? (
+          <button onClick={handleBack}
+            className="flex items-center gap-1.5 text-sm text-neutral-500 hover:text-neutral-800 transition-colors">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            Back
+          </button>
+        ) : <div />}
+
+        {step < STEPS.length - 1 ? (
+          <button onClick={handleNext}
+            className="flex items-center gap-1.5 bg-[#0F4C3A] text-white rounded-xl px-6 py-2.5 text-sm font-bold hover:opacity-90 transition-opacity">
+            Next
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        ) : (
+          <button onClick={handleSubmit} disabled={loading}
+            className="bg-[#0F4C3A] text-white rounded-xl px-6 py-2.5 text-sm font-bold disabled:opacity-50 hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+            {loading ? (<><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Generating…</>) : 'Generate Code'}
+          </button>
+        )}
       </div>
 
       {/* Gate modal */}
@@ -831,7 +914,7 @@ export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }
                     </svg>
                   </div>
                   <p className="text-base font-bold text-neutral-900 mb-2">Sign in to continue</p>
-                  <p className="text-sm text-neutral-500 leading-relaxed mb-6">Create a free ScanFrameNG account to continue. Your information is secure, and your progress has been saved.</p>
+                  <p className="text-sm text-neutral-500 leading-relaxed mb-6">Create a free ScanMyFrame account to continue. Your information is secure, and your progress has been saved.</p>
                   <div className="flex flex-col gap-2.5">
                     <button onClick={() => {
                       localStorage.setItem(DRAFT_KEY, JSON.stringify({ form, featureTags }));

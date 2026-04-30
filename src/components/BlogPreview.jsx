@@ -98,7 +98,7 @@ export default function BlogPreview() {
                           to={`/blog?tag=${encodeURIComponent(tag)}`}
                           onClick={e => e.stopPropagation()}
                           className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full transition-opacity hover:opacity-70
-                            ${isDark ? 'bg-[#D4AF37]/15 text-[#D4AF37]' : 'bg-[#0F4C3A]/8 text-[#0F4C3A]'}`}
+                            ${isDark ? 'bg-[#D4AF37]/15 text-[#D4AF37]' : 'bg-secondary/30 text-[#0F4C3A]'}`}
                         >
                           {tag}
                         </Link>

@@ -15,7 +15,8 @@ export default function NotificationDropdown({ notification, notificationData, s
 
   const markRead = async (id) => {
     setNotificationData(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
-    await supabase.from('notification').update({ is_read: true }).eq('id', id);
+    const { error } = await supabase.from('notification').update({ is_read: true }).eq('id', id).eq('user_id', user.id);
+    if (error) console.error('[notif:markRead]', error.message);
   };
 
   const handleClick = (alert) => {

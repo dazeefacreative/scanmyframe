@@ -9,7 +9,7 @@ export default function SigninFooter() {
   return (
     <footer className="w-full bg-primary sticky bottom-0 left-0">
       <div className="m-0 flex flex-row flex-wrap justify-center items-center gap-x-3 gap-y-1 text-secondary text-[12px] py-5 px-4">
-        <p className="whitespace-nowrap">{new Date().getFullYear()} &copy; ScanFrameNG. All Rights Reserved.</p>
+        <p className="whitespace-nowrap">{new Date().getFullYear()} &copy; ScanMyFrame. All Rights Reserved.</p>
 
         <div className="h-4 w-px bg-[#FAF5DD]/30 hidden sm:block" />
 

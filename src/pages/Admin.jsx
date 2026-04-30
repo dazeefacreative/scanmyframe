@@ -34,7 +34,7 @@ function downloadCSV(rows, filename) {
 }
 
 // ── Empty post template ───────────────────────────────────────────────────────
-const EMPTY_POST = { title: '', slug: '', excerpt: '', cover_image: '', tags: '', author: 'ScanFrameNG', status: 'draft', body: [] };
+const EMPTY_POST = { title: '', slug: '', excerpt: '', cover_image: '', tags: '', author: 'ScanMyFrame', status: 'draft', body: [] };
 
 // ── Block editor ─────────────────────────────────────────────────────────────
 function BlockEditor({ blocks, onChange }) {
@@ -351,7 +351,7 @@ function LoginScreen({ onLogin }) {
     <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <p className="text-[#D4AF37] text-xs font-bold uppercase tracking-widest text-center mb-6">Admin Access</p>
-        <h1 className="text-2xl font-bold text-white text-center mb-8">ScanFrameNG Admin</h1>
+        <h1 className="text-2xl font-bold text-white text-center mb-8">ScanMyFrame Admin</h1>
         <form onSubmit={submit} className="flex flex-col gap-4">
           <input className={inp} placeholder="Username" value={u} onChange={e => setU(e.target.value)} autoFocus />
           <div className="relative">
@@ -816,7 +816,7 @@ export default function Admin() {
       {/* Top bar */}
       <header className="border-b border-white/8 px-6 py-4 flex items-center justify-between max-w-7xl mx-auto">
         <div className="flex items-center gap-6">
-          <span className="text-white font-bold text-lg tracking-tight">ScanFrameNG Admin</span>
+          <span className="text-white font-bold text-lg tracking-tight">ScanMyFrame Admin</span>
           <nav className="flex items-center gap-1">
             {tabs.map(t => (
               <button key={t.id} onClick={() => setTab(t.id)}

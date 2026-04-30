@@ -8,8 +8,8 @@ import {
 } from "./AuthService";
 import { useTheme } from "../context/ThemeContext";
 
-export default function AuthButtons({ setMessage }) {
-  const [isRegister, setIsRegister] = useState(false);
+export default function AuthButtons({ setMessage, initialMode = false }) {
+  const [isRegister, setIsRegister] = useState(initialMode);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

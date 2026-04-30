@@ -26,7 +26,7 @@ export default function Price() {
         '1 extra image per frame',
         '20MB max video upload',
         'PNG QR code download',
-        'Last 30 days analytics data',
+        'Basic analytics data',
       ],
       notes: ['Good for starter', 'Upgrade anytime to unlock more'],
       cta: 'Get Started',
@@ -50,7 +50,7 @@ export default function Price() {
         'Vendor card on public frame page',
         'Password-protect frames',
         'AI Story Assistant',
-        'Analytics - last 6 months',
+        'Real-time analytics data',
       ],
       notes: ['Everything in Basic', 'Unlock branding & advanced exports'],
       cta: 'Subscribe Now',
@@ -66,15 +66,11 @@ export default function Price() {
       discount: 'Save 20%',
       description: 'For large-scale operations',
       features: [
+        'Everything in Pro +',
         'Unlimited QR credits',
-        '5MB max image upload',
         '8 extra images per frame',
         '50MB max video upload',
-        'PNG, SVG & print-ready PDF export',
-        'Vendor card on public frame page',
-        'Password-protect frames',
-        'AI Story Assistant',
-        'All-time analytics data',
+        'Featured on homepage',
         '24/7 priority support',
       ],
       notes: ['Everything in Pro', 'Built for high-volume vendors'],
@@ -113,7 +109,7 @@ export default function Price() {
   }
 
   return (
-    <div className="flex flex-col px-4 md:px-0 max-w-6xl mx-auto">
+    <div className="flex flex-col px-4 md:px-0 max-w-4xl mx-auto">
       {/* Billing toggle */}
       <div className={`flex items-center justify-center gap-2 mb-12 font-[Poltawski_Nowy,serif]`}>
         <div className={`flex items-center border p-0.5 rounded-lg w-max ${isDark ? 'border-[#FAF5DD]' : 'border-[#0F4C3A]'}`}>
@@ -151,7 +147,7 @@ export default function Price() {
         <p className="text-xs text-red-500 text-center mb-4">⚠ {payError}</p>
       )}
 
-      <div className="grid md:grid-cols-3 gap-8">
+      <div className="grid md:grid-cols-3 gap-4">
         {plans.map((plan) => (
           <motion.div
             initial={plan.initial}
@@ -159,35 +155,35 @@ export default function Price() {
             transition={plan.transition}
             viewport={{ once: true }}
             key={plan.name}
-            className={`rounded-2xl p-8 transition-all ${
+            className={`rounded-2xl p-5 transition-all ${
               plan.highlighted
                 ? 'bg-[#0F4C3A] border-2 border-[#D4AF37] transform scale-105'
                 : isDark ? 'bg-black border border-neutral-400' : 'bg-white border border-neutral-400'
             }`}
           >
             {plan.highlighted && (
-              <div className="mb-4 inline-block bg-[#D4AF37] text-[#0F4C3A] px-4 py-1 rounded-full text-sm font-bold">
+              <div className="mb-3 inline-block bg-[#D4AF37] text-[#0F4C3A] px-3 py-0.5 rounded-full text-xs font-bold">
                 Most Popular
               </div>
             )}
 
-            <h3 className={`text-2xl font-bold mb-2 ${plan.highlighted ? 'text-white' : isDark ? 'text-white' : 'text-[#0F4C3A]'}`}>
+            <h3 className={`text-lg font-bold mb-1 ${plan.highlighted ? 'text-white' : isDark ? 'text-white' : 'text-[#0F4C3A]'}`}>
               {plan.name}
             </h3>
 
-            <p className={`mb-6 text-sm ${plan.highlighted ? 'text-white/80' : isDark ? 'text-neutral-400' : 'text-neutral-600'}`}>
+            <p className={`mb-4 text-xs ${plan.highlighted ? 'text-white/80' : isDark ? 'text-neutral-400' : 'text-neutral-600'}`}>
               {plan.description}
             </p>
 
-            <div className="mb-6">
-              <span className={`text-2xl md:text-3xl font-bold ${plan.highlighted ? 'text-white' : isDark ? 'text-white' : 'text-[#0F4C3A]'}`}>
+            <div className="mb-4">
+              <span className={`text-xl md:text-2xl font-bold ${plan.highlighted ? 'text-white' : isDark ? 'text-white' : 'text-[#0F4C3A]'}`}>
                 {billingCycle === 'monthly' ? plan.price.monthly : plan.price.yearly}
               </span>
-              <span className={`ml-1 text-sm ${plan.highlighted ? 'text-white/80' : isDark ? 'text-neutral-400' : 'text-neutral-600'}`}>
-                {billingCycle === 'monthly' ? '/Month' : '/Month, billed yearly'}
+              <span className={`ml-1 text-xs ${plan.highlighted ? 'text-white/80' : isDark ? 'text-neutral-400' : 'text-neutral-600'}`}>
+                /Month
               </span>
               {billingCycle === 'yearly' && (
-                <div className="mt-2 inline-flex ml-2 bg-red-600 text-white text-xs px-3 py-0.5 rounded-full font-medium">
+                <div className="mt-1.5 inline-flex ml-2 bg-red-600 text-white text-[10px] px-2.5 py-0.5 rounded-full font-medium">
                   {plan.discount}
                 </div>
               )}
@@ -196,7 +192,7 @@ export default function Price() {
             <button
               onClick={() => handleCTA(plan)}
               disabled={payLoading === plan.id}
-              className={`w-full py-3 px-6 rounded-full font-bold mb-8 transition-all flex items-center justify-center gap-2 disabled:opacity-70 ${
+              className={`w-full py-2 px-4 rounded-full text-sm font-bold mb-5 transition-all flex items-center justify-center gap-2 disabled:opacity-70 ${
                 plan.highlighted
                   ? 'bg-[#D4AF37] text-[#0F4C3A] hover:opacity-90'
                   : isDark
@@ -206,16 +202,16 @@ export default function Price() {
             >
               {payLoading === plan.id ? (
                 <>
-                  <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
                   Opening…
                 </>
               ) : plan.cta}
             </button>
 
-            <ul className={`space-y-4 ${plan.highlighted ? 'text-white' : isDark ? 'text-neutral-400' : 'text-neutral-700'}`}>
+            <ul className={`space-y-2.5 ${plan.highlighted ? 'text-white' : isDark ? 'text-neutral-400' : 'text-neutral-700'}`}>
               {plan.features.map((feature) => (
-                <li key={feature} className="flex items-center gap-3 text-sm">
-                  <span className={plan.highlighted ? 'text-[#D4AF37]' : 'text-[#D4AF37]'}>✓</span>
+                <li key={feature} className="flex items-center gap-2.5 text-xs">
+                  <span className="text-[#D4AF37]">✓</span>
                   {feature}
                 </li>
               ))}

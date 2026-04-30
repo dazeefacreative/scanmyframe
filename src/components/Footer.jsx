@@ -49,7 +49,7 @@ export default function Footer() {
 
         {/* Brand */}
         <motion.div className="max-w-md flex flex-col gap-4 items-start" initial={{ opacity: 0, y: -200 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-          <img src={logo} alt="ScanFrameNG Logo" className="w-16 h-auto" />
+          <img src={logo} alt="ScanMyFrame Logo" className="w-16 h-auto" />
           <span className="font-bold">Stay Connected</span>
           <p>Follow us on social media and be part of the community bringing frames to life.</p>
           <div className="flex gap-2 mt-2">
@@ -105,7 +105,7 @@ export default function Footer() {
         <motion.div className="flex flex-col gap-4" initial={{ opacity: 0, y: -200 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
           <span className="font-semibold">Subscribe to our Newsletter</span>
           <NewsletterForm />
-          <p className="text-sm font-light">© {new Date().getFullYear()} ScanFrameNG. All rights reserved.</p>
+          <p className="text-sm font-light">© {new Date().getFullYear()} ScanMyFrame. All rights reserved.</p>
         </motion.div>
 
       </div>

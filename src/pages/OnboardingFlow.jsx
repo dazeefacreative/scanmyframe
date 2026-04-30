@@ -669,7 +669,7 @@ export default function OnboardingFlow() {
         <img
         src={isDark ? scanframeLogo : scanframeLogoAlt}
         className="w-10"
-        alt="ScanFrameNG"
+        alt="ScanMyFrame"
       />
         </div>
 

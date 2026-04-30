@@ -1,6 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getFrameBySlug, recordQRScan } from '../services/supabaseHelpers';
+
+// Returns a stable UUID for this browser/device (persists in localStorage)
+function getVisitorId() {
+  const KEY = '_sfvid';
+  let id = localStorage.getItem(KEY);
+  if (!id) {
+    id = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : Math.random().toString(36).slice(2) + Date.now().toString(36);
+    localStorage.setItem(KEY, id);
+  }
+  return id;
+}
 import { supabase } from '../services/supabaseClient';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
@@ -792,7 +805,7 @@ function PasswordGate({ frameId, frameTitle, isDark, onUnlocked }) {
         </form>
 
         <Link to="/" className={`block mt-5 text-xs ${textSub} hover:opacity-70 transition-opacity`}>
-          ← Back to ScanFrameNG
+          ← Back to ScanMyFrame
         </Link>
       </div>
     </div>
@@ -809,8 +822,11 @@ export default function FramePage() {
   const [vendorPlanId,   setVendorPlanId] = useState('trial');
 
   useEffect(() => {
+    let cancelled = false;
+
     async function load() {
       const { frame: data, error } = await getFrameBySlug(slug);
+      if (cancelled) return;
       if (error || !data) {
         setNotFound(true);
       } else {
@@ -820,7 +836,7 @@ export default function FramePage() {
           sessionStorage.getItem(`sf_unlocked_${data.id}`) === '1';
         if (alreadyUnlocked) {
           setUnlocked(true);
-          recordQRScan(data.id);
+          recordQRScan(data.id, getVisitorId());
         }
         // Fetch vendor's subscription plan (non-blocking)
         if (data.user_id) {
@@ -832,13 +848,15 @@ export default function FramePage() {
             .limit(1)
             .single()
             .then(({ data: sub }) => {
-              if (sub?.plan_id) setVendorPlanId(sub.plan_id);
+              if (!cancelled && sub?.plan_id) setVendorPlanId(sub.plan_id);
             });
         }
       }
-      setLoading(false);
+      if (!cancelled) setLoading(false);
     }
     load();
+
+    return () => { cancelled = true; };
   }, [slug]);
 
   const showVendorCard = ['trial', 'pro', 'business'].includes(vendorPlanId);
@@ -866,7 +884,7 @@ export default function FramePage() {
         frameId={frame.id}
         frameTitle={frame.title}
         isDark={isDark}
-        onUnlocked={() => { setUnlocked(true); recordQRScan(frame.id); }}
+        onUnlocked={() => { setUnlocked(true); recordQRScan(frame.id, getVisitorId()); }}
       />
     );
   }
@@ -878,7 +896,7 @@ export default function FramePage() {
         <h1 className={`text-2xl font-bold ${textPrim} font-[Poltawski_Nowy,serif] mb-2`}>Frame not found</h1>
         <p className={`text-sm ${textSub} mb-8`}>This frame doesn't exist or may have been removed.</p>
         <Link to="/" className="bg-[#0F4C3A] text-[#FAF5DD] px-7 py-2.5 rounded-xl text-sm font-bold hover:opacity-90 transition-opacity">
-          Back to ScanFrameNG
+          Back to ScanMyFrame
         </Link>
       </div>
     );
@@ -904,7 +922,7 @@ export default function FramePage() {
 
       {/* Header */}
       <header className={`border-b ${border} px-6 py-4 flex items-center justify-between max-w-3xl mx-auto`}>
-        <Link to="/"><img src={logo} alt="ScanFrameNG" className="h-7 w-auto" /></Link>
+        <Link to="/"><img src={logo} alt="ScanMyFrame" className="h-7 w-auto" /></Link>
         <div className="flex items-center gap-3">
           <button onClick={toggleTheme}
             className={`w-8 h-8 rounded-full flex items-center justify-center border ${border} ${cardBg} ${textSub} hover:opacity-80 transition-opacity`}
@@ -988,7 +1006,7 @@ export default function FramePage() {
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
                 </svg>
-                Verified on ScanFrameNG
+                Verified on ScanMyFrame
               </span>
             </div>
 
@@ -1028,7 +1046,7 @@ export default function FramePage() {
                   <div className="flex flex-wrap gap-2">
                     {businessEmail && (
                       <a
-                        href={`mailto:${businessEmail}?subject=Frame enquiry from ScanFrameNG&body=Hi ${creatorName},%0A%0AI saw your frame "${frame.title}" on ScanFrameNG and I'd love to discuss a similar project.%0A%0AThanks`}
+                        href={`mailto:${businessEmail}?subject=Frame enquiry from ScanMyFrame&body=Hi ${creatorName},%0A%0AI saw your frame "${frame.title}" on ScanMyFrame and I'd love to discuss a similar project.%0A%0AThanks`}
                         className="inline-flex items-center gap-1.5 bg-[#0F4C3A] text-[#FAF5DD] text-xs font-bold px-4 py-2 rounded-xl hover:opacity-90 transition-opacity"
                       >
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1057,17 +1075,19 @@ export default function FramePage() {
           </div>
         )}
 
-        {/* Comments */}
-        <div className={`pt-4 border-t ${border}`}>
-          <CommentsSection
-            frameId={frame.id}
-            isDark={isDark}
-            border={border}
-            cardBg={cardBg}
-            textPrim={textPrim}
-            textSub={textSub}
-          />
-        </div>
+        {/* Comments — only rendered when vendor has enabled them */}
+        {frame.comments_enabled !== false && (
+          <div className={`pt-4 border-t ${border}`}>
+            <CommentsSection
+              frameId={frame.id}
+              isDark={isDark}
+              border={border}
+              cardBg={cardBg}
+              textPrim={textPrim}
+              textSub={textSub}
+            />
+          </div>
+        )}
 
         {/* Footer — always shown; more prominent on trial/basic since vendor card is hidden */}
         <div className={`flex items-center justify-center pt-4 border-t ${border}`}>
@@ -1075,12 +1095,12 @@ export default function FramePage() {
             <Link to="/"
               className={`flex items-center gap-2 px-4 py-2 rounded-xl border ${isDark ? 'border-white/10 bg-[#1a1a1a]' : 'border-[#0F4C3A]/12 bg-[#f5faf8]'} hover:opacity-80 transition-opacity`}>
               <span className={`text-xs font-semibold ${textSub}`}>Frame created with</span>
-              <img src={logo} alt="ScanFrameNG" className="h-4 w-auto" />
+              <img src={logo} alt="ScanMyFrame" className="h-4 w-auto" />
             </Link>
           ) : (
             <Link to="/" className={`flex items-center gap-2 text-xs ${textSub} hover:opacity-80 transition-opacity`}>
               <span>Powered by</span>
-              <img src={logo} alt="ScanFrameNG" className="h-4 w-auto opacity-60" />
+              <img src={logo} alt="ScanMyFrame" className="h-4 w-auto opacity-60" />
             </Link>
           )}
         </div>

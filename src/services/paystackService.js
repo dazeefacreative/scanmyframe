@@ -132,23 +132,22 @@ async function activateSubscription(userId, planId, billingCycle, paystackRef, p
   }
 
   // Check whether a subscription row already exists for this user
-  // Also fetch qr_allocated + qr_used so we can carry over unused credits
+  // Also fetch qr_allocated + qr_used so we can carry over locked credits
   const { data: existingSub } = await supabase
     .from('subscriptions')
     .select('id, qr_allocated, qr_used')
     .eq('user_id', userId)
     .maybeSingle();
 
-  // Calculate final allocation:
-  // If new plan is unlimited (-1) keep it unlimited.
-  // Otherwise add any unused credits from the previous plan.
+  // Always carry over unused credits into the new plan allocation.
+  // Credits remain visible (locked) on the Free plan after expiry,
+  // so the user sees exactly what they're getting when they resubscribe.
   let finalQrAllocation = newQrAllocation;
   if (newQrAllocation !== -1 && existingSub) {
-    const prevAllocated  = existingSub.qr_allocated ?? 0;
-    const prevUsed       = existingSub.qr_used       ?? 0;
-    // Don't carry over from an unlimited plan (prevAllocated === -1)
-    const carryOver      = prevAllocated === -1 ? 0 : Math.max(0, prevAllocated - prevUsed);
-    finalQrAllocation    = newQrAllocation + carryOver;
+    const prevAllocated = existingSub.qr_allocated ?? 0;
+    const prevUsed      = existingSub.qr_used      ?? 0;
+    const carryOver     = prevAllocated === -1 ? 0 : Math.max(0, prevAllocated - prevUsed);
+    finalQrAllocation   = newQrAllocation + carryOver;
   }
 
   let subErr;

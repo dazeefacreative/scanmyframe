@@ -9,37 +9,38 @@ function esc(s: string) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function loginAlertHtml(name: string, ip: string): string {
+function loginAlertHtml(name: string, ip: string, deviceInfo?: string): string {
+  const locationLine = deviceInfo ? esc(deviceInfo) : esc(ip);
   return `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8"><title>New Login Detected</title></head>
-<body style="margin:0;padding:0;background:#f0efe9;font-family:Helvetica,Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;"><tr><td align="center">
-<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,0.08);">
+<head><meta charset="utf-8"><meta name="color-scheme" content="dark"><title>New Login Detected</title></head>
+<body style="margin:0;padding:0;background:#0a0a0a;font-family:Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;background:#0a0a0a;"><tr><td align="center">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#111111;border-radius:20px;overflow:hidden;border:1px solid #222;">
   <tr><td style="background:#0F4C3A;padding:28px 40px;text-align:center;">
-    <h1 style="margin:0;font-size:24px;font-weight:700;color:#D4AF37;font-family:Georgia,serif;letter-spacing:0.04em;">SCANFRAME</h1>
-    <p style="margin:4px 0 0;font-size:11px;color:#FAF5DD;opacity:0.65;letter-spacing:0.12em;text-transform:uppercase;">Smart QR Frames</p>
+    <h1 style="margin:0;font-size:24px;font-weight:700;color:#D4AF37;font-family:Georgia,serif;letter-spacing:0.04em;">SCANMYFRAME</h1>
+    <p style="margin:4px 0 0;font-size:11px;color:#FAF5DD;letter-spacing:0.12em;text-transform:uppercase;">Smart QR Frames</p>
   </td></tr>
-  <tr><td style="padding:36px 40px;">
-    <div style="width:44px;height:44px;border-radius:22px;background:rgba(239,68,68,0.1);display:flex;align-items:center;justify-content:center;margin-bottom:18px;">
-      <span style="font-size:22px;">&#x26A0;</span>
-    </div>
-    <h2 style="margin:0 0 10px;font-size:20px;color:#0F4C3A;font-family:Georgia,serif;">New login detected, ${esc(name)}!</h2>
-    <p style="margin:0 0 16px;font-size:14px;color:#555;line-height:1.75;">We noticed a login to your ScanFrame account from a new IP address:</p>
-    <div style="background:#f0efe9;border-radius:10px;padding:14px 20px;margin:0 0 20px;font-size:14px;font-family:monospace;color:#0F4C3A;font-weight:700;">${esc(ip)}</div>
-    <p style="margin:0 0 14px;font-size:14px;color:#555;line-height:1.75;"><strong>If this was you</strong>, no action is needed.</p>
-    <p style="margin:0 0 24px;font-size:14px;color:#555;line-height:1.75;">
-      If you <strong>don&rsquo;t recognise this activity</strong>, reset your password immediately. Go to your dashboard &rarr; Settings and click <em>&ldquo;Request password reset&rdquo;</em>.
-    </p>
+  <tr><td style="padding:36px 40px;background:#111111;">
+    <table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;">
+      <tr><td width="44" height="44" style="background:#2a1a1a;border-radius:22px;text-align:center;vertical-align:middle;font-size:22px;">&#x26A0;</td></tr>
+    </table>
+    <h2 style="margin:0 0 10px;font-size:20px;color:#FAF5DD;font-family:Georgia,serif;">New login detected, ${esc(name)}!</h2>
+    <p style="margin:0 0 16px;font-size:14px;color:#aaa;line-height:1.75;">We noticed a login to your ScanMyFrame account from a new device or location:</p>
+    <table cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 20px;">
+      <tr><td style="background:#1a1a1a;border-radius:10px;padding:14px 20px;font-size:14px;color:#D4AF37;font-weight:700;border:1px solid #2a2a2a;">${locationLine}</td></tr>
+    </table>
+    <p style="margin:0 0 12px;font-size:14px;color:#aaa;line-height:1.75;"><strong style="color:#FAF5DD;">If this was you</strong>, no action is needed.</p>
+    <p style="margin:0 0 28px;font-size:14px;color:#aaa;line-height:1.75;">If you <strong style="color:#FAF5DD;">don&rsquo;t recognise this activity</strong>, reset your password immediately. Go to your dashboard &rarr; Settings and click <em>&ldquo;Request password reset&rdquo;</em>.</p>
     <table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 8px;"><tr>
-      <td style="background:#0F4C3A;border-radius:12px;">
-        <a href="${SITE_URL}/dashboard" style="display:inline-block;padding:13px 34px;font-size:14px;font-weight:700;color:#FAF5DD;text-decoration:none;">Go to Dashboard</a>
+      <td style="background:#D4AF37;border-radius:10px;">
+        <a href="${SITE_URL}/dashboard" style="display:inline-block;padding:13px 34px;font-size:14px;font-weight:700;color:#0F4C3A;text-decoration:none;">Go to Dashboard</a>
       </td>
     </tr></table>
   </td></tr>
-  <tr><td style="background:#FAF5DD;padding:20px 40px;border-top:1px solid #e5e8e4;">
-    <p style="margin:0;font-size:11px;color:#aaa;">&copy; 2026 ScanFrame &nbsp;&middot;&nbsp;
-      <a href="${SITE_URL}" style="color:#0F4C3A;text-decoration:none;">scanframe.ng</a>
+  <tr><td style="background:#0a0a0a;padding:20px 40px;border-top:1px solid #222;">
+    <p style="margin:0;font-size:11px;color:#444;">&copy; 2026 ScanMyFrame &nbsp;&middot;&nbsp;
+      <a href="${SITE_URL}" style="color:#D4AF37;text-decoration:none;">scanframe.ng</a>
     </p>
   </td></tr>
 </table>
@@ -140,11 +141,11 @@ Deno.serve(async (req: Request) => {
 
   // ── Send alert email via Resend ──────────────────────────────────────────────
   if (resource === 'send_alert_email') {
-    const { to_email, subject, html_body, name, ip } = body;
+    const { to_email, subject, html_body, name, ip, device_info } = body;
     if (!to_email || !subject) return json({ error: 'to_email and subject are required' }, 400);
     if (!RESEND_API_KEY) return json({ error: 'Email service not configured' }, 503);
 
-    const finalHtml = html_body ?? (ip ? loginAlertHtml(name ?? 'there', ip) : null);
+    const finalHtml = html_body ?? (ip ? loginAlertHtml(name ?? 'there', ip, device_info) : null);
     if (!finalHtml) return json({ error: 'html_body or ip is required' }, 400);
 
     const res = await fetch('https://api.resend.com/emails', {
@@ -169,49 +170,49 @@ Deno.serve(async (req: Request) => {
     const displayName = esc(name ?? 'there');
     const welcomeHtml = `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8"><title>Welcome to ScanFrameNG</title></head>
-<body style="margin:0;padding:0;background:#f0efe9;font-family:Helvetica,Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;"><tr><td align="center">
-<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,0.08);">
+<head><meta charset="utf-8"><meta name="color-scheme" content="dark"><title>Welcome to ScanMyFrame</title></head>
+<body style="margin:0;padding:0;background:#0a0a0a;font-family:Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;background:#0a0a0a;"><tr><td align="center">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#111111;border-radius:20px;overflow:hidden;border:1px solid #222;">
   <tr><td style="background:#0F4C3A;padding:28px 40px;text-align:center;">
-    <h1 style="margin:0;font-size:24px;font-weight:700;color:#D4AF37;font-family:Georgia,serif;letter-spacing:0.04em;">SCANFRAME</h1>
-    <p style="margin:4px 0 0;font-size:11px;color:#FAF5DD;opacity:0.65;letter-spacing:0.12em;text-transform:uppercase;">Smart QR Frames</p>
+    <h1 style="margin:0;font-size:24px;font-weight:700;color:#D4AF37;font-family:Georgia,serif;letter-spacing:0.04em;">SCANMYFRAME</h1>
+    <p style="margin:4px 0 0;font-size:11px;color:#FAF5DD;letter-spacing:0.12em;text-transform:uppercase;">Smart QR Frames</p>
   </td></tr>
-  <tr><td style="padding:36px 40px;">
-    <div style="width:44px;height:44px;border-radius:22px;background:rgba(212,175,55,0.12);display:flex;align-items:center;justify-content:center;margin-bottom:18px;">
-      <span style="font-size:22px;">&#127881;</span>
-    </div>
-    <h2 style="margin:0 0 10px;font-size:20px;color:#0F4C3A;font-family:Georgia,serif;">Welcome, ${displayName}!</h2>
-    <p style="margin:0 0 16px;font-size:14px;color:#555;line-height:1.75;">Your ScanFrameNG account is ready. You have <strong style="color:#0F4C3A;">10 free QR codes</strong> waiting — no credit card needed.</p>
-    <p style="margin:0 0 24px;font-size:14px;color:#555;line-height:1.75;">Start creating frames and let every piece you sell carry its own digital story.</p>
-    <table cellpadding="0" cellspacing="0" border="0" style="background:#f0efe9;border-radius:12px;width:100%;margin:0 0 28px;">
+  <tr><td style="padding:36px 40px;background:#111111;">
+    <table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;">
+      <tr><td width="44" height="44" style="background:#1e1a0a;border-radius:22px;text-align:center;vertical-align:middle;font-size:22px;">&#127881;</td></tr>
+    </table>
+    <h2 style="margin:0 0 10px;font-size:20px;color:#FAF5DD;font-family:Georgia,serif;">Welcome, ${displayName}!</h2>
+    <p style="margin:0 0 16px;font-size:14px;color:#aaa;line-height:1.75;">Your ScanMyFrame account is ready. You have <strong style="color:#D4AF37;">10 free QR codes</strong> waiting — no credit card needed.</p>
+    <p style="margin:0 0 24px;font-size:14px;color:#aaa;line-height:1.75;">Start creating frames and let every piece you sell carry its own digital story.</p>
+    <table cellpadding="0" cellspacing="0" border="0" style="background:#1a1a1a;border-radius:12px;width:100%;margin:0 0 28px;border:1px solid #2a2a2a;">
       <tr><td style="padding:18px 24px;">
-        <p style="margin:0 0 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#0F4C3A;">Get started in 3 steps</p>
+        <p style="margin:0 0 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#D4AF37;">Get started in 3 steps</p>
         <table cellpadding="0" cellspacing="0" width="100%">
           <tr>
-            <td width="28" valign="top" style="padding-bottom:12px;"><div style="width:24px;height:24px;border-radius:12px;background:#0F4C3A;color:#D4AF37;font-size:11px;font-weight:700;text-align:center;line-height:24px;">1</div></td>
-            <td style="padding:3px 0 12px 10px;font-size:13px;color:#444;">Create a frame and attach your content</td>
+            <td width="28" valign="top" style="padding-bottom:12px;"><table cellpadding="0" cellspacing="0"><tr><td width="24" height="24" style="background:#0F4C3A;border-radius:12px;text-align:center;vertical-align:middle;font-size:11px;font-weight:700;color:#D4AF37;">1</td></tr></table></td>
+            <td style="padding:3px 0 12px 10px;font-size:13px;color:#bbb;">Create a frame and attach your content</td>
           </tr>
           <tr>
-            <td width="28" valign="top" style="padding-bottom:12px;"><div style="width:24px;height:24px;border-radius:12px;background:#0F4C3A;color:#D4AF37;font-size:11px;font-weight:700;text-align:center;line-height:24px;">2</div></td>
-            <td style="padding:3px 0 12px 10px;font-size:13px;color:#444;">Generate and download your QR code</td>
+            <td width="28" valign="top" style="padding-bottom:12px;"><table cellpadding="0" cellspacing="0"><tr><td width="24" height="24" style="background:#0F4C3A;border-radius:12px;text-align:center;vertical-align:middle;font-size:11px;font-weight:700;color:#D4AF37;">2</td></tr></table></td>
+            <td style="padding:3px 0 12px 10px;font-size:13px;color:#bbb;">Generate and download your QR code</td>
           </tr>
           <tr>
-            <td width="28" valign="top"><div style="width:24px;height:24px;border-radius:12px;background:#0F4C3A;color:#D4AF37;font-size:11px;font-weight:700;text-align:center;line-height:24px;">3</div></td>
-            <td style="padding:3px 0 0 10px;font-size:13px;color:#444;">Stick it on the frame — your customers do the rest</td>
+            <td width="28" valign="top"><table cellpadding="0" cellspacing="0"><tr><td width="24" height="24" style="background:#0F4C3A;border-radius:12px;text-align:center;vertical-align:middle;font-size:11px;font-weight:700;color:#D4AF37;">3</td></tr></table></td>
+            <td style="padding:3px 0 0 10px;font-size:13px;color:#bbb;">Stick it on the frame — your customers do the rest</td>
           </tr>
         </table>
       </td></tr>
     </table>
     <table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 8px;"><tr>
-      <td style="background:#0F4C3A;border-radius:12px;">
-        <a href="${SITE_URL}/dashboard" style="display:inline-block;padding:13px 34px;font-size:14px;font-weight:700;color:#FAF5DD;text-decoration:none;">Go to my dashboard</a>
+      <td style="background:#D4AF37;border-radius:10px;">
+        <a href="${SITE_URL}/dashboard" style="display:inline-block;padding:13px 34px;font-size:14px;font-weight:700;color:#0F4C3A;text-decoration:none;">Go to my dashboard</a>
       </td>
     </tr></table>
   </td></tr>
-  <tr><td style="background:#FAF5DD;padding:20px 40px;border-top:1px solid #e5e8e4;">
-    <p style="margin:0;font-size:11px;color:#aaa;">You received this because you just created a ScanFrameNG account. &nbsp;&middot;&nbsp;
-      <a href="${SITE_URL}" style="color:#0F4C3A;text-decoration:none;">scanframe.ng</a>
+  <tr><td style="background:#0a0a0a;padding:20px 40px;border-top:1px solid #222;">
+    <p style="margin:0;font-size:11px;color:#444;">You received this because you just created a ScanMyFrame account. &nbsp;&middot;&nbsp;
+      <a href="${SITE_URL}" style="color:#D4AF37;text-decoration:none;">scanframe.ng</a>
     </p>
   </td></tr>
 </table>
@@ -221,7 +222,7 @@ Deno.serve(async (req: Request) => {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: FROM_EMAIL, to: [to_email], subject: 'Welcome to ScanFrameNG — your frames are ready to come alive', html: welcomeHtml }),
+      body: JSON.stringify({ from: FROM_EMAIL, to: [to_email], subject: 'Welcome to ScanMyFrame — your frames are ready to come alive', html: welcomeHtml }),
     });
 
     if (!res.ok) {

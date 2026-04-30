@@ -103,12 +103,12 @@ export default function Blog() {
   const activeTag = searchParams.get('tag') || '';
 
   useEffect(() => {
-    document.title = 'Blog: Insights, Tips & Stories | ScanFrameNG';
+    document.title = 'Blog: Insights, Tips & Stories | ScanMyFrame';
     getBlogPosts().then(({ posts: data }) => {
       setPosts(data);
       setLoading(false);
     });
-    return () => { document.title = 'ScanFrameNG | Smart QR Frames'; };
+    return () => { document.title = 'ScanMyFrame | Smart QR Frames'; };
   }, []);
 
   function clearTag() { setSearchParams({}); }
@@ -135,7 +135,7 @@ export default function Blog() {
     <div className={`min-h-screen ${pageBg}`}>
       <SEO
         title="Blog: Insights, Tips & Stories"
-        description="Guides for frame vendors, updates on new features, and ideas to help you get the most from ScanFrameNG."
+        description="Guides for frame vendors, updates on new features, and ideas to help you get the most from ScanMyFrame."
         url="/blog"
         type="website"
       />
@@ -146,13 +146,13 @@ export default function Blog() {
       <section className={`py-16 md:py-20 px-4`}>
         <div className="max-w-6xl mx-auto text-center">
           <p className={`text-[11px] font-bold uppercase tracking-[0.35em] mb-4 ${isDark ? 'text-[#D4AF37]' : 'text-[#0F4C3A]'}`}>
-            The ScanFrameNG Blog
+            The ScanMyFrame Blog
           </p>
           <h1 className={`text-4xl md:text-5xl font-bold font-[Poltawski_Nowy,serif] leading-tight mb-4 ${textPrim}`}>
             Insights, tips &amp; stories
           </h1>
           <p className={`text-base md:text-lg max-w-xl mx-auto ${textSub}`}>
-            Guides for frame vendors, updates on new features, and ideas to help you get the most from ScanFrameNG.
+            Guides for frame vendors, updates on new features, and ideas to help you get the most from ScanMyFrame.
           </p>
 
           {/* Search bar */}

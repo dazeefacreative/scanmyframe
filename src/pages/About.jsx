@@ -49,7 +49,7 @@ export default function About() {
           </motion.h1>
 
           <motion.p {...fadeUp(0.2)} className={`text-lg md:text-xl leading-relaxed max-w-2xl mx-auto ${text}`}>
-            ScanFrameNG was built on one simple idea: a frame hanging on a wall should not be the end of a story. It should be the beginning of a conversation, a discovery, and a connection.
+            ScanMyFrame was built on one simple idea: a frame hanging on a wall should not be the end of a story. It should be the beginning of a conversation, a discovery, and a connection.
           </motion.p>
         </div>
       </section>
@@ -66,10 +66,10 @@ export default function About() {
                 A Platform That Gives Frames a Digital Voice
               </h2>
               <p className={`text-base leading-relaxed mb-4 ${text}`}>
-                ScanFrameNG is a B2B SaaS platform built for frame vendors, artists, photographers, galleries, and creators across Nigeria and West Africa. We turn physical frames into interactive digital experiences using branded QR codes, with no technical knowledge required.
+                ScanMyFrame is a B2B SaaS platform built for frame vendors, artists, photographers, galleries, and creators across Nigeria and West Africa. We turn physical frames into interactive digital experiences using branded QR codes, with no technical knowledge required.
               </p>
               <p className={`text-base leading-relaxed ${text}`}>
-                When someone hangs a frame on a wall today, it sits there silently. We believe that is a missed opportunity. With ScanFrameNG, that same frame becomes a living connection to the story behind it. Scannable, shareable, and always up to date.
+                When someone hangs a frame on a wall today, it sits there silently. We believe that is a missed opportunity. With ScanMyFrame, that same frame becomes a living connection to the story behind it. Scannable, shareable, and always up to date.
               </p>
             </motion.div>
 
@@ -108,12 +108,12 @@ export default function About() {
               {
                 icon: '🖼️',
                 title: 'Bring Frames to Life',
-                body: 'A frame mounted on a wall is just the beginning. ScanFrameNG attaches a living digital layer to every physical frame: photos, videos, stories, and context. Each frame becomes an experience rather than just a decoration. Your frames breathe, update, and speak long after they leave your hands.',
+                body: 'A frame mounted on a wall is just the beginning. ScanMyFrame attaches a living digital layer to every physical frame: photos, videos, stories, and context. Each frame becomes an experience rather than just a decoration. Your frames breathe, update, and speak long after they leave your hands.',
               },
               {
                 icon: '📣',
                 title: 'Visibility for Vendors',
-                body: 'Frame vendors deserve an audience beyond their local street or shop. ScanFrameNG exposes vendors to a growing digital community. Every QR code scan is a new visitor discovering your work. Every frame page is a storefront accessible to anyone, anywhere, at any time, helping you attract more clients and close sales faster.',
+                body: 'Frame vendors deserve an audience beyond their local street or shop. ScanMyFrame exposes vendors to a growing digital community. Every QR code scan is a new visitor discovering your work. Every frame page is a storefront accessible to anyone, anywhere, at any time, helping you attract more clients and close sales faster.',
               },
               {
                 icon: '🤝',
@@ -147,7 +147,7 @@ export default function About() {
               <span className="text-gold">The World Is Where We Are Going.</span>
             </h2>
             <p className={`text-base leading-relaxed max-w-2xl mx-auto ${text}`}>
-              We are building ScanFrameNG to be the global platform for frame vendors, starting in Nigeria, expanding across West Africa, and reaching audiences on every continent.
+              We are building ScanMyFrame to be the global platform for frame vendors, starting in Nigeria, expanding across West Africa, and reaching audiences on every continent.
             </p>
           </motion.div>
 
@@ -170,7 +170,7 @@ export default function About() {
                 Coming Soon
               </span>
               <span className="text-3xl mb-4 block">🛒</span>
-              <h3 className={`text-xl font-bold mb-3 ${heading}`}>The ScanFrameNG Marketplace</h3>
+              <h3 className={`text-xl font-bold mb-3 ${heading}`}>The ScanMyFrame Marketplace</h3>
               <p className={`text-sm leading-relaxed mb-3 ${text}`}>
                 Our next milestone is a fully integrated marketplace where signed-in vendors can list their physical frames for quick sale and order. Buyers browse a curated catalogue, discover vendors by style or location, and place orders directly through the platform.
               </p>
@@ -258,7 +258,7 @@ export default function About() {
             Ready to Bring Your Frames to Life?
           </h2>
           <p className="text-secondary/70 text-base mb-8 max-w-xl mx-auto">
-            Join thousands of vendors using ScanFrameNG to reach more customers, tell better stories, and build a digital presence that lasts.
+            Join thousands of vendors using ScanMyFrame to reach more customers, tell better stories, and build a digital presence that lasts.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button

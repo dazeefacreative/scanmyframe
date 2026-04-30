@@ -21,7 +21,7 @@ const SECTIONS = [
     id: 'acceptance',
     title: '1. Acceptance of Terms',
     content: [
-      `These Terms of Use ("Terms") are a legal agreement between you and ScanFrameNG ("ScanFrame", "we", "us") governing your access to and use of the website at ${SITE}, the ScanFrameNG dashboard, QR frame management tools, and all related services (collectively, the "Service").`,
+      `These Terms of Use ("Terms") are a legal agreement between you and ScanMyFrame ("ScanFrame", "we", "us") governing your access to and use of the website at ${SITE}, the ScanMyFrame dashboard, QR frame management tools, and all related services (collectively, the "Service").`,
       'By creating an account or using the Service in any way, you confirm that you have read, understood, and agree to be bound by these Terms and our Privacy Policy. If you do not agree, you must not use the Service.',
       'We may update these Terms from time to time. Continued use after the effective date of any changes constitutes acceptance of the revised Terms.',
     ],
@@ -66,7 +66,7 @@ const SECTIONS = [
     id: 'qr-frames',
     title: '5. QR Codes and Frames',
     content: [
-      'ScanFrameNG generates unique QR codes that link to digital content pages ("frame pages") you create on the platform.',
+      'ScanMyFrame generates unique QR codes that link to digital content pages ("frame pages") you create on the platform.',
       'You are solely responsible for the accuracy, legality, and appropriateness of any content you attach to a frame, including artwork stories, descriptions, images, and videos.',
       'QR codes remain active as long as your account and subscription are in good standing. If your subscription lapses or your account is terminated, your frame pages and QR codes may become inaccessible. We will provide reasonable notice before deactivation.',
       'We reserve the right to remove any frame page that violates these Terms or is reported as infringing.',
@@ -76,8 +76,8 @@ const SECTIONS = [
     id: 'ip',
     title: '6. Intellectual Property',
     content: [
-      'Your content remains yours. By uploading content to ScanFrameNG, you grant us a non-exclusive, royalty-free, worldwide licence to host, display, and deliver that content solely for the purpose of operating the Service.',
-      'ScanFrameNG and its logo, design, code, and branding are the intellectual property of ScanFrameNG. You may not use them without our prior written consent.',
+      'Your content remains yours. By uploading content to ScanMyFrame, you grant us a non-exclusive, royalty-free, worldwide licence to host, display, and deliver that content solely for the purpose of operating the Service.',
+      'ScanMyFrame and its logo, design, code, and branding are the intellectual property of ScanMyFrame. You may not use them without our prior written consent.',
       'If you believe any content on the platform infringes your copyright, please send a takedown notice to ' + CONTACT_EMAIL + ' with full details of the infringement.',
     ],
   },
@@ -106,7 +106,7 @@ const SECTIONS = [
     id: 'liability',
     title: '9. Limitation of Liability',
     content: [
-      'To the fullest extent permitted by applicable law, ScanFrameNG and its directors, employees, and partners shall not be liable for any indirect, incidental, consequential, or punitive damages arising from your use of or inability to use the Service.',
+      'To the fullest extent permitted by applicable law, ScanMyFrame and its directors, employees, and partners shall not be liable for any indirect, incidental, consequential, or punitive damages arising from your use of or inability to use the Service.',
       'Our total aggregate liability to you for any claims arising from these Terms or the Service shall not exceed the amount you paid to us in the 3 months preceding the claim.',
       'Some jurisdictions do not allow the exclusion of certain warranties or limitation of liability, so the above limitations may not apply to you.',
     ],
@@ -135,7 +135,7 @@ const SECTIONS = [
     content: [
       'If any provision of these Terms is found to be invalid or unenforceable, the remaining provisions will continue in full force and effect.',
       'Our failure to enforce any right or provision of these Terms will not be considered a waiver of those rights.',
-      'These Terms, together with our Privacy Policy and Cookie Policy, constitute the entire agreement between you and ScanFrameNG regarding the Service.',
+      'These Terms, together with our Privacy Policy and Cookie Policy, constitute the entire agreement between you and ScanMyFrame regarding the Service.',
     ],
   },
   {
@@ -143,7 +143,7 @@ const SECTIONS = [
     title: '13. Contact',
     content: [
       `For questions about these Terms, please email us at: ${CONTACT_EMAIL}`,
-      'ScanFrameNG, Lagos, Nigeria.',
+      'ScanMyFrame, Lagos, Nigeria.',
     ],
   },
 ];
@@ -205,7 +205,7 @@ export default function TermsOfUse() {
     <main className={`${bg} min-h-screen transition-colors duration-200`}>
       <SEO
         title="Terms of Use | ScanFrame"
-        description="Read ScanFrameNG's Terms of Use — the rules and guidelines governing your use of the platform, QR frame tools, and subscription services."
+        description="Read ScanMyFrame's Terms of Use — the rules and guidelines governing your use of the platform, QR frame tools, and subscription services."
         url="/terms"
       />
       <Header />
@@ -223,7 +223,7 @@ export default function TermsOfUse() {
             Last updated: {LAST_UPDATED}
           </motion.p>
           <motion.p {...fadeUp(0.25)} className={`mt-4 text-sm leading-relaxed max-w-xl mx-auto ${text}`}>
-            Please read these terms carefully before using ScanFrameNG. They explain your rights,
+            Please read these terms carefully before using ScanMyFrame. They explain your rights,
             your responsibilities, and how we work together.
           </motion.p>
         </div>

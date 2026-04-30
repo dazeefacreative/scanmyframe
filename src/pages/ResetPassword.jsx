@@ -92,7 +92,7 @@ export default function ResetPassword() {
               user_id:          session.user.id,
               type:             'success',
               message:          'Your password was successfully reset.',
-              full_description: 'Your ScanFrameNG account password was changed just now. If you did not initiate this change, contact support immediately and request another password reset from a secure device.',
+              full_description: 'Your ScanMyFrame account password was changed just now. If you did not initiate this change, contact support immediately and request another password reset from a secure device.',
               is_read:          false,
             });
           }
@@ -134,7 +134,7 @@ export default function ResetPassword() {
 
         <footer className="w-full bg-primary position absolute bottom-0 left-0">
           <div className="m-0 flex flex-row justify-center items-center gap-2 text-secondary text-[12px] py-5">
-            <p>2025 © All Right Reserved. ScanFrameNG</p>
+            <p>2025 © All Right Reserved. ScanMyFrame</p>
             <div className="h-5 w-[1px] bg-secondary"></div>
             <p>Privacy</p>
             <div className="h-5 w-[1px] bg-secondary"></div>

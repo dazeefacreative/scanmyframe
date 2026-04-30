@@ -232,6 +232,7 @@ export const getFrameBySlug = async (frameSlug) => {
         size,
         frame_features,
         is_password_protected,
+        comments_enabled,
         created_at,
         users (
           full_name,
@@ -295,17 +296,24 @@ export const consumeQRCode = async (userId) => {
     // 1. Fetch current subscription row
     const { data: sub, error: fetchErr } = await supabase
       .from('subscriptions')
-      .select('id, qr_allocated, qr_used, status')
+      .select('id, qr_allocated, qr_used, status, current_period_end')
       .eq('user_id', userId)
       .single();
 
     if (fetchErr) return { success: false, error: fetchErr.message };
     if (!sub)     return { success: false, error: 'No subscription found.' };
 
-    const { qr_allocated, qr_used } = sub;
+    const { qr_allocated, qr_used, status, current_period_end } = sub;
     const isUnlimited = qr_allocated === -1;
 
-    // 2. Guard: check quota
+    // 2. Guard: block if billing period has expired, regardless of status field
+    const now = new Date();
+    const periodExpired = current_period_end && new Date(current_period_end) < now;
+    if (periodExpired || !['active', 'cancelled', 'trial'].includes(status)) {
+      return { success: false, error: 'Your subscription has ended. Please renew your plan to create QR codes.' };
+    }
+
+    // 3. Guard: check quota
     if (!isUnlimited && qr_used >= qr_allocated) {
       return { success: false, error: 'QR code limit reached. Please upgrade your plan.' };
     }
@@ -495,7 +503,7 @@ export const getFrameComments = async (frameId) => {
  * @param {string} frameId - Frame ID
  * @returns {object} - Error (if any)
  */
-export const recordQRScan = async (frameId) => {
+export const recordQRScan = async (frameId, visitorId) => {
   try {
     const res = await fetch(
       `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/record-scan`,
@@ -505,7 +513,7 @@ export const recordQRScan = async (frameId) => {
           'Content-Type': 'application/json',
           'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
         },
-        body: JSON.stringify({ frameId }),
+        body: JSON.stringify({ frameId, visitorId: visitorId || null }),
       }
     );
     const data = await res.json();
@@ -591,6 +599,43 @@ export const getBlogPosts = async () => {
       .order('published_at', { ascending: false });
     if (error) throw error;
     return { posts: data || [], error: null };
+  } catch (error) {
+    return { posts: [], error: error.message };
+  }
+};
+
+/** Get related published posts by shared tags, excluding the current post */
+export const getRelatedPosts = async (currentId, tags = [], limit = 3) => {
+  try {
+    if (!tags.length) {
+      // No tags — fall back to latest posts
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('id, title, slug, excerpt, cover_image, tags, author, published_at, created_at')
+        .eq('status', 'published')
+        .neq('id', currentId)
+        .order('published_at', { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return { posts: data || [], error: null };
+    }
+
+    // Fetch all published posts except the current one
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .select('id, title, slug, excerpt, cover_image, tags, author, published_at, created_at')
+      .eq('status', 'published')
+      .neq('id', currentId)
+      .order('published_at', { ascending: false });
+    if (error) throw error;
+
+    // Rank by number of shared tags, take top `limit`
+    const scored = (data || []).map(p => ({
+      ...p,
+      _score: (p.tags || []).filter(t => tags.includes(t)).length,
+    }));
+    scored.sort((a, b) => b._score - a._score || 0);
+    return { posts: scored.slice(0, limit), error: null };
   } catch (error) {
     return { posts: [], error: error.message };
   }
@@ -843,13 +888,14 @@ export const adminPushNotification = async ({ audience, type, message, full_desc
  * Send a login-alert email via Resend (uses admin-data edge function).
  * Fire-and-forget safe — never throws.
  */
-export const sendLoginAlertEmail = async ({ toEmail, userName, ip }) => {
+export const sendLoginAlertEmail = async ({ toEmail, userName, deviceInfo, ip }) => {
   try {
     await adminDataFetch({
-      resource: 'send_alert_email',
-      to_email: toEmail,
-      subject:  'New login detected on your ScanFrame account',
-      name:     userName,
+      resource:    'send_alert_email',
+      to_email:    toEmail,
+      subject:     'New login detected on your ScanMyFrame account',
+      name:        userName,
+      device_info: deviceInfo,
       ip,
     });
   } catch (_) {
@@ -869,7 +915,7 @@ export const sendWelcomeNotification = async ({ userId, toEmail, userName }) => 
     await supabase.from('notification').insert({
       user_id:          userId,
       type:             'info',
-      message:          'Welcome to ScanFrameNG!',
+      message:          'Welcome to ScanMyFrame!',
       full_description: `Hi ${displayName}, your account is all set. You have 10 free QR codes ready to use. Create your first frame, generate a QR code, and let your work speak for itself. We are excited to have you.`,
       is_read:          false,
     });

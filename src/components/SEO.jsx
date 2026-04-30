@@ -1,8 +1,8 @@
 import { Helmet } from 'react-helmet-async';
 
-const SITE_NAME  = 'ScanFrameNG';
-const SITE_URL   = 'https://scanframe.ng'; // update to your real domain
-const DEFAULT_DESC = 'ScanFrameNG connects physical picture frames to rich digital content via QR codes. Empower your frames with stories, photos, videos, and more.';
+const SITE_NAME  = 'ScanMyFrame';
+const SITE_URL   = 'https://scanframe.dazeefa.com'; // update to your real domain
+const DEFAULT_DESC = 'ScanMyFrame connects physical picture frames to rich digital content via QR codes. Empower your frames with stories, photos, videos, and more.';
 const DEFAULT_IMG  = `${SITE_URL}/og-default.png`; // place a 1200×630 image in /public
 
 export default function SEO({
@@ -99,7 +99,7 @@ export function BlogListSchema() {
     '@context': 'https://schema.org',
     '@type': 'Blog',
     name: `${SITE_NAME} Blog`,
-    description: 'Guides, tips, and updates for frame vendors using ScanFrameNG.',
+    description: 'Guides, tips, and updates for frame vendors using ScanMyFrame.',
     url: `${SITE_URL}/blog`,
     publisher: {
       '@type': 'Organization',

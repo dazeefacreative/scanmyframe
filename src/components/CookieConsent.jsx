@@ -42,7 +42,7 @@ const CATEGORIES = [
     required: false,
     icon: '📊',
     description:
-      'Analytics cookies help us understand how visitors interact with ScanFrameNG — which pages are popular, where users drop off, and how they navigate the platform. This data is aggregated and anonymous. Enabling this helps us improve the product for everyone.',
+      'Analytics cookies help us understand how visitors interact with ScanMyFrame — which pages are popular, where users drop off, and how they navigate the platform. This data is aggregated and anonymous. Enabling this helps us improve the product for everyone.',
     examples: 'Page views, session duration, traffic sources.',
   },
   {
@@ -51,7 +51,7 @@ const CATEGORIES = [
     required: false,
     icon: '📣',
     description:
-      'Marketing cookies allow us (and our partners) to show you relevant ads and content based on your interests, both on ScanFrameNG and on other sites. They also help us measure the effectiveness of our campaigns. Disabling these will not stop ads — you may just see less relevant ones.',
+      'Marketing cookies allow us (and our partners) to show you relevant ads and content based on your interests, both on ScanMyFrame and on other sites. They also help us measure the effectiveness of our campaigns. Disabling these will not stop ads — you may just see less relevant ones.',
     examples: 'Ad targeting, retargeting pixels, campaign attribution.',
   },
 ];
@@ -221,7 +221,7 @@ export default function CookieConsent() {
               {/* Categories */}
               <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px' }}>
                 <p style={{ fontSize: 13, color: sub, lineHeight: 1.6, margin: '0 0 16px' }}>
-                  We use cookies to improve your experience on ScanFrameNG, personalise content,
+                  We use cookies to improve your experience on ScanMyFrame, personalise content,
                   and analyse traffic. You can choose which categories to allow below. Your
                   choices are saved for 12 months.{' '}
                   <a href="/privacy" style={{ color: '#D4AF37', textDecoration: 'none' }}>
@@ -411,7 +411,7 @@ export default function CookieConsent() {
                   We use cookies
                 </p>
                 <p style={{ margin: 0, fontSize: 12.5, color: sub, lineHeight: 1.6 }}>
-                  ScanFrameNG uses essential cookies to keep you logged in and your work saved.
+                  ScanMyFrame uses essential cookies to keep you logged in and your work saved.
                   With your consent, we also use analytics and marketing cookies to improve the
                   platform.{' '}
                   <a href="/privacy" style={{ color: '#D4AF37', textDecoration: 'none' }}>
