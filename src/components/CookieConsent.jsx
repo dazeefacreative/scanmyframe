@@ -411,7 +411,7 @@ export default function CookieConsent() {
                   We use cookies
                 </p>
                 <p style={{ margin: 0, fontSize: 12.5, color: sub, lineHeight: 1.6 }}>
-                  ScanMyFrame uses essential cookies to keep you logged in and your work saved.
+                  ScanMyFrame uses essential cookies to ensure the site works correctly.
                   With your consent, we also use analytics and marketing cookies to improve the
                   platform.{' '}
                   <a href="/privacy" style={{ color: '#D4AF37', textDecoration: 'none' }}>
