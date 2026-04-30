@@ -466,6 +466,10 @@ export default function BillingTab() {
               </motion.p>
             )}
           </AnimatePresence>
+
+          <p className={`text-center text-xs mt-4 ${muted}`}>
+            Powered by Paystack · pay your way
+          </p>
         </div>
       )}
 

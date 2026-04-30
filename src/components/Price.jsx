@@ -219,6 +219,10 @@ export default function Price() {
           </motion.div>
         ))}
       </div>
+
+      <p className={`text-center text-xs mt-6 ${isDark ? 'text-neutral-500' : 'text-neutral-400'}`}>
+        Powered by Paystack · pay your way
+      </p>
     </div>
   );
 }
