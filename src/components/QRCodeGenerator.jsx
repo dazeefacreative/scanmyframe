@@ -576,9 +576,12 @@ export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }
           )}
           {emailStatus === 'sent' && (
             <motion.div key="sent" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-              className="flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 mb-4">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0"><path d="M5 13l4 4L19 7"/></svg>
-              QR code sent to your inbox. Check your email!
+              className="flex flex-col gap-0.5 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 mb-4">
+              <div className="flex items-center gap-2">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0"><path d="M5 13l4 4L19 7"/></svg>
+                QR code sent to your inbox.
+              </div>
+              <span className="text-emerald-600 pl-5">Not seeing it? Check your spam folder and mark us as safe.</span>
             </motion.div>
           )}
           {emailStatus === 'skipped' && (

@@ -282,7 +282,7 @@ function PostModal({ post, onClose, onSaved }) {
             </div>
 
             {/* Author + Status in a row */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelCls}>Author</label>
                 <input className={inputCls} value={form.author}
@@ -422,66 +422,112 @@ function PostsTab() {
       ) : posts.length === 0 ? (
         <p className="text-[#555] text-sm text-center py-16">No posts yet. Create your first one.</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-white/8">
-          <table className="w-full min-w-[600px]">
-            <thead className="border-b border-white/8">
-              <tr>
-                <th className={th}>Title</th>
-                <th className={th}>Status</th>
-                <th className={th}>Tags</th>
-                <th className={th}>Published</th>
-                <th className={th}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {posts.map((p, i) => (
-                <tr key={p.id} className={`border-b border-white/5 ${i % 2 === 0 ? 'bg-white/[0.02]' : ''}`}>
-                  <td className={td}>
-                    <div className="flex items-center gap-2">
-                      {p.is_pinned && (
-                        <span title="Pinned to homepage" className="text-[#D4AF37] text-xs">📌</span>
-                      )}
-                      <div>
-                        <div className="font-semibold text-white line-clamp-1">{p.title}</div>
-                        <div className="text-[11px] text-[#555] mt-0.5">/blog/{p.slug}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className={td}>
-                    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full
-                      ${p.status === 'published' ? 'bg-green-500/15 text-green-400' : 'bg-yellow-500/15 text-yellow-400'}`}>
-                      {p.status}
-                    </span>
-                  </td>
-                  <td className={td}>
-                    <div className="flex flex-wrap gap-1">
-                      {(p.tags || []).slice(0, 3).map(t => (
-                        <span key={t} className="text-[10px] bg-white/5 text-[#888] px-1.5 py-0.5 rounded">{t}</span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className={`${td} whitespace-nowrap`}>{fmtDate(p.published_at)}</td>
-                  <td className={td}>
-                    <div className="flex items-center gap-2 justify-end">
-                      <button
-                        onClick={() => togglePin(p)}
-                        title={p.is_pinned ? 'Remove from homepage' : 'Pin to homepage'}
-                        className={`text-xs font-medium transition-opacity hover:opacity-70 ${p.is_pinned ? 'text-[#D4AF37]' : 'text-[#555]'}`}>
-                        {p.is_pinned ? '📌 Pinned' : '📌 Pin'}
-                      </button>
-                      <button onClick={() => setModal(p)}
-                        className="text-[#D4AF37] text-xs hover:opacity-70 transition-opacity font-medium">Edit</button>
-                      <button onClick={() => doDelete(p.id)} disabled={deleting === p.id}
-                        className="text-red-400 text-xs hover:opacity-70 transition-opacity font-medium disabled:opacity-40">
-                        {deleting === p.id ? '…' : 'Delete'}
-                      </button>
-                    </div>
-                  </td>
+        <>
+          {/* Desktop table */}
+          <div className="hidden sm:block overflow-x-auto rounded-xl border border-white/8">
+            <table className="w-full min-w-[600px]">
+              <thead className="border-b border-white/8">
+                <tr>
+                  <th className={th}>Title</th>
+                  <th className={th}>Status</th>
+                  <th className={th}>Tags</th>
+                  <th className={th}>Published</th>
+                  <th className={th}></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {posts.map((p, i) => (
+                  <tr key={p.id} className={`border-b border-white/5 ${i % 2 === 0 ? 'bg-white/[0.02]' : ''}`}>
+                    <td className={td}>
+                      <div className="flex items-center gap-2">
+                        {p.is_pinned && (
+                          <span title="Pinned to homepage" className="text-[#D4AF37] text-xs">📌</span>
+                        )}
+                        <div>
+                          <div className="font-semibold text-white line-clamp-1">{p.title}</div>
+                          <div className="text-[11px] text-[#555] mt-0.5">/blog/{p.slug}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className={td}>
+                      <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full
+                        ${p.status === 'published' ? 'bg-green-500/15 text-green-400' : 'bg-yellow-500/15 text-yellow-400'}`}>
+                        {p.status}
+                      </span>
+                    </td>
+                    <td className={td}>
+                      <div className="flex flex-wrap gap-1">
+                        {(p.tags || []).slice(0, 3).map(t => (
+                          <span key={t} className="text-[10px] bg-white/5 text-[#888] px-1.5 py-0.5 rounded">{t}</span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className={`${td} whitespace-nowrap`}>{fmtDate(p.published_at)}</td>
+                    <td className={td}>
+                      <div className="flex items-center gap-2 justify-end">
+                        <button
+                          onClick={() => togglePin(p)}
+                          title={p.is_pinned ? 'Remove from homepage' : 'Pin to homepage'}
+                          className={`text-xs font-medium transition-opacity hover:opacity-70 ${p.is_pinned ? 'text-[#D4AF37]' : 'text-[#555]'}`}>
+                          {p.is_pinned ? '📌 Pinned' : '📌 Pin'}
+                        </button>
+                        <button onClick={() => setModal(p)}
+                          className="text-[#D4AF37] text-xs hover:opacity-70 transition-opacity font-medium">Edit</button>
+                        <button onClick={() => doDelete(p.id)} disabled={deleting === p.id}
+                          className="text-red-400 text-xs hover:opacity-70 transition-opacity font-medium disabled:opacity-40">
+                          {deleting === p.id ? '…' : 'Delete'}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="sm:hidden flex flex-col divide-y divide-white/5 rounded-xl border border-white/8 overflow-hidden">
+            {posts.map((p, i) => (
+              <div key={p.id} className={`p-4 ${i % 2 === 0 ? 'bg-white/[0.02]' : ''}`}>
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      {p.is_pinned && <span className="text-[#D4AF37] text-xs">📌</span>}
+                      <div className="font-semibold text-white text-sm truncate">{p.title}</div>
+                    </div>
+                    <div className="text-[11px] text-[#555]">/blog/{p.slug}</div>
+                  </div>
+                  <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full shrink-0
+                    ${p.status === 'published' ? 'bg-green-500/15 text-green-400' : 'bg-yellow-500/15 text-yellow-400'}`}>
+                    {p.status}
+                  </span>
+                </div>
+                {(p.tags || []).length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {(p.tags || []).slice(0, 3).map(t => (
+                      <span key={t} className="text-[10px] bg-white/5 text-[#888] px-1.5 py-0.5 rounded">{t}</span>
+                    ))}
+                  </div>
+                )}
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-[11px] text-[#555]">{fmtDate(p.published_at)}</span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => togglePin(p)}
+                      className={`text-xs font-medium transition-opacity hover:opacity-70 ${p.is_pinned ? 'text-[#D4AF37]' : 'text-[#555]'}`}>
+                      {p.is_pinned ? '📌 Pinned' : '📌 Pin'}
+                    </button>
+                    <button onClick={() => setModal(p)} className="text-[#D4AF37] text-xs hover:opacity-70 font-medium">Edit</button>
+                    <button onClick={() => doDelete(p.id)} disabled={deleting === p.id}
+                      className="text-red-400 text-xs hover:opacity-70 font-medium disabled:opacity-40">
+                      {deleting === p.id ? '…' : 'Delete'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {modal !== null && (
@@ -516,7 +562,7 @@ function UsersTab() {
 
   const th = 'text-left text-[10px] font-bold uppercase tracking-widest text-[#555] pb-3 px-3';
   const td = 'px-3 py-3 text-sm text-[#ccc] align-middle';
-  const searchInp = 'bg-[#111] border border-white/10 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#D4AF37]/40 placeholder:text-[#444] w-64';
+  const searchInp = 'bg-[#111] border border-white/10 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#D4AF37]/40 placeholder:text-[#444] w-full sm:w-64';
 
   return (
     <div>
@@ -524,7 +570,7 @@ function UsersTab() {
         <h2 className="text-white font-bold text-lg">
           Users <span className="text-[#555] font-normal text-base ml-1">({filtered.length}{q ? ` of ${users.length}` : ''})</span>
         </h2>
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 opacity-30" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
           </svg>
@@ -550,54 +596,101 @@ function UsersTab() {
       ) : filtered.length === 0 ? (
         <p className="text-[#555] text-sm text-center py-16">{q ? `No users matching "${query}"` : 'No users found.'}</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-white/8">
-          <table className="w-full min-w-[700px]">
-            <thead className="border-b border-white/8">
-              <tr>
-                <th className={th}>Name / Email</th>
-                <th className={th}>Plan</th>
-                <th className={th}>QR Used / Allocated</th>
-                <th className={th}>Sub Status</th>
-                <th className={th}>Renews</th>
-                <th className={th}>Joined</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((u, i) => {
-                const sub = (Array.isArray(u.subscriptions) ? u.subscriptions[0] : u.subscriptions) || {};
-                return (
-                  <tr key={u.id} className={`border-b border-white/5 ${i % 2 === 0 ? 'bg-white/[0.02]' : ''}`}>
-                    <td className={td}>
-                      <div className="font-semibold text-white">{u.business_name || u.full_name || '—'}</div>
-                      <div className="text-[11px] text-[#555]">{u.email || u.full_name}</div>
-                    </td>
-                    <td className={td}>
-                      <div className="text-[11px] font-bold text-[#D4AF37]">{sub.plan_id || '—'}</div>
-                      {sub.billing_cycle && (
-                        <div className="text-[10px] text-[#555] capitalize">{sub.billing_cycle}</div>
-                      )}
-                    </td>
-                    <td className={td}>
-                      {sub.qr_used != null
-                        ? `${sub.qr_used} / ${sub.qr_allocated === -1 ? '∞' : sub.qr_allocated}`
-                        : '—'}
-                    </td>
-                    <td className={td}>
-                      {sub.status
-                        ? <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full
-                            ${sub.status === 'active' ? 'bg-green-500/15 text-green-400' : 'bg-red-500/15 text-red-400'}`}>
-                            {sub.status}
-                          </span>
-                        : '—'}
-                    </td>
-                    <td className={`${td} whitespace-nowrap`}>{fmtDate(sub.current_period_end)}</td>
-                    <td className={`${td} whitespace-nowrap`}>{fmtDate(u.created_at)}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <>
+          {/* Desktop table */}
+          <div className="hidden sm:block overflow-x-auto rounded-xl border border-white/8">
+            <table className="w-full min-w-[700px]">
+              <thead className="border-b border-white/8">
+                <tr>
+                  <th className={th}>Name / Email</th>
+                  <th className={th}>Plan</th>
+                  <th className={th}>QR Used / Allocated</th>
+                  <th className={th}>Sub Status</th>
+                  <th className={th}>Renews</th>
+                  <th className={th}>Joined</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((u, i) => {
+                  const sub = (Array.isArray(u.subscriptions) ? u.subscriptions[0] : u.subscriptions) || {};
+                  return (
+                    <tr key={u.id} className={`border-b border-white/5 ${i % 2 === 0 ? 'bg-white/[0.02]' : ''}`}>
+                      <td className={td}>
+                        <div className="font-semibold text-white">{u.business_name || u.full_name || '—'}</div>
+                        <div className="text-[11px] text-[#555]">{u.email || u.full_name}</div>
+                      </td>
+                      <td className={td}>
+                        <div className="text-[11px] font-bold text-[#D4AF37]">{sub.plan_id || '—'}</div>
+                        {sub.billing_cycle && (
+                          <div className="text-[10px] text-[#555] capitalize">{sub.billing_cycle}</div>
+                        )}
+                      </td>
+                      <td className={td}>
+                        {sub.qr_used != null
+                          ? `${sub.qr_used} / ${sub.qr_allocated === -1 ? '∞' : sub.qr_allocated}`
+                          : '—'}
+                      </td>
+                      <td className={td}>
+                        {sub.status
+                          ? <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full
+                              ${sub.status === 'active' ? 'bg-green-500/15 text-green-400' : 'bg-red-500/15 text-red-400'}`}>
+                              {sub.status}
+                            </span>
+                          : '—'}
+                      </td>
+                      <td className={`${td} whitespace-nowrap`}>{fmtDate(sub.current_period_end)}</td>
+                      <td className={`${td} whitespace-nowrap`}>{fmtDate(u.created_at)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="sm:hidden flex flex-col divide-y divide-white/5 rounded-xl border border-white/8 overflow-hidden">
+            {filtered.map((u, i) => {
+              const sub = (Array.isArray(u.subscriptions) ? u.subscriptions[0] : u.subscriptions) || {};
+              return (
+                <div key={u.id} className={`p-4 ${i % 2 === 0 ? 'bg-white/[0.02]' : ''}`}>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="min-w-0">
+                      <div className="font-semibold text-white text-sm truncate">{u.business_name || u.full_name || '—'}</div>
+                      <div className="text-[11px] text-[#555] truncate">{u.email}</div>
+                    </div>
+                    {sub.status && (
+                      <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full shrink-0
+                        ${sub.status === 'active' ? 'bg-green-500/15 text-green-400' : 'bg-red-500/15 text-red-400'}`}>
+                        {sub.status}
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
+                    <div>
+                      <span className="text-[#555]">Plan: </span>
+                      <span className="text-[#D4AF37] font-bold">{sub.plan_id || '—'}</span>
+                      {sub.billing_cycle && <span className="text-[#555] capitalize"> · {sub.billing_cycle}</span>}
+                    </div>
+                    <div>
+                      <span className="text-[#555]">QR: </span>
+                      <span className="text-[#ccc]">
+                        {sub.qr_used != null ? `${sub.qr_used} / ${sub.qr_allocated === -1 ? '∞' : sub.qr_allocated}` : '—'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[#555]">Renews: </span>
+                      <span className="text-[#ccc]">{fmtDate(sub.current_period_end)}</span>
+                    </div>
+                    <div>
+                      <span className="text-[#555]">Joined: </span>
+                      <span className="text-[#ccc]">{fmtDate(u.created_at)}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );
@@ -621,7 +714,7 @@ function NewsletterTab() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h2 className="text-white font-bold text-lg">
           Newsletter <span className="text-[#555] font-normal text-base ml-1">({subs.length})</span>
         </h2>
@@ -638,26 +731,42 @@ function NewsletterTab() {
       ) : subs.length === 0 ? (
         <p className="text-[#555] text-sm text-center py-16">No subscribers yet.</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-white/8">
-          <table className="w-full min-w-[400px]">
-            <thead className="border-b border-white/8">
-              <tr>
-                <th className={th}>#</th>
-                <th className={th}>Email</th>
-                <th className={th}>Subscribed</th>
-              </tr>
-            </thead>
-            <tbody>
-              {subs.map((s, i) => (
-                <tr key={s.id || i} className={`border-b border-white/5 ${i % 2 === 0 ? 'bg-white/[0.02]' : ''}`}>
-                  <td className={`${td} text-[#555]`}>{i + 1}</td>
-                  <td className={td}>{s.email}</td>
-                  <td className={`${td} whitespace-nowrap`}>{fmtDate(s.created_at)}</td>
+        <>
+          {/* Desktop table */}
+          <div className="hidden sm:block overflow-x-auto rounded-xl border border-white/8">
+            <table className="w-full min-w-[400px]">
+              <thead className="border-b border-white/8">
+                <tr>
+                  <th className={th}>#</th>
+                  <th className={th}>Email</th>
+                  <th className={th}>Subscribed</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {subs.map((s, i) => (
+                  <tr key={s.id || i} className={`border-b border-white/5 ${i % 2 === 0 ? 'bg-white/[0.02]' : ''}`}>
+                    <td className={`${td} text-[#555]`}>{i + 1}</td>
+                    <td className={td}>{s.email}</td>
+                    <td className={`${td} whitespace-nowrap`}>{fmtDate(s.created_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="sm:hidden flex flex-col divide-y divide-white/5 rounded-xl border border-white/8 overflow-hidden">
+            {subs.map((s, i) => (
+              <div key={s.id || i} className={`px-4 py-3 flex items-center justify-between gap-3 ${i % 2 === 0 ? 'bg-white/[0.02]' : ''}`}>
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="text-[#555] text-[11px] shrink-0">#{i + 1}</span>
+                  <span className="text-sm text-[#ccc] truncate">{s.email}</span>
+                </div>
+                <span className="text-[11px] text-[#555] whitespace-nowrap shrink-0">{fmtDate(s.created_at)}</span>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
@@ -708,7 +817,7 @@ function NotificationsTab() {
 
   return (
     <div className="max-w-2xl">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-6">
         <h2 className="text-white font-bold text-lg">Push Notification</h2>
         <span className="text-[#555] text-xs">Sends to all matched users simultaneously</span>
       </div>
@@ -814,29 +923,29 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
       {/* Top bar */}
-      <header className="border-b border-white/8 px-6 py-4 flex items-center justify-between max-w-7xl mx-auto">
-        <div className="flex items-center gap-6">
+      <header className="border-b border-white/8 max-w-7xl mx-auto">
+        <div className="px-4 sm:px-6 py-4 flex items-center justify-between">
           <span className="text-white font-bold text-lg tracking-tight">ScanMyFrame Admin</span>
-          <nav className="flex items-center gap-1">
-            {tabs.map(t => (
-              <button key={t.id} onClick={() => setTab(t.id)}
-                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors
-                  ${tab === t.id ? 'bg-white/10 text-white' : 'text-[#666] hover:text-white'}`}>
-                {t.label}
-              </button>
-            ))}
-          </nav>
+          <button
+            onClick={() => { sessionStorage.removeItem('sf_admin'); setAuthed(false); }}
+            className="text-[#555] border border-[#555] rounded-md px-3 py-1 hover:text-white hover:border-white text-xs transition-colors"
+          >
+            Sign out
+          </button>
         </div>
-        <button
-          onClick={() => { sessionStorage.removeItem('sf_admin'); setAuthed(false); }}
-          className="text-[#555] border border-[#555] rounded-md px-4 py-1 hover:text-white hover:border-white text-xs transition-colors"
-        >
-          Sign out
-        </button>
+        <nav className="flex items-center gap-1 px-4 sm:px-6 pb-2 overflow-x-auto">
+          {tabs.map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)}
+              className={`px-3 sm:px-4 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap
+                ${tab === t.id ? 'bg-white/10 text-white' : 'text-[#666] hover:text-white'}`}>
+              {t.label}
+            </button>
+          ))}
+        </nav>
       </header>
 
       {/* Content */}
-      <main className="max-w-7xl mx-auto px-6 py-10">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
         {tab === 'posts'         && <PostsTab />}
         {tab === 'users'         && <UsersTab />}
         {tab === 'newsletter'    && <NewsletterTab />}

@@ -1608,6 +1608,7 @@ function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccou
             <p style={{ fontSize: 13, fontWeight: 600, color: t.textPrimary(isDark), marginBottom: 3 }}>Email QR code on creation</p>
             <p style={{ fontSize: 12, color: t.textSub(isDark), lineHeight: 1.6 }}>
               Every time you generate a new QR frame, we'll send the branded QR code image directly to your inbox so you always have a copy.
+              {emailQR && <span style={{ display: 'block', marginTop: 4 }}>If you don't see it, check your spam folder and mark us as safe.</span>}
               {!emailQR && <span style={{ display: 'block', marginTop: 4, color: '#D4AF37', fontWeight: 600 }}>Currently off — QR codes won't be emailed.</span>}
             </p>
           </div>

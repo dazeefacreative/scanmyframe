@@ -474,6 +474,10 @@ function StepComplete({ planName, onDashboard, onCreateFrame, onSkip, isDark }) 
         ))}
       </div>
 
+      <p className={`text-xs mb-6 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+        We sent a welcome email to your inbox. If you don't see it, check your spam folder and mark it as safe.
+      </p>
+
       <div className="flex gap-3 justify-center">
         <button
           onClick={onDashboard}

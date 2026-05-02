@@ -18,7 +18,6 @@ function loginAlertHtml(name: string, ip: string, deviceInfo?: string): string {
 <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;background:#0a0a0a;"><tr><td align="center">
 <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#111111;border-radius:20px;overflow:hidden;border:1px solid #222;">
   <tr><td style="background:#0F4C3A;padding:28px 40px;text-align:center;">
-    <img src="https://scanmyframe.com/logo.png" alt="ScanMyFrame" width="48" height="48" style="display:block;margin:0 auto 12px;border:0;" />
     <h1 style="margin:0;font-size:24px;font-weight:700;color:#D4AF37;font-family:Georgia,serif;letter-spacing:0.04em;">SCANMYFRAME</h1>
     <p style="margin:4px 0 0;font-size:11px;color:#FAF5DD;letter-spacing:0.12em;text-transform:uppercase;">Smart QR Frames</p>
   </td></tr>
@@ -176,7 +175,6 @@ Deno.serve(async (req: Request) => {
 <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;background:#0a0a0a;"><tr><td align="center">
 <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#111111;border-radius:20px;overflow:hidden;border:1px solid #222;">
   <tr><td style="background:#0F4C3A;padding:28px 40px;text-align:center;">
-    <img src="https://scanmyframe.com/logo.png" alt="ScanMyFrame" width="48" height="48" style="display:block;margin:0 auto 12px;border:0;" />
     <h1 style="margin:0;font-size:24px;font-weight:700;color:#D4AF37;font-family:Georgia,serif;letter-spacing:0.04em;">SCANMYFRAME</h1>
     <p style="margin:4px 0 0;font-size:11px;color:#FAF5DD;letter-spacing:0.12em;text-transform:uppercase;">Smart QR Frames</p>
   </td></tr>
