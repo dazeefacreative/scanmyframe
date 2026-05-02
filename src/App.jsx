@@ -19,6 +19,8 @@ import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Admin from "./pages/Admin";
 import About from "./pages/About";
+import NotFound from "./pages/NotFound";
+import Contact from "./pages/Contact";
 
 import SigninFooter from "./components/SigninFooter";
 import Pricing from "./pages/Pricing";
@@ -53,6 +55,9 @@ function App() {
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
 
+          {/* Support */}
+          <Route path="/contact" element={<Contact />} />
+
           {/* Legal */}
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms"   element={<TermsOfUse />} />
@@ -75,6 +80,9 @@ function App() {
 
           {/* Onboarding — blocked if user has already completed it */}
           <Route path="/onboarding" element={<OnboardingRoute><OnboardingFlow /></OnboardingRoute>} />
+
+          {/* 404 */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
         {shortFooter && <SigninFooter />}
         <CookieConsent />

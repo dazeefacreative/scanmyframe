@@ -68,6 +68,8 @@ export default function Price() {
       features: [
         'Everything in Pro +',
         'Unlimited QR credits',
+        'Your logo and brand featured on every public frame page',
+        'Full white label experience, no ScanMyFrame branding',
         '8 extra images per frame',
         '50MB max video upload',
         'Featured on homepage',

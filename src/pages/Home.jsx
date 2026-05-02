@@ -726,7 +726,7 @@ export default function Home() {
       </section>
 
       {/* ── 11. FINAL CTA BLOCK ──────────────────────────────────────────── */}
-      <section className='py-12 md:py-20 px-4 bg-primary'>
+      <section className='py-12 md:py-20 px-4 bg-green-800'>
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}

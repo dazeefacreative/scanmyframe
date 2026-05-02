@@ -6,8 +6,8 @@ import Footer from '../components/Footer';
 import SEO from '../components/SEO';
 
 const LAST_UPDATED = 'April 25, 2026';
-const CONTACT_EMAIL = 'privacy@scanframe.ng';
-const SITE = 'https://scanframe.ng';
+const CONTACT_EMAIL = 'legal@scanmyframe.com';
+const SITE = 'https://scanmyframe.com';
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 24 },
@@ -21,7 +21,7 @@ const SECTIONS = [
     id: 'who-we-are',
     title: '1. Who We Are',
     content: [
-      `ScanMyFrame ("ScanFrame", "we", "us", or "our") is a platform that connects frame vendors with buyers by linking physical artwork frames to digital content through unique QR codes. We are registered in Nigeria and operate the website at ${SITE}.`,
+      `ScanMyFrame ("ScanMyFrame", "we", "us", or "our") is a platform that connects frame vendors with buyers by linking physical artwork frames to digital content through unique QR codes. We are registered in Nigeria and operate the website at ${SITE}.`,
       'This Privacy Policy describes how we collect, use, store, and share your personal data when you use our website, dashboard, or any related services (collectively, the "Service"). It is written in compliance with the Nigeria Data Protection Regulation (NDPR) 2019 and, where applicable, the EU General Data Protection Regulation (GDPR).',
     ],
   },
@@ -101,10 +101,10 @@ const SECTIONS = [
       'We share your data with trusted third parties only to the extent necessary to operate the Service:',
     ],
     bullets: [
-      'Supabase (Ireland / EU) — Database, authentication, and file storage. Supabase is GDPR-compliant.',
-      'Resend — Transactional email delivery (welcome emails, alerts). We share your email address and name only.',
-      'Payment Processor — For subscription billing. We share only what is required to complete a transaction.',
-      'Groq (AI provider) — Powers our in-app AI Guide. Messages you send to the AI are processed by Groq. Do not share sensitive personal information in chat.',
+      'Supabase (Ireland / EU) - Database, authentication, and file storage. Supabase is GDPR-compliant.',
+      'Resend - Transactional email delivery (welcome emails, alerts). We share your email address and name only.',
+      'Paystack - For subscription billing. We share only what is required to complete a transaction.',
+      'Groq (AI provider) - Powers our in-app AI Guide. Messages you send to the AI are processed by Groq. Do not share sensitive personal information in chat.',
     ],
     content2: [
       'We do not sell, rent, or trade your personal data to any third party for their own marketing purposes.',
@@ -176,12 +176,12 @@ export default function PrivacyPolicy() {
   const { isDark } = useTheme();
   const [activeSection, setActiveSection] = useState(null);
 
-  const bg      = isDark ? 'bg-black'       : 'bg-white';
-  const heading = isDark ? 'text-white'     : 'text-gray-900';
-  const text     = isDark ? 'text-gray-300' : 'text-gray-600';
-  const card     = isDark ? 'bg-[#111] border-white/10' : 'bg-white border-gray-200';
-  const divider  = isDark ? 'border-white/10' : 'border-gray-200';
-  const tag      = isDark ? 'bg-white/5 text-[#D4AF37] border border-white/10' : 'bg-[#0F4C3A]/5 text-[#0F4C3A] border border-[#0F4C3A]/20';
+  const bg      = isDark ? 'bg-[#0a0a0a]'   : 'bg-white';
+  const heading = isDark ? 'text-white'     : 'text-[#0F4C3A]';
+  const text    = isDark ? 'text-[#aaa]'    : 'text-[#4a7c6f]';
+  const card    = isDark ? 'bg-[#111] border-white/8' : 'bg-white border-[#0F4C3A]/10';
+  const divider = isDark ? 'border-white/8' : 'border-[#0F4C3A]/10';
+  const tag     = isDark ? 'bg-white/5 text-[#D4AF37] border border-white/10' : 'bg-[#0F4C3A]/5 text-[#0F4C3A] border border-[#0F4C3A]/20';
 
   function renderSection(sec) {
     return (
@@ -276,14 +276,14 @@ export default function PrivacyPolicy() {
   return (
     <main className={`${bg} min-h-screen transition-colors duration-200`}>
       <SEO
-        title="Privacy Policy | ScanFrame"
+        title="Privacy Policy | ScanMyFrame"
         description="Learn how ScanMyFrame collects, uses, and protects your personal data in compliance with the Nigeria Data Protection Regulation (NDPR)."
         url="/privacy"
       />
       <Header />
 
       {/* Hero */}
-      <section className={`pt-28 pb-14 px-4 ${isDark ? 'bg-gradient-to-b from-[#1C1C1C] to-black' : 'bg-white'}`}>
+      <section className={`pt-28 pb-14 px-4 ${isDark ? 'bg-gradient-to-b from-[#1a1a1a] to-[#0a0a0a]' : 'bg-white'}`}>
         <div className="max-w-3xl mx-auto text-center">
           <motion.span {...fadeUp(0)} className={`inline-block text-xs font-semibold tracking-widest uppercase px-5 py-2 rounded-full mb-6 ${tag}`}>
             Legal
@@ -302,7 +302,7 @@ export default function PrivacyPolicy() {
       </section>
 
       {/* Quick-expand tip */}
-      <section className={`py-10 px-4 ${isDark ? 'bg-[#0a0a0a]' : 'bg-gray-50'}`}>
+      <section className={`py-10 px-4 ${isDark ? 'bg-[#0a0a0a]' : 'bg-[#f5f5f0]'}`}>
         <div className="max-w-3xl mx-auto">
           <p className={`text-xs mb-6 ${text}`}>Click any section to expand it.</p>
           <div className="space-y-3">

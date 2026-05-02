@@ -1,7 +1,7 @@
 import { Helmet } from 'react-helmet-async';
 
 const SITE_NAME  = 'ScanMyFrame';
-const SITE_URL   = 'https://scanframe.dazeefa.com'; // update to your real domain
+const SITE_URL   = 'https://scanmyframe.com'; // update to your real domain
 const DEFAULT_DESC = 'ScanMyFrame connects physical picture frames to rich digital content via QR codes. Empower your frames with stories, photos, videos, and more.';
 const DEFAULT_IMG  = `${SITE_URL}/og-default.png`; // place a 1200×630 image in /public
 

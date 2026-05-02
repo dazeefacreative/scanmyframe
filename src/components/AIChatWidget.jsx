@@ -46,7 +46,7 @@ export default function AIChatWidget({ userId }) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  function clearChat() {
+  function newChat() {
     setMessages([]);
     const key = storageKey(userId);
     if (key) localStorage.removeItem(key);
@@ -141,8 +141,8 @@ export default function AIChatWidget({ userId }) {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <button
-                  onClick={clearChat}
-                  title="Clear chat"
+                  onClick={newChat}
+                  title="New chat"
                   style={{
                     background: 'transparent', border: 'none',
                     color: 'rgba(250,245,221,0.55)', cursor: 'pointer',
@@ -154,14 +154,14 @@ export default function AIChatWidget({ userId }) {
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="3 6 5 6 21 6"/>
-                    <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
-                    <path d="M10 11v6M14 11v6"/>
-                    <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                    <line x1="12" y1="9" x2="12" y2="15"/>
+                    <line x1="9" y1="12" x2="15" y2="12"/>
                   </svg>
                 </button>
                 <button
                   onClick={() => setOpen(false)}
+                  title='Close chat'
                   style={{
                     background: 'transparent', border: 'none',
                     color: 'rgba(250,245,221,0.65)', cursor: 'pointer',

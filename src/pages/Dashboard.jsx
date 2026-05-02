@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -152,22 +152,24 @@ function StatCard({ label, value, sub, icon, accentBg, delay, isDark, onClick, a
         cursor: onClick ? 'pointer' : 'default',
         transition: 'border-color 0.15s, box-shadow 0.15s',
         boxShadow: active ? `0 0 0 3px ${accentBg}22` : 'none',
+        minWidth: 0, overflow: 'hidden',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: active ? accentBg : t.textMuted(isDark), transition: 'color 0.15s' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: active ? accentBg : t.textMuted(isDark), transition: 'color 0.15s', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {label}
         </span>
-        <div style={{ width: 34, height: 34, borderRadius: 10, background: accentBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 34, height: 34, borderRadius: 10, background: accentBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <Icon path={icons[icon]} size={15} className="text-white" />
         </div>
       </div>
-      <div>
-        <div style={{ position: 'relative' }}>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ position: 'relative', minWidth: 0 }}>
           <p
             onMouseEnter={() => valueTooltip && setShowTip(true)}
             onMouseLeave={() => setShowTip(false)}
-            style={{ fontSize: 26, fontWeight: 700, color: t.textPrimary(isDark), fontFamily: 'Poltawski Nowy, serif', lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: valueTooltip ? 'default' : undefined }}
+            className="db-stat-value"
+            style={{ fontWeight: 700, color: t.textPrimary(isDark), fontFamily: 'Poltawski Nowy, serif', lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: valueTooltip ? 'default' : undefined }}
           >{value}</p>
           {showTip && valueTooltip && (
             <div style={{
@@ -601,19 +603,15 @@ function OverviewTab({ stats, frames, isDark, onNavigate, canViewAnalytics, noti
                 <div style={{ flex: 1, minWidth: 0 }}>
                   {isNotif ? (
                     <MsgTooltip full={a.message}>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: t.textSub(isDark), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                        {trunc(a.message, 60)}
+                      <span style={{ fontSize: 11, fontWeight: 600, color: t.textSub(isDark), display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', wordBreak: 'break-word' }}>
+                        {a.message}
                       </span>
                     </MsgTooltip>
                   ) : (
-                    <div style={{ display: 'flex', alignItems: 'baseline', minWidth: 0, gap: 0 }}>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: t.textSub(isDark), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, flexShrink: 1, maxWidth: '60%' }}>
-                        {trunc(a.frame.title, 16)}
-                      </span>
-                      <span style={{ fontSize: 11, color: t.textMuted(isDark), whiteSpace: 'nowrap', flexShrink: 0 }}>
-                        {suffix}
-                      </span>
-                    </div>
+                    <p style={{ margin: 0, fontSize: 11, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', wordBreak: 'break-word' }}>
+                      <span style={{ fontWeight: 600, color: t.textSub(isDark) }}>{a.frame.title}</span>
+                      <span style={{ color: t.textMuted(isDark) }}>{suffix}</span>
+                    </p>
                   )}
                   <p style={{ margin: '2px 0 0', fontSize: 10, color: t.textMuted(isDark) }}>{timeAgo(a.time)}</p>
                 </div>
@@ -779,9 +777,9 @@ function CreateTab({ editingFrame, onSaved, isDark, onNavigateToBilling, planId 
         <h2 className="db-tab-h2" style={{ fontWeight: 700, color: t.textPrimary(isDark), fontFamily: 'Poltawski Nowy, serif' }}>
           {isEdit ? 'Edit frame' : 'Create a new frame'}
         </h2>
-        <p style={{ fontSize: 13, color: t.textSub(isDark), marginTop: 4 }}>
+        <p style={{ fontSize: 13, color: t.textSub(isDark), marginTop: 4, wordBreak: 'break-word' }}>
           {isEdit
-            ? `Editing "${editingFrame.title}" - the QR code URL will not change.`
+            ? `Editing "${editingFrame.title}" — the QR code URL will not change.`
             : 'Fill in the details and generate a QR code.'}
         </p>
       </div>
@@ -1273,19 +1271,15 @@ function AnalyticsTab({ frames, isDark, planId, notificationData }) {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {isNotif ? (
                       <MsgTooltip full={a.message}>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: t.textSub(isDark), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                          {trunc(a.message, 60)}
+                        <span style={{ fontSize: 12, fontWeight: 600, color: t.textSub(isDark), display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', wordBreak: 'break-word' }}>
+                          {a.message}
                         </span>
                       </MsgTooltip>
                     ) : (
-                      <div style={{ display: 'flex', alignItems: 'baseline', minWidth: 0, flexWrap: 'wrap', gap: 0 }}>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: t.textSub(isDark) }}>
-                          {a.frame.title}
-                        </span>
-                        <span style={{ fontSize: 12, color: t.textMuted(isDark), whiteSpace: 'nowrap' }}>
-                          {suffix}
-                        </span>
-                      </div>
+                      <p style={{ margin: 0, fontSize: 12, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', wordBreak: 'break-word' }}>
+                        <span style={{ fontWeight: 600, color: t.textSub(isDark) }}>{a.frame.title}</span>
+                        <span style={{ color: t.textMuted(isDark) }}>{suffix}</span>
+                      </p>
                     )}
                     <p style={{ margin: '2px 0 0', fontSize: 10, color: t.textMuted(isDark) }}>{timeAgo(a.time)}</p>
                   </div>
@@ -2027,6 +2021,19 @@ export default function Dashboard() {
           </div>
           <Icon path={icons.settings} size={12} style={{ color: t.textMuted(isDark), flexShrink: 0 }} />
         </button>
+        {/* Help / Support */}
+        <Link 
+          to="/contact"
+          target='blank'
+          style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 9, fontSize: 11, border: `1px solid ${t.border(isDark)}`, background: 'transparent', color: t.textSub(isDark), cursor: 'pointer', textDecoration: 'none', marginBottom: 6 }}
+          onMouseEnter={e => e.currentTarget.style.opacity = '0.7'}
+          onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          Help &amp; Support
+        </Link>
+
         {/* Theme + signout */}
         <div style={{ display: 'flex', gap: 6 }}>
           {[
@@ -2083,6 +2090,7 @@ export default function Dashboard() {
 
           /* ── Responsive grid systems ── */
           .db-stat-grid      { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; }
+          .db-stat-value     { font-size:26px; margin:0; }
           .db-actions-grid   { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
           .db-frame-grid     { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; }
           .db-overview-twoup { display:grid; grid-template-columns:2fr 1fr; gap:16px; }
@@ -2109,6 +2117,7 @@ export default function Dashboard() {
             .db-card          { padding:16px; }
             .db-tab-h2        { font-size:19px; }
             .db-stat-grid     { grid-template-columns:repeat(2,1fr); gap:10px; }
+            .db-stat-value    { font-size:18px !important; }
             .db-frame-grid    { grid-template-columns:1fr; gap:12px; }
             .db-actions-grid  { grid-template-columns:1fr; gap:8px; }
             .db-frames-hdr    { flex-direction:column; }
@@ -2187,12 +2196,17 @@ export default function Dashboard() {
                     {activeTab === 'frames'    && <FramesTab frames={frames} isDark={isDark} onCreateFrame={() => navTo('create')} onEdit={handleEditFrame} onDelete={handleDeleteFrame} />}
                     {activeTab === 'create'    && <CreateTab editingFrame={editingFrame} onSaved={handleFrameSaved} isDark={isDark} onNavigateToBilling={() => navTo('billing')} planId={currentPlanId} />}
                     {activeTab === 'analytics' && canViewAnalytics && <AnalyticsTab frames={frames} isDark={isDark} planId={currentPlanId} notificationData={notificationData} />}
-                    {activeTab === 'billing'   && <BillingTab />}
+                    {activeTab === 'billing'   && null}
                     {activeTab === 'settings'  && <SettingsTab user={user} userProfile={userProfile} isDark={isDark} onResetPassword={handleResetPassword} onDeleteAccount={handleDeleteAccount} onProfileUpdated={setUserProfile} notificationData={notificationData} onMarkNotificationRead={handleMarkNotificationRead} onDeleteNotification={handleDeleteNotification} onClearAllNotifications={handleClearAllNotifications} />}
                   </>
               }
             </motion.div>
           </AnimatePresence>
+
+          {/* BillingTab kept mounted to avoid refetch on every tab switch */}
+          <div style={{ display: activeTab === 'billing' ? 'block' : 'none' }}>
+            <BillingTab />
+          </div>
         </main>
       </div>
 

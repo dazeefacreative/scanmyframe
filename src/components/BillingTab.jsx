@@ -53,15 +53,13 @@ const PLAN_META = {
     description: 'For large-scale operations',
     discount:    'Save 20%',
     features: [
+      'Everything in Pro +',
       'Unlimited QR credits',
-      '5MB max image upload',
+      'Your logo and brand featured on every public frame page',
+      'Full white label experience, no ScanMyFrame branding',
       '8 extra images per frame',
       '50MB max video upload',
-      'PNG, SVG & print-ready PDF export',
-      'Vendor card on public frame page',
-      'Password-protect frames',
-      'AI Story Assistant',
-      'Real-time analytics data',
+      'Featured on homepage',
       '24/7 priority support',
     ],
   },
@@ -244,7 +242,7 @@ export default function BillingTab() {
   const [cancelLoading, setCancelLoading] = useState(false);
   const [showHistory,   setShowHistory]   = useState(false);
 
-  useEffect(() => { if (user) loadData(); }, [user]);
+  useEffect(() => { if (user?.id) loadData(); }, [user?.id]);
 
   async function loadData() {
     setLoading(true);
@@ -541,7 +539,7 @@ export default function BillingTab() {
                 Cancel subscription?
               </p>
               <p className={`text-sm leading-relaxed mb-6 ${muted}`}>
-            You’ll retain access until the end of your billing period. After that, your subscription will be cancelled and any remaining QR credits will be locked until you resubscribe. <strong>Note that this can not be undone.</strong>
+            You’ll retain access until the end of your billing period. After that, your subscription will be cancelled and any unused QR credits will be cleared. <strong>This cannot be undone.</strong>
             </p>
               <div className="flex gap-3">
                 <button

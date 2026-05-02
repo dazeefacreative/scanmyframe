@@ -17,8 +17,8 @@ function getVisitorId() {
 import { supabase } from '../services/supabaseClient';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import scanframeLogo from '../assets/images/Scanframe alt.png';
-import scanframeLogoAlt from '../assets/images/Scanframe.png';
+import scanMyFrameLogo from '../assets/images/Scanframe alt.png';
+import scanMyFrameLogoAlt from '../assets/images/Scanframe.png';
 
 // ─── Image Gallery (manual swipe, no auto-slide) ──────────────────────────────
 function ImageGallery({ images, title, cardRing, isDark }) {
@@ -859,7 +859,9 @@ export default function FramePage() {
     return () => { cancelled = true; };
   }, [slug]);
 
-  const showVendorCard = ['trial', 'pro', 'business'].includes(vendorPlanId);
+  const isBusinessOrTrial = ['business', 'trial'].includes(vendorPlanId);
+  const isPro             = vendorPlanId === 'pro';
+  const showVendorCard    = ['trial', 'pro', 'business'].includes(vendorPlanId);
 
   const pageBg     = isDark ? 'bg-primary'    : 'bg-white';
   const textPrim   = isDark ? 'text-white'       : 'text-[#0F4C3A]';
@@ -867,7 +869,7 @@ export default function FramePage() {
   const border     = isDark ? 'border-white/10'  : 'border-[#0F4C3A]/10';
   const cardBg     = isDark ? 'bg-[#1a1a1a]'    : 'bg-white';
   const cardRing   = isDark ? 'ring-white/10'    : 'ring-[#0F4C3A]/10';
-  const logo       = isDark ? scanframeLogoAlt  : scanframeLogo;
+  const logo       = isDark ? scanMyFrameLogoAlt  : scanMyFrameLogo;
 
   if (loading) {
     return (
@@ -922,7 +924,13 @@ export default function FramePage() {
 
       {/* Header */}
       <header className={`border-b ${border} px-6 py-4 flex items-center justify-between max-w-3xl mx-auto`}>
-        <Link to="/"><img src={logo} alt="ScanMyFrame" className="h-7 w-auto" /></Link>
+        {isBusinessOrTrial && businessLogo ? (
+          <img src={businessLogo} alt={creatorName || 'Vendor'} className="h-8 w-auto object-contain max-w-[140px]" />
+        ) : isBusinessOrTrial && creatorName ? (
+          <span className={`text-sm font-bold ${textPrim}`}>{creatorName}</span>
+        ) : (
+          <Link to="/"><img src={logo} alt="ScanMyFrame" className="h-7 w-auto" /></Link>
+        )}
         <div className="flex items-center gap-3">
           <button onClick={toggleTheme}
             className={`w-8 h-8 rounded-full flex items-center justify-center border ${border} ${cardBg} ${textSub} hover:opacity-80 transition-opacity`}
@@ -1089,19 +1097,26 @@ export default function FramePage() {
           </div>
         )}
 
-        {/* Footer — always shown; more prominent on trial/basic since vendor card is hidden */}
-        <div className={`flex items-center justify-center pt-4 border-t ${border}`}>
-          {!showVendorCard ? (
-            <Link to="/"
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl border ${isDark ? 'border-white/10 bg-[#1a1a1a]' : 'border-[#0F4C3A]/12 bg-[#f5faf8]'} hover:opacity-80 transition-opacity`}>
-              <span className={`text-xs font-semibold ${textSub}`}>Frame created with</span>
-              <img src={logo} alt="ScanMyFrame" className="h-4 w-auto" />
-            </Link>
-          ) : (
-            <Link to="/" className={`flex items-center gap-2 text-xs ${textSub} hover:opacity-80 transition-opacity`}>
+        {/* Footer */}
+        <div className={`flex items-center pt-4 border-t ${border} ${isBusinessOrTrial || isPro ? 'justify-between' : 'justify-center'}`}>
+          {/* Powered by ScanMyFrame — hidden on Business & Trial */}
+          {!isBusinessOrTrial && (
+            <Link to="/" className={`flex items-center gap-1.5 text-xs ${textSub} hover:opacity-80 transition-opacity`}>
               <span>Powered by</span>
               <img src={logo} alt="ScanMyFrame" className="h-4 w-auto opacity-60" />
             </Link>
+          )}
+
+          {/* Frame by vendor — Business, Trial, Pro */}
+          {(isBusinessOrTrial || isPro) && creatorName && (
+            <div className="flex items-center gap-1.5">
+              {businessLogo && (
+                <img src={businessLogo} alt={creatorName} className="h-5 w-5 rounded-full object-cover border border-[#0F4C3A]/10" />
+              )}
+              <span className={`text-xs ${textSub}`}>
+                Frame by <strong className={textPrim}>{creatorName}</strong>
+              </span>
+            </div>
           )}
         </div>
 

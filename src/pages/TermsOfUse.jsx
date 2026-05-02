@@ -6,8 +6,8 @@ import Footer from '../components/Footer';
 import SEO from '../components/SEO';
 
 const LAST_UPDATED = 'April 25, 2026';
-const CONTACT_EMAIL = 'legal@scanframe.ng';
-const SITE = 'https://scanframe.ng';
+const CONTACT_EMAIL = 'legal@scanmyframe.com';
+const SITE = 'https://scanmyframe.com';
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 24 },
@@ -21,7 +21,7 @@ const SECTIONS = [
     id: 'acceptance',
     title: '1. Acceptance of Terms',
     content: [
-      `These Terms of Use ("Terms") are a legal agreement between you and ScanMyFrame ("ScanFrame", "we", "us") governing your access to and use of the website at ${SITE}, the ScanMyFrame dashboard, QR frame management tools, and all related services (collectively, the "Service").`,
+      `These Terms of Use ("Terms") are a legal agreement between you and ScanMyFrame ("ScanMyFrame", "we", "us") governing your access to and use of the website at ${SITE}, the ScanMyFrame dashboard, QR frame management tools, and all related services (collectively, the "Service").`,
       'By creating an account or using the Service in any way, you confirm that you have read, understood, and agree to be bound by these Terms and our Privacy Policy. If you do not agree, you must not use the Service.',
       'We may update these Terms from time to time. Continued use after the effective date of any changes constitutes acceptance of the revised Terms.',
     ],
@@ -152,11 +152,11 @@ export default function TermsOfUse() {
   const { isDark } = useTheme();
   const [activeSection, setActiveSection] = useState(null);
 
-  const bg      = isDark ? 'bg-black'       : 'bg-white';
-  const heading = isDark ? 'text-white'     : 'text-gray-900';
-  const text    = isDark ? 'text-gray-300'  : 'text-gray-600';
-  const card    = isDark ? 'bg-[#111] border-white/10' : 'bg-white border-gray-200';
-  const divider = isDark ? 'border-white/10' : 'border-gray-200';
+  const bg      = isDark ? 'bg-[#0a0a0a]'   : 'bg-white';
+  const heading = isDark ? 'text-white'     : 'text-[#0F4C3A]';
+  const text    = isDark ? 'text-[#aaa]'    : 'text-[#4a7c6f]';
+  const card    = isDark ? 'bg-[#111] border-white/8' : 'bg-white border-[#0F4C3A]/10';
+  const divider = isDark ? 'border-white/8' : 'border-[#0F4C3A]/10';
   const tag     = isDark ? 'bg-white/5 text-[#D4AF37] border border-white/10' : 'bg-[#0F4C3A]/5 text-[#0F4C3A] border border-[#0F4C3A]/20';
 
   function renderSection(sec) {
@@ -204,14 +204,14 @@ export default function TermsOfUse() {
   return (
     <main className={`${bg} min-h-screen transition-colors duration-200`}>
       <SEO
-        title="Terms of Use | ScanFrame"
+        title="Terms of Use | ScanMyFrame"
         description="Read ScanMyFrame's Terms of Use — the rules and guidelines governing your use of the platform, QR frame tools, and subscription services."
         url="/terms"
       />
       <Header />
 
       {/* Hero */}
-      <section className={`pt-28 pb-14 px-4 ${isDark ? 'bg-gradient-to-b from-[#1C1C1C] to-black' : 'bg-white'}`}>
+      <section className={`pt-28 pb-14 px-4 ${isDark ? 'bg-gradient-to-b from-[#1a1a1a] to-[#0a0a0a]' : 'bg-white'}`}>
         <div className="max-w-3xl mx-auto text-center">
           <motion.span {...fadeUp(0)} className={`inline-block text-xs font-semibold tracking-widest uppercase px-5 py-2 rounded-full mb-6 ${tag}`}>
             Legal
@@ -230,7 +230,7 @@ export default function TermsOfUse() {
       </section>
 
       {/* Sections */}
-      <section className={`py-10 px-4 ${isDark ? 'bg-[#0a0a0a]' : 'bg-gray-50'}`}>
+      <section className={`py-10 px-4 ${isDark ? 'bg-[#0a0a0a]' : 'bg-[#f5f5f0]'}`}>
         <div className="max-w-3xl mx-auto">
           <p className={`text-xs mb-6 ${text}`}>Click any section to expand it.</p>
           <div className="space-y-3">
