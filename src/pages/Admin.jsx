@@ -3,23 +3,68 @@ import {
   adminGetAllPosts, adminCreatePost, adminUpdatePost, adminDeletePost,
   adminGetAllUsers, adminGetNewsletter, uploadBlogImage, adminPushNotification,
 } from '../services/supabaseHelpers';
+import scanframeLogo from '../assets/images/Scanframe alt.png';
 
-// ─── Admin credentials (change these to whatever you want) ───────────────────
 const ADMIN_USERNAME = 'scanframe_admin';
 const ADMIN_PASSWORD = 'Scanframe@2025';
-// ─────────────────────────────────────────────────────────────────────────────
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ─── CSS Variables ────────────────────────────────────────────────────────────
+const ADMIN_STYLES = `
+  .sf-admin {
+    --bg: #f8f7f4;
+    --bg-subtle: #f0efe9;
+    --surface: #ffffff;
+    --border: rgba(15,76,58,0.12);
+    --fg-body: #1a1a1a;
+    --fg-sub: #4a7c6f;
+    --fg-muted: #9aaea9;
+    --sf-primary: #0F4C3A;
+    --sf-primary-deep: #0a2e22;
+    --sf-secondary: #FAF5DD;
+    --sf-gold: #D4AF37;
+    --danger: #ef4444;
+    --font-body: 'Montserrat Alternates', system-ui, sans-serif;
+    --font-display: 'Poltawski Nowy', Georgia, serif;
+    --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  }
+  .sf-btn-primary {
+    background: var(--sf-primary); color: var(--sf-secondary);
+    border: none; border-radius: 10px; padding: 10px 18px;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    font-family: var(--font-body); transition: opacity 0.15s;
+  }
+  .sf-btn-primary:hover:not(:disabled) { opacity: 0.85; }
+  .sf-btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+  .sf-input {
+    width: 100%; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 14px; font-size: 13px;
+    font-family: var(--font-body); color: var(--fg-body);
+    outline: none; box-sizing: border-box; transition: border-color 0.15s;
+  }
+  .sf-input:focus { border-color: var(--sf-primary); }
+  .sf-textarea { resize: vertical; min-height: 80px; }
+  .sf-admin-mobile-nav { display: none; }
+  @media (max-width: 900px) {
+    .sf-admin-aside { display: none !important; }
+    .sf-admin-mobile-nav { display: flex !important; }
+  }
+`;
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 function slugify(str) {
   return str.toLowerCase().trim()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-');
+    .replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
 }
 
 function fmtDate(d) {
   if (!d) return '—';
-  return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function fmtDateShort(d) {
+  if (!d) return '—';
+  return new Date(d).toISOString().split('T')[0];
 }
 
 function downloadCSV(rows, filename) {
@@ -28,15 +73,48 @@ function downloadCSV(rows, filename) {
   const csv  = [cols.join(','), ...rows.map(r => cols.map(c => `"${(r[c] ?? '').toString().replace(/"/g, '""')}"`).join(','))].join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url; a.download = filename; a.click();
+  const a    = document.createElement('a'); a.href = url; a.download = filename; a.click();
   URL.revokeObjectURL(url);
 }
 
-// ── Empty post template ───────────────────────────────────────────────────────
+function initials(name = '') {
+  return name.split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || '?';
+}
+
 const EMPTY_POST = { title: '', slug: '', excerpt: '', cover_image: '', tags: '', author: 'ScanMyFrame', status: 'draft', body: [] };
 
-// ── Block editor ─────────────────────────────────────────────────────────────
+// ─── KPI Header ───────────────────────────────────────────────────────────────
+function AdminHeader({ title, eyebrow, kpis = [], action }) {
+  return (
+    <div style={{ padding: '32px 36px 0', background: 'var(--bg)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-muted)' }}>{eyebrow}</p>
+          <h1 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 700, color: 'var(--sf-primary)' }}>{title}</h1>
+        </div>
+        {action}
+      </div>
+      {kpis.length > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${kpis.length}, 1fr)`, gap: 12, marginBottom: 24 }}>
+          {kpis.map((k, i) => (
+            <div key={i} style={{
+              background: i === 0 ? 'var(--sf-primary)' : 'var(--surface)',
+              color: i === 0 ? 'var(--sf-secondary)' : 'inherit',
+              border: i === 0 ? 'none' : '1px solid var(--border)',
+              borderRadius: 14, padding: '16px 18px',
+            }}>
+              <p style={{ margin: '0 0 4px', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: i === 0 ? 'var(--sf-gold)' : 'var(--fg-muted)' }}>{k.label}</p>
+              <p style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, color: i === 0 ? 'var(--sf-secondary)' : 'var(--sf-primary)', lineHeight: 1.1 }}>{k.value}</p>
+              {k.sub && <p style={{ margin: '4px 0 0', fontSize: 11, color: i === 0 ? 'rgba(250,245,221,0.65)' : 'var(--fg-muted)' }}>{k.sub}</p>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Block Editor ─────────────────────────────────────────────────────────────
 function BlockEditor({ blocks, onChange }) {
   const [uploading, setUploading] = useState({});
 
@@ -53,21 +131,12 @@ function BlockEditor({ blocks, onChange }) {
     onChange([...blocks, defaults[type]]);
   }
 
-  function updateBlock(i, patch) {
-    const next = blocks.map((b, idx) => idx === i ? { ...b, ...patch } : b);
-    onChange(next);
-  }
-
-  function removeBlock(i) {
-    onChange(blocks.filter((_, idx) => idx !== i));
-  }
-
+  function updateBlock(i, patch) { onChange(blocks.map((b, idx) => idx === i ? { ...b, ...patch } : b)); }
+  function removeBlock(i) { onChange(blocks.filter((_, idx) => idx !== i)); }
   function moveBlock(i, dir) {
-    const next = [...blocks];
-    const swap = i + dir;
+    const next = [...blocks]; const swap = i + dir;
     if (swap < 0 || swap >= next.length) return;
-    [next[i], next[swap]] = [next[swap], next[i]];
-    onChange(next);
+    [next[i], next[swap]] = [next[swap], next[i]]; onChange(next);
   }
 
   async function handleImageUpload(i, file) {
@@ -75,877 +144,761 @@ function BlockEditor({ blocks, onChange }) {
     setUploading(u => ({ ...u, [i]: true }));
     const { url, error } = await uploadBlogImage(file);
     setUploading(u => ({ ...u, [i]: false }));
-    if (url) updateBlock(i, { url });
-    else alert('Upload failed: ' + error);
+    if (url) updateBlock(i, { url }); else alert('Upload failed: ' + error);
   }
 
-  const inputCls  = 'w-full bg-[#1a1a1a] border border-white/10 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#D4AF37]/50 placeholder:text-[#444] resize-none';
-  const labelCls  = 'text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] mb-1.5 block';
-  const actionBtn = 'text-[#666] hover:text-white transition-colors p-1';
-
   return (
-    <div className="flex flex-col gap-3">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {blocks.map((block, i) => (
-        <div key={i} className="bg-[#111] border border-white/8 rounded-xl p-4 flex flex-col gap-3">
-          {/* Block header */}
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[#555]">
+        <div key={i} style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--fg-muted)' }}>
               {block.type === 'h2' ? 'Heading 2' : block.type === 'h3' ? 'Heading 3' : block.type}
             </span>
-            <div className="flex items-center gap-1">
-              <button type="button" onClick={() => moveBlock(i, -1)} className={actionBtn} title="Move up">↑</button>
-              <button type="button" onClick={() => moveBlock(i, 1)}  className={actionBtn} title="Move down">↓</button>
-              <button type="button" onClick={() => removeBlock(i)}
-                className="text-red-400/60 hover:text-red-400 transition-colors p-1 ml-1" title="Delete">✕</button>
+            <div style={{ display: 'flex', gap: 4 }}>
+              <button type="button" onClick={() => moveBlock(i, -1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--fg-muted)', padding: 4 }}>↑</button>
+              <button type="button" onClick={() => moveBlock(i, 1)}  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--fg-muted)', padding: 4 }}>↓</button>
+              <button type="button" onClick={() => removeBlock(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: 4, marginLeft: 4 }}>✕</button>
             </div>
           </div>
 
-          {/* Block content fields */}
-          {(block.type === 'paragraph') && (
-            <textarea rows={4} className={inputCls} placeholder="Paragraph text…"
-              value={block.content} onChange={e => updateBlock(i, { content: e.target.value })} />
-          )}
-
-          {(block.type === 'h2' || block.type === 'h3') && (
-            <input className={inputCls} placeholder="Heading text…"
-              value={block.content} onChange={e => updateBlock(i, { content: e.target.value })} />
-          )}
-
-          {block.type === 'quote' && (
-            <textarea rows={3} className={inputCls} placeholder="Quote text…"
-              value={block.content} onChange={e => updateBlock(i, { content: e.target.value })} />
-          )}
+          {(block.type === 'paragraph') && <textarea rows={4} className="sf-input sf-textarea" placeholder="Paragraph…" value={block.content} onChange={e => updateBlock(i, { content: e.target.value })} />}
+          {(block.type === 'h2' || block.type === 'h3') && <input className="sf-input" placeholder="Heading…" value={block.content} onChange={e => updateBlock(i, { content: e.target.value })} />}
+          {block.type === 'quote' && <textarea rows={3} className="sf-input sf-textarea" placeholder="Quote…" value={block.content} onChange={e => updateBlock(i, { content: e.target.value })} />}
 
           {block.type === 'list' && (
-            <div className="flex flex-col gap-2">
-              <label className="flex items-center gap-2 text-sm text-[#aaa]">
-                <input type="checkbox" checked={block.ordered} onChange={e => updateBlock(i, { ordered: e.target.checked })}
-                  className="accent-[#D4AF37]" />
-                Ordered list
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--fg-sub)' }}>
+                <input type="checkbox" checked={block.ordered} onChange={e => updateBlock(i, { ordered: e.target.checked })} /> Ordered
               </label>
               {(block.items || []).map((item, j) => (
-                <div key={j} className="flex gap-2">
-                  <input className={`${inputCls} flex-1`} placeholder={`Item ${j + 1}`}
-                    value={item}
-                    onChange={e => {
-                      const items = [...block.items];
-                      items[j] = e.target.value;
-                      updateBlock(i, { items });
-                    }} />
-                  <button type="button"
-                    onClick={() => updateBlock(i, { items: block.items.filter((_, k) => k !== j) })}
-                    className="text-red-400/50 hover:text-red-400 text-sm">✕</button>
+                <div key={j} style={{ display: 'flex', gap: 8 }}>
+                  <input className="sf-input" style={{ flex: 1 }} placeholder={`Item ${j + 1}`} value={item} onChange={e => { const items = [...block.items]; items[j] = e.target.value; updateBlock(i, { items }); }} />
+                  <button type="button" onClick={() => updateBlock(i, { items: block.items.filter((_, k) => k !== j) })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)' }}>✕</button>
                 </div>
               ))}
-              <button type="button"
-                onClick={() => updateBlock(i, { items: [...(block.items || []), ''] })}
-                className="text-[#D4AF37] text-xs hover:opacity-80 text-left mt-1">+ Add item</button>
+              <button type="button" onClick={() => updateBlock(i, { items: [...(block.items || []), ''] })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--sf-primary)', fontSize: 12, textAlign: 'left', fontWeight: 600 }}>+ Add item</button>
             </div>
           )}
 
           {block.type === 'image' && (
-            <div className="flex flex-col gap-2">
-              <label className={labelCls}>Image URL</label>
-              <input className={inputCls} placeholder="https://…"
-                value={block.url} onChange={e => updateBlock(i, { url: e.target.value })} />
-              <div className="flex items-center gap-3">
-                <label className="cursor-pointer text-[11px] text-[#D4AF37] hover:opacity-80">
-                  {uploading[i] ? 'Uploading…' : '↑ Upload image'}
-                  <input type="file" accept="image/*" className="hidden"
-                    onChange={e => handleImageUpload(i, e.target.files[0])} />
-                </label>
-              </div>
-              {block.url && <img src={block.url} alt="" className="max-h-32 object-contain rounded-lg mt-1" />}
-              <input className={inputCls} placeholder="Caption (optional)"
-                value={block.caption || ''} onChange={e => updateBlock(i, { caption: e.target.value })} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <input className="sf-input" placeholder="https://…" value={block.url} onChange={e => updateBlock(i, { url: e.target.value })} />
+              <label style={{ cursor: 'pointer', fontSize: 12, color: 'var(--sf-primary)', fontWeight: 600 }}>
+                {uploading[i] ? 'Uploading…' : '↑ Upload image'}
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleImageUpload(i, e.target.files[0])} />
+              </label>
+              {block.url && <img src={block.url} alt="" style={{ maxHeight: 120, objectFit: 'contain', borderRadius: 8 }} />}
+              <input className="sf-input" placeholder="Caption (optional)" value={block.caption || ''} onChange={e => updateBlock(i, { caption: e.target.value })} />
             </div>
           )}
 
-          {block.type === 'divider' && (
-            <hr className="border-white/10" />
-          )}
+          {block.type === 'divider' && <hr style={{ border: 'none', borderTop: '1px solid var(--border)', margin: 0 }} />}
         </div>
       ))}
 
-      {/* Add block buttons */}
-      <div className="flex flex-wrap gap-2 mt-1">
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
         {['paragraph','h2','h3','quote','list','image','divider'].map(type => (
-          <button key={type} type="button" onClick={() => addBlock(type)}
-            className="text-[11px] font-medium px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[#aaa] hover:text-white transition-colors border border-white/8">
-            + {type === 'h2' ? 'Heading 2' : type === 'h3' ? 'Heading 3' : type.charAt(0).toUpperCase() + type.slice(1)}
-          </button>
+          <button key={type} type="button" onClick={() => addBlock(type)} style={{
+            fontSize: 11, fontWeight: 600, padding: '6px 12px', borderRadius: 8,
+            background: 'var(--surface)', border: '1px solid var(--border)',
+            color: 'var(--fg-sub)', cursor: 'pointer',
+          }}>+ {type === 'h2' ? 'Heading 2' : type === 'h3' ? 'Heading 3' : type.charAt(0).toUpperCase() + type.slice(1)}</button>
         ))}
       </div>
     </div>
   );
 }
 
-// ── Post modal (create / edit) ────────────────────────────────────────────────
+// ─── Post Modal ───────────────────────────────────────────────────────────────
 function PostModal({ post, onClose, onSaved }) {
-  const [form, setForm]         = useState({ ...EMPTY_POST, ...post });
-  const [saving, setSaving]     = useState(false);
-  const [coverUp, setCoverUp]   = useState(false);
-  const fileRef                 = useRef();
+  const [form, setForm] = useState({ ...EMPTY_POST, ...post });
+  const [saving, setSaving] = useState(false);
+  const [coverUp, setCoverUp] = useState(false);
 
   function set(k, v) { setForm(f => ({ ...f, [k]: v })); }
-
-  function onTitleChange(v) {
-    set('title', v);
-    if (!post?.id) set('slug', slugify(v));
-  }
+  function onTitleChange(v) { set('title', v); if (!post?.id) set('slug', slugify(v)); }
 
   async function uploadCover(file) {
     if (!file) return;
     setCoverUp(true);
     const { url, error } = await uploadBlogImage(file);
     setCoverUp(false);
-    if (url) set('cover_image', url);
-    else alert('Upload failed: ' + error);
+    if (url) set('cover_image', url); else alert('Upload failed: ' + error);
   }
 
   async function handleSave(e) {
     e.preventDefault();
     if (!form.title.trim() || !form.slug.trim()) return alert('Title and slug are required.');
     setSaving(true);
-
     try {
-      const payload = {
-        ...form,
-        tags: Array.isArray(form.tags)
-          ? form.tags
-          : form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
-        slug: slugify(form.slug),
-      };
-
-      const { error } = post?.id
-        ? await adminUpdatePost(post.id, payload)
-        : await adminCreatePost(payload);
-
+      const payload = { ...form, tags: Array.isArray(form.tags) ? form.tags : form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [], slug: slugify(form.slug) };
+      const { error } = post?.id ? await adminUpdatePost(post.id, payload) : await adminCreatePost(payload);
       if (error) { alert('Error: ' + error); return; }
       onSaved();
-    } catch (err) {
-      alert('Unexpected error: ' + err.message);
-    } finally {
-      setSaving(false);
-    }
+    } catch (err) { alert('Unexpected error: ' + err.message); }
+    finally { setSaving(false); }
   }
 
-  const inputCls = 'w-full bg-[#1a1a1a] border border-white/10 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#D4AF37]/50 placeholder:text-[#444]';
-  const labelCls = 'text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] mb-1.5 block';
+  const lbl = { display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--fg-sub)', marginBottom: 8 };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm overflow-y-auto">
-      <div className="min-h-screen flex items-start justify-center px-4 py-10">
-        <div className="w-full max-w-3xl bg-[#0d0d0d] border border-white/10 rounded-2xl p-6 md:p-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold text-white">{post?.id ? 'Edit Post' : 'New Post'}</h2>
-            <button onClick={onClose} className="text-[#666] hover:text-white transition-colors text-xl">✕</button>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(10,46,34,0.55)', backdropFilter: 'blur(4px)', overflowY: 'auto', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 16px' }}>
+      <div style={{ width: '100%', maxWidth: 720, background: 'var(--bg)', borderRadius: 20, padding: '32px 36px', border: '1px solid var(--border)', boxShadow: '0 24px 60px rgba(0,0,0,0.15)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
+          <div>
+            <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-muted)' }}>Content</p>
+            <h2 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, color: 'var(--sf-primary)' }}>{post?.id ? 'Edit post' : 'New post'}</h2>
           </div>
-
-          <form onSubmit={handleSave} className="flex flex-col gap-5">
-            {/* Title */}
-            <div>
-              <label className={labelCls}>Title *</label>
-              <input className={inputCls} placeholder="Post title" value={form.title}
-                onChange={e => onTitleChange(e.target.value)} required />
-            </div>
-
-            {/* Slug */}
-            <div>
-              <label className={labelCls}>Slug *</label>
-              <input className={inputCls} placeholder="post-url-slug" value={form.slug}
-                onChange={e => set('slug', slugify(e.target.value))} required />
-            </div>
-
-            {/* Excerpt */}
-            <div>
-              <label className={labelCls}>Excerpt</label>
-              <textarea rows={2} className={`${inputCls} resize-none`} placeholder="Short description shown on listing page…"
-                value={form.excerpt} onChange={e => set('excerpt', e.target.value)} />
-            </div>
-
-            {/* Cover image */}
-            <div>
-              <label className={labelCls}>Cover Image</label>
-              <div className="flex gap-2">
-                <input className={`${inputCls} flex-1`} placeholder="https://… or upload below"
-                  value={form.cover_image} onChange={e => set('cover_image', e.target.value)} />
-                <label className={`cursor-pointer flex items-center gap-1.5 px-4 py-2 rounded-lg border border-white/10 text-sm text-[#D4AF37] hover:bg-white/5 transition-colors whitespace-nowrap ${coverUp ? 'opacity-50 pointer-events-none' : ''}`}>
-                  {coverUp ? 'Uploading…' : '↑ Upload'}
-                  <input type="file" accept="image/*" className="hidden"
-                    onChange={e => uploadCover(e.target.files[0])} />
-                </label>
-              </div>
-              {form.cover_image && (
-                <img src={form.cover_image} alt="" className="mt-2 max-h-32 object-cover rounded-xl" />
-              )}
-            </div>
-
-            {/* Author + Status in a row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className={labelCls}>Author</label>
-                <input className={inputCls} value={form.author}
-                  onChange={e => set('author', e.target.value)} />
-              </div>
-              <div>
-                <label className={labelCls}>Status</label>
-                <select className={inputCls} value={form.status} onChange={e => set('status', e.target.value)}>
-                  <option value="draft">Draft</option>
-                  <option value="published">Published</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Tags */}
-            <div>
-              <label className={labelCls}>Tags (comma-separated)</label>
-              <input className={inputCls} placeholder="tips, guide, update"
-                value={form.tags} onChange={e => set('tags', e.target.value)} />
-            </div>
-
-            {/* Body */}
-            <div>
-              <label className={labelCls}>Content Blocks</label>
-              <BlockEditor blocks={form.body} onChange={v => set('body', v)} />
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center justify-end gap-3 pt-2 border-t border-white/8 mt-2">
-              <button type="button" onClick={onClose}
-                className="px-5 py-2 rounded-lg border border-white/10 text-sm text-[#aaa] hover:text-white transition-colors">
-                Cancel
-              </button>
-              <button type="submit" disabled={saving}
-                className="px-6 py-2 rounded-lg bg-[#0F4C3A] text-[#FAF5DD] text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-50">
-                {saving ? 'Saving…' : post?.id ? 'Save changes' : 'Create post'}
-              </button>
-            </div>
-          </form>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: 'var(--fg-muted)', lineHeight: 1 }}>×</button>
         </div>
-      </div>
-    </div>
-  );
-}
 
-// ── Login screen ──────────────────────────────────────────────────────────────
-function LoginScreen({ onLogin }) {
-  const [u, setU] = useState('');
-  const [p, setP] = useState('');
-  const [err, setErr] = useState('');
-  const [show, setShow] = useState(false);
+        <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div><label style={lbl}>Title *</label><input className="sf-input" placeholder="Post title" value={form.title} onChange={e => onTitleChange(e.target.value)} required /></div>
+          <div><label style={lbl}>Slug *</label><input className="sf-input" placeholder="post-url-slug" value={form.slug} onChange={e => set('slug', slugify(e.target.value))} required /></div>
+          <div><label style={lbl}>Excerpt</label><textarea rows={2} className="sf-input sf-textarea" placeholder="Short description…" value={form.excerpt} onChange={e => set('excerpt', e.target.value)} /></div>
 
-  function submit(e) {
-    e.preventDefault();
-    if (u === ADMIN_USERNAME && p === ADMIN_PASSWORD) {
-      sessionStorage.setItem('sf_admin', '1');
-      onLogin();
-    } else {
-      setErr('Invalid credentials.');
-    }
-  }
-
-  const inp = 'w-full bg-[#111] border border-white/10 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#D4AF37]/50 placeholder:text-[#444]';
-
-  return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <p className="text-[#D4AF37] text-xs font-bold uppercase tracking-widest text-center mb-6">Admin Access</p>
-        <h1 className="text-2xl font-bold text-white text-center mb-8">ScanMyFrame Admin</h1>
-        <form onSubmit={submit} className="flex flex-col gap-4">
-          <input className={inp} placeholder="Username" value={u} onChange={e => setU(e.target.value)} autoFocus />
-          <div className="relative">
-            <input className={`${inp} pr-10`} type={show ? 'text' : 'password'}
-              placeholder="Password" value={p} onChange={e => setP(e.target.value)} />
-            <button type="button" onClick={() => setShow(s => !s)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#555] hover:text-[#aaa] text-xs">
-              {show ? 'hide' : 'show'}
-            </button>
+          <div>
+            <label style={lbl}>Cover image</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input className="sf-input" style={{ flex: 1 }} placeholder="https://…" value={form.cover_image} onChange={e => set('cover_image', e.target.value)} />
+              <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0 16px', borderRadius: 10, border: '1px solid var(--border)', fontSize: 12, fontWeight: 700, color: 'var(--sf-primary)', whiteSpace: 'nowrap', opacity: coverUp ? 0.5 : 1 }}>
+                {coverUp ? 'Uploading…' : '↑ Upload'}
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => uploadCover(e.target.files[0])} />
+              </label>
+            </div>
+            {form.cover_image && <img src={form.cover_image} alt="" style={{ marginTop: 8, maxHeight: 120, objectFit: 'cover', borderRadius: 10 }} />}
           </div>
-          {err && <p className="text-red-400 text-xs text-center">{err}</p>}
-          <button type="submit"
-            className="bg-[#0F4C3A] text-[#FAF5DD] py-3 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity mt-2">
-            Sign in
-          </button>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div><label style={lbl}>Author</label><input className="sf-input" value={form.author} onChange={e => set('author', e.target.value)} /></div>
+            <div>
+              <label style={lbl}>Status</label>
+              <select className="sf-input" value={form.status} onChange={e => set('status', e.target.value)}>
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+              </select>
+            </div>
+          </div>
+
+          <div><label style={lbl}>Tags (comma-separated)</label><input className="sf-input" placeholder="tips, guide, update" value={form.tags} onChange={e => set('tags', e.target.value)} /></div>
+
+          <div><label style={lbl}>Content blocks</label><BlockEditor blocks={form.body} onChange={v => set('body', v)} /></div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
+            <button type="button" onClick={onClose} style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', fontSize: 13, fontWeight: 600, color: 'var(--fg-sub)', cursor: 'pointer' }}>Cancel</button>
+            <button type="submit" disabled={saving} className="sf-btn-primary">{saving ? 'Saving…' : post?.id ? 'Save changes' : 'Create post'}</button>
+          </div>
         </form>
       </div>
     </div>
   );
 }
 
-// ── Tab: Blog Posts ───────────────────────────────────────────────────────────
+// ─── Login Screen ─────────────────────────────────────────────────────────────
+function LoginScreen({ onLogin }) {
+  const [u, setU] = useState('');
+  const [p, setP] = useState('');
+  const [show, setShow] = useState(false);
+  const [err, setErr] = useState('');
+
+  function submit(e) {
+    e.preventDefault();
+    if (u === ADMIN_USERNAME && p === ADMIN_PASSWORD) { sessionStorage.setItem('sf_admin', '1'); onLogin(); }
+    else setErr('Invalid credentials.');
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', background: 'var(--sf-primary)' }}>
+      {/* Left brand panel */}
+      <div style={{ flex: 1, padding: '56px 64px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', overflow: 'hidden' }} className="sf-admin-brand">
+        <img src={scanframeLogo} alt="ScanMyFrame" style={{ height: 26, filter: 'brightness(0) invert(1)', opacity: 0.9 }} />
+        <div>
+          <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase', padding: '6px 16px', borderRadius: 999, color: 'var(--sf-gold)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', marginBottom: 24 }}>Internal tool</span>
+          <h1 style={{ margin: '0 0 16px', fontFamily: 'var(--font-display)', fontSize: 44, color: 'var(--sf-secondary)', fontWeight: 700, lineHeight: 1.08, maxWidth: 440 }}>
+            Manage every story behind every frame.
+          </h1>
+          <p style={{ margin: 0, color: 'rgba(250,245,221,0.65)', fontSize: 15, lineHeight: 1.6, maxWidth: 400 }}>
+            Posts, vendors, newsletter and notifications — all in one place.
+          </p>
+        </div>
+        <p style={{ margin: 0, fontSize: 11, color: 'rgba(250,245,221,0.4)', fontFamily: 'var(--font-mono)' }}>v1.0 · scanmyframe.com</p>
+      </div>
+
+      {/* Right form panel */}
+      <div style={{ width: 480, background: 'var(--bg)', padding: '60px 56px', display: 'flex', flexDirection: 'column', justifyContent: 'center', flexShrink: 0 }}>
+        <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-muted)' }}>Sign in</p>
+        <h2 style={{ margin: '0 0 32px', fontFamily: 'var(--font-display)', fontSize: 26, color: 'var(--sf-primary)', fontWeight: 700 }}>Welcome back, admin.</h2>
+        <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--fg-sub)', marginBottom: 8 }}>Username</label>
+            <input className="sf-input" value={u} onChange={e => setU(e.target.value)} autoFocus />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--fg-sub)', marginBottom: 8 }}>Password</label>
+            <div style={{ position: 'relative' }}>
+              <input className="sf-input" style={{ paddingRight: 64 }} type={show ? 'text' : 'password'} value={p} onChange={e => setP(e.target.value)} />
+              <button type="button" onClick={() => setShow(s => !s)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, fontWeight: 700, color: 'var(--fg-muted)', letterSpacing: '0.08em' }}>
+                {show ? 'HIDE' : 'SHOW'}
+              </button>
+            </div>
+          </div>
+          {err && <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, padding: '10px 14px', fontSize: 12, color: '#ef4444' }}>{err}</div>}
+          <button type="submit" className="sf-btn-primary" style={{ marginTop: 8, padding: '14px 20px', fontSize: 14 }}>Sign in to admin</button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ─── Tab: Blog Posts ──────────────────────────────────────────────────────────
 function PostsTab() {
   const [posts, setPosts]   = useState([]);
   const [loading, setLoad]  = useState(true);
-  const [modal, setModal]   = useState(null); // null | EMPTY_POST | existing post
+  const [modal, setModal]   = useState(null);
   const [deleting, setDel]  = useState(null);
+  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
 
   async function load() {
     setLoad(true);
     const { posts: data } = await adminGetAllPosts();
-    setPosts(data);
-    setLoad(false);
+    setPosts(data); setLoad(false);
   }
 
   useEffect(() => { load(); }, []);
 
   async function doDelete(id) {
     if (!confirm('Delete this post permanently?')) return;
-    setDel(id);
-    await adminDeletePost(id);
-    setDel(null);
-    load();
+    setDel(id); await adminDeletePost(id); setDel(null); load();
   }
 
   async function togglePin(post) {
-    await adminUpdatePost(post.id, { is_pinned: !post.is_pinned });
-    load();
+    await adminUpdatePost(post.id, { is_pinned: !post.is_pinned }); load();
   }
 
-  const th = 'text-left text-[10px] font-bold uppercase tracking-widest text-[#555] pb-3 px-3';
-  const td = 'px-3 py-3 text-sm text-[#ccc] align-middle';
+  const total     = posts.length;
+  const published = posts.filter(p => p.status === 'published').length;
+  const drafts    = total - published;
+  const pinned    = posts.filter(p => p.is_pinned).length;
+
+  const filtered = posts.filter(p => {
+    const matchFilter = filter === 'all' || (filter === 'published' && p.status === 'published') || (filter === 'drafts' && p.status !== 'published') || (filter === 'pinned' && p.is_pinned);
+    const matchSearch = !search || p.title?.toLowerCase().includes(search.toLowerCase()) || p.slug?.toLowerCase().includes(search.toLowerCase());
+    return matchFilter && matchSearch;
+  });
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-white font-bold text-lg">Blog Posts</h2>
-        <button onClick={() => setModal({ ...EMPTY_POST })}
-          className="bg-[#0F4C3A] text-[#FAF5DD] px-4 py-2 rounded-xl text-sm font-bold hover:opacity-90 transition-opacity">
-          + New post
-        </button>
-      </div>
+    <>
+      <AdminHeader
+        title="Blog posts"
+        eyebrow="Content"
+        kpis={[
+          { label: 'Total',     value: total,     sub: 'all time' },
+          { label: 'Published', value: published, sub: 'live on site' },
+          { label: 'Drafts',    value: drafts,    sub: 'unpublished' },
+          { label: 'Pinned',    value: pinned,    sub: 'on homepage' },
+        ]}
+        action={
+          <button onClick={() => setModal({ ...EMPTY_POST })} className="sf-btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> New post
+          </button>
+        }
+      />
 
-      {loading ? (
-        <div className="flex justify-center py-16">
-          <div className="w-7 h-7 border-2 border-[#0F4C3A] border-t-transparent rounded-full animate-spin" />
-        </div>
-      ) : posts.length === 0 ? (
-        <p className="text-[#555] text-sm text-center py-16">No posts yet. Create your first one.</p>
-      ) : (
-        <>
-          {/* Desktop table */}
-          <div className="hidden sm:block overflow-x-auto rounded-xl border border-white/8">
-            <table className="w-full min-w-[600px]">
-              <thead className="border-b border-white/8">
-                <tr>
-                  <th className={th}>Title</th>
-                  <th className={th}>Status</th>
-                  <th className={th}>Tags</th>
-                  <th className={th}>Published</th>
-                  <th className={th}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {posts.map((p, i) => (
-                  <tr key={p.id} className={`border-b border-white/5 ${i % 2 === 0 ? 'bg-white/[0.02]' : ''}`}>
-                    <td className={td}>
-                      <div className="flex items-center gap-2">
-                        {p.is_pinned && (
-                          <span title="Pinned to homepage" className="text-[#D4AF37] text-xs">📌</span>
-                        )}
-                        <div>
-                          <div className="font-semibold text-white line-clamp-1">{p.title}</div>
-                          <div className="text-[11px] text-[#555] mt-0.5">/blog/{p.slug}</div>
+      <div style={{ padding: '0 36px 32px', flex: 1, background: 'var(--bg)' }}>
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
+            <div style={{ width: 28, height: 28, border: '2.5px solid var(--sf-primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+          </div>
+        ) : (
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden' }}>
+            {/* Filter + Search bar */}
+            <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+              <div style={{ display: 'flex', gap: 4, padding: 4, background: 'var(--bg-subtle)', borderRadius: 99 }}>
+                {[['all','All'],['published','Published'],['drafts','Drafts'],['pinned','Pinned']].map(([id, label]) => (
+                  <button key={id} onClick={() => setFilter(id)} style={{ padding: '5px 14px', borderRadius: 99, border: 'none', background: filter === id ? 'var(--surface)' : 'transparent', color: filter === id ? 'var(--sf-primary)' : 'var(--fg-muted)', fontWeight: 600, fontSize: 11, cursor: 'pointer', boxShadow: filter === id ? '0 1px 4px rgba(0,0,0,0.08)' : 'none' }}>{label}</button>
+                ))}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 10, background: 'var(--bg-subtle)', border: '1px solid var(--border)', minWidth: 220 }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--fg-muted)', flexShrink: 0 }}><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search posts…" style={{ background: 'transparent', border: 'none', outline: 'none', fontSize: 12, flex: 1, color: 'var(--fg-body)' }} />
+              </div>
+            </div>
+
+            {filtered.length === 0 ? (
+              <p style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--fg-muted)', fontSize: 13 }}>No posts found.</p>
+            ) : (
+              <>
+                {/* Desktop table */}
+                <table style={{ width: '100%', borderCollapse: 'collapse' }} className="sf-admin-table">
+                  <thead>
+                    <tr style={{ background: 'var(--bg-subtle)' }}>
+                      {['Title', 'Status', 'Tags', 'Published', ''].map(h => (
+                        <th key={h} style={{ textAlign: 'left', padding: '12px 20px', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-muted)' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map(p => (
+                      <tr key={p.id} style={{ borderTop: '1px solid var(--border)', background: p.is_pinned ? 'rgba(212,175,55,0.04)' : 'var(--surface)', borderLeft: p.is_pinned ? '3px solid var(--sf-gold)' : '3px solid transparent' }}>
+                        <td style={{ padding: '14px 20px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            {p.is_pinned && (
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--sf-gold)" stroke="none" style={{ flexShrink: 0 }}>
+                                <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17 5.8 21.3l2.4-7.4L2 9.4h7.6L12 2z"/>
+                              </svg>
+                            )}
+                            <div>
+                              <p style={{ margin: 0, fontWeight: 600, fontSize: 14, color: 'var(--sf-primary)', fontFamily: 'var(--font-display)' }}>{p.title}</p>
+                              <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--fg-muted)', fontFamily: 'var(--font-mono)' }}>/blog/{p.slug}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td style={{ padding: '14px 20px' }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 99, textTransform: 'uppercase', letterSpacing: '0.06em', background: p.status === 'published' ? 'rgba(34,197,94,0.12)' : 'rgba(202,138,4,0.12)', color: p.status === 'published' ? '#16a34a' : '#ca8a04', border: `1px solid ${p.status === 'published' ? 'rgba(34,197,94,0.25)' : 'rgba(202,138,4,0.25)'}` }}>{p.status}</span>
+                        </td>
+                        <td style={{ padding: '14px 20px' }}>
+                          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                            {(p.tags || []).slice(0, 3).map(t => (
+                              <span key={t} style={{ fontSize: 10, padding: '3px 8px', borderRadius: 6, background: 'var(--bg-subtle)', color: 'var(--fg-sub)' }}>{t}</span>
+                            ))}
+                          </div>
+                        </td>
+                        <td style={{ padding: '14px 20px', fontSize: 12, color: 'var(--fg-sub)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>{fmtDateShort(p.published_at) || '—'}</td>
+                        <td style={{ padding: '14px 20px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                          <button onClick={() => togglePin(p)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: p.is_pinned ? 'var(--sf-gold)' : 'var(--fg-muted)', fontWeight: 600, fontSize: 12, marginRight: 12 }}>{p.is_pinned ? 'Unpin' : 'Pin'}</button>
+                          <button onClick={() => setModal(p)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--sf-primary)', fontWeight: 600, fontSize: 12, marginRight: 12 }}>Edit</button>
+                          <button onClick={() => doDelete(p.id)} disabled={deleting === p.id} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontWeight: 600, fontSize: 12, opacity: deleting === p.id ? 0.4 : 1 }}>{deleting === p.id ? '…' : 'Delete'}</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {/* Mobile cards */}
+                <div className="sf-admin-cards">
+                  {filtered.map((p, i) => (
+                    <div key={p.id} style={{ padding: '16px 20px', borderTop: i > 0 ? '1px solid var(--border)' : 'none', borderLeft: p.is_pinned ? '3px solid var(--sf-gold)' : '3px solid transparent' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ margin: '0 0 2px', fontWeight: 600, fontSize: 13, color: 'var(--sf-primary)', fontFamily: 'var(--font-display)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</p>
+                          <p style={{ margin: 0, fontSize: 11, color: 'var(--fg-muted)' }}>/blog/{p.slug}</p>
+                        </div>
+                        <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 99, textTransform: 'uppercase', background: p.status === 'published' ? 'rgba(34,197,94,0.12)' : 'rgba(202,138,4,0.12)', color: p.status === 'published' ? '#16a34a' : '#ca8a04', flexShrink: 0, marginLeft: 8 }}>{p.status}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 11, color: 'var(--fg-muted)', fontFamily: 'var(--font-mono)' }}>{fmtDateShort(p.published_at) || '—'}</span>
+                        <div style={{ display: 'flex', gap: 12 }}>
+                          <button onClick={() => togglePin(p)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: p.is_pinned ? 'var(--sf-gold)' : 'var(--fg-muted)', fontWeight: 600, fontSize: 12 }}>{p.is_pinned ? 'Unpin' : 'Pin'}</button>
+                          <button onClick={() => setModal(p)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--sf-primary)', fontWeight: 600, fontSize: 12 }}>Edit</button>
+                          <button onClick={() => doDelete(p.id)} disabled={deleting === p.id} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontWeight: 600, fontSize: 12 }}>{deleting === p.id ? '…' : 'Delete'}</button>
                         </div>
                       </div>
-                    </td>
-                    <td className={td}>
-                      <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full
-                        ${p.status === 'published' ? 'bg-green-500/15 text-green-400' : 'bg-yellow-500/15 text-yellow-400'}`}>
-                        {p.status}
-                      </span>
-                    </td>
-                    <td className={td}>
-                      <div className="flex flex-wrap gap-1">
-                        {(p.tags || []).slice(0, 3).map(t => (
-                          <span key={t} className="text-[10px] bg-white/5 text-[#888] px-1.5 py-0.5 rounded">{t}</span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className={`${td} whitespace-nowrap`}>{fmtDate(p.published_at)}</td>
-                    <td className={td}>
-                      <div className="flex items-center gap-2 justify-end">
-                        <button
-                          onClick={() => togglePin(p)}
-                          title={p.is_pinned ? 'Remove from homepage' : 'Pin to homepage'}
-                          className={`text-xs font-medium transition-opacity hover:opacity-70 ${p.is_pinned ? 'text-[#D4AF37]' : 'text-[#555]'}`}>
-                          {p.is_pinned ? '📌 Pinned' : '📌 Pin'}
-                        </button>
-                        <button onClick={() => setModal(p)}
-                          className="text-[#D4AF37] text-xs hover:opacity-70 transition-opacity font-medium">Edit</button>
-                        <button onClick={() => doDelete(p.id)} disabled={deleting === p.id}
-                          className="text-red-400 text-xs hover:opacity-70 transition-opacity font-medium disabled:opacity-40">
-                          {deleting === p.id ? '…' : 'Delete'}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile cards */}
-          <div className="sm:hidden flex flex-col divide-y divide-white/5 rounded-xl border border-white/8 overflow-hidden">
-            {posts.map((p, i) => (
-              <div key={p.id} className={`p-4 ${i % 2 === 0 ? 'bg-white/[0.02]' : ''}`}>
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      {p.is_pinned && <span className="text-[#D4AF37] text-xs">📌</span>}
-                      <div className="font-semibold text-white text-sm truncate">{p.title}</div>
                     </div>
-                    <div className="text-[11px] text-[#555]">/blog/{p.slug}</div>
-                  </div>
-                  <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full shrink-0
-                    ${p.status === 'published' ? 'bg-green-500/15 text-green-400' : 'bg-yellow-500/15 text-yellow-400'}`}>
-                    {p.status}
-                  </span>
+                  ))}
                 </div>
-                {(p.tags || []).length > 0 && (
-                  <div className="flex flex-wrap gap-1 mb-2">
-                    {(p.tags || []).slice(0, 3).map(t => (
-                      <span key={t} className="text-[10px] bg-white/5 text-[#888] px-1.5 py-0.5 rounded">{t}</span>
-                    ))}
-                  </div>
-                )}
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-[11px] text-[#555]">{fmtDate(p.published_at)}</span>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => togglePin(p)}
-                      className={`text-xs font-medium transition-opacity hover:opacity-70 ${p.is_pinned ? 'text-[#D4AF37]' : 'text-[#555]'}`}>
-                      {p.is_pinned ? '📌 Pinned' : '📌 Pin'}
-                    </button>
-                    <button onClick={() => setModal(p)} className="text-[#D4AF37] text-xs hover:opacity-70 font-medium">Edit</button>
-                    <button onClick={() => doDelete(p.id)} disabled={deleting === p.id}
-                      className="text-red-400 text-xs hover:opacity-70 font-medium disabled:opacity-40">
-                      {deleting === p.id ? '…' : 'Delete'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+              </>
+            )}
           </div>
-        </>
-      )}
+        )}
+      </div>
 
-      {modal !== null && (
-        <PostModal
-          post={modal}
-          onClose={() => setModal(null)}
-          onSaved={() => { setModal(null); load(); }}
-        />
-      )}
-    </div>
+      {modal !== null && <PostModal post={modal} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />}
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } } .sf-admin-cards { display: none; } @media(max-width:640px){ .sf-admin-table { display: none !important; } .sf-admin-cards { display: block !important; } }`}</style>
+    </>
   );
 }
 
-// ── Tab: Users ────────────────────────────────────────────────────────────────
+// ─── Tab: Users ───────────────────────────────────────────────────────────────
 function UsersTab() {
-  const [users, setUsers]   = useState([]);
-  const [loading, setLoad]  = useState(true);
-  const [query, setQuery]   = useState('');
+  const [users, setUsers] = useState([]);
+  const [loading, setLoad] = useState(true);
+  const [query, setQuery]  = useState('');
 
   useEffect(() => {
     adminGetAllUsers().then(({ users: data }) => { setUsers(data); setLoad(false); });
   }, []);
 
   const q = query.trim().toLowerCase();
-  const filtered = q
-    ? users.filter(u =>
-        u.full_name?.toLowerCase().includes(q) ||
-        u.business_name?.toLowerCase().includes(q) ||
-        u.email?.toLowerCase().includes(q)
-      )
-    : users;
+  const filtered = q ? users.filter(u => u.full_name?.toLowerCase().includes(q) || u.business_name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q)) : users;
 
-  const th = 'text-left text-[10px] font-bold uppercase tracking-widest text-[#555] pb-3 px-3';
-  const td = 'px-3 py-3 text-sm text-[#ccc] align-middle';
-  const searchInp = 'bg-[#111] border border-white/10 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-[#D4AF37]/40 placeholder:text-[#444] w-full sm:w-64';
+  const total   = users.length;
+  const active  = users.filter(u => (Array.isArray(u.subscriptions) ? u.subscriptions[0] : u.subscriptions)?.status === 'active').length;
+  const byPlan  = users.reduce((acc, u) => { const s = (Array.isArray(u.subscriptions) ? u.subscriptions[0] : u.subscriptions) || {}; if (s.plan_id) acc[s.plan_id] = (acc[s.plan_id] || 0) + 1; return acc; }, {});
+
+  const planColor = { basic: '#6366f1', pro: '#D4AF37', business: '#0F4C3A', trial: '#9aaea9', free: '#9aaea9' };
 
   return (
-    <div>
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <h2 className="text-white font-bold text-lg">
-          Users <span className="text-[#555] font-normal text-base ml-1">({filtered.length}{q ? ` of ${users.length}` : ''})</span>
-        </h2>
-        <div className="relative w-full sm:w-auto">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 opacity-30" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-          </svg>
-          <input
-            type="text"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            placeholder="Search by name or email…"
-            className={`${searchInp} pl-9`}
-          />
-          {query && (
-            <button onClick={() => setQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#555] hover:text-white">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-            </button>
-          )}
-        </div>
+    <>
+      <AdminHeader
+        title="Vendors & users"
+        eyebrow="Accounts"
+        kpis={[
+          { label: 'Total',    value: total,              sub: 'all signups' },
+          { label: 'Active',   value: active,             sub: 'paying now' },
+          { label: 'Pro',      value: byPlan.pro || 0,    sub: 'most popular' },
+          { label: 'Business', value: byPlan.business || 0, sub: 'top tier' },
+        ]}
+        action={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 10, background: 'var(--surface)', border: '1px solid var(--border)', minWidth: 240 }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--fg-muted)', flexShrink: 0 }}><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+            <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search by name or email…" style={{ background: 'transparent', border: 'none', outline: 'none', fontSize: 12, flex: 1 }} />
+          </div>
+        }
+      />
+
+      <div style={{ padding: '0 36px 32px', flex: 1, background: 'var(--bg)' }}>
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
+            <div style={{ width: 28, height: 28, border: '2.5px solid var(--sf-primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+          </div>
+        ) : filtered.length === 0 ? (
+          <p style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--fg-muted)', fontSize: 13 }}>No users found.</p>
+        ) : (
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden' }}>
+            {/* Desktop */}
+            <div className="sf-admin-table">
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: 'var(--bg-subtle)' }}>
+                    {['Vendor', 'Plan', 'QR usage', 'Status', 'Renews', 'Joined'].map(h => (
+                      <th key={h} style={{ textAlign: 'left', padding: '12px 20px', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-muted)' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((u, i) => {
+                    const sub = (Array.isArray(u.subscriptions) ? u.subscriptions[0] : u.subscriptions) || {};
+                    const name = u.business_name || u.full_name || '—';
+                    const pct = sub.qr_allocated > 0 && sub.qr_allocated !== -1 ? (sub.qr_used / sub.qr_allocated) * 100 : 0;
+                    const near = sub.qr_allocated !== -1 && pct >= 80;
+                    const pColor = planColor[sub.plan_id] || '#9aaea9';
+                    return (
+                      <tr key={u.id} style={{ borderTop: i > 0 ? '1px solid var(--border)' : 'none' }}>
+                        <td style={{ padding: '14px 20px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--sf-primary)', color: 'var(--sf-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12, flexShrink: 0 }}>{initials(name)}</div>
+                            <div>
+                              <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--sf-primary)' }}>{name}</p>
+                              <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--fg-muted)' }}>{u.email}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td style={{ padding: '14px 20px' }}>
+                          {sub.plan_id ? <span style={{ fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 99, textTransform: 'uppercase', letterSpacing: '0.06em', color: pColor, border: `1px solid ${pColor}`, background: `${pColor}12` }}>{sub.plan_id}</span> : <span style={{ color: 'var(--fg-muted)', fontSize: 12 }}>—</span>}
+                          {sub.billing_cycle && <p style={{ margin: '4px 0 0', fontSize: 11, color: 'var(--fg-muted)', textTransform: 'capitalize' }}>{sub.billing_cycle}</p>}
+                        </td>
+                        <td style={{ padding: '14px 20px', minWidth: 140 }}>
+                          {sub.qr_used != null ? (
+                            <>
+                              <p style={{ margin: '0 0 4px', fontSize: 12, color: 'var(--fg-body)', fontFamily: 'var(--font-mono)' }}>{sub.qr_used} / {sub.qr_allocated === -1 ? '∞' : sub.qr_allocated}</p>
+                              {sub.qr_allocated !== -1 && (
+                                <div style={{ height: 4, background: 'var(--bg-subtle)', borderRadius: 99, overflow: 'hidden' }}>
+                                  <div style={{ width: `${Math.min(100, pct)}%`, height: '100%', background: near ? 'var(--sf-gold)' : 'var(--sf-primary)' }} />
+                                </div>
+                              )}
+                            </>
+                          ) : <span style={{ color: 'var(--fg-muted)', fontSize: 12 }}>—</span>}
+                        </td>
+                        <td style={{ padding: '14px 20px' }}>
+                          {sub.status ? <span style={{ fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 99, textTransform: 'uppercase', background: sub.status === 'active' ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)', color: sub.status === 'active' ? '#16a34a' : 'var(--danger)', border: `1px solid ${sub.status === 'active' ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}` }}>{sub.status === 'past_due' ? 'past due' : sub.status}</span> : <span style={{ color: 'var(--fg-muted)', fontSize: 12 }}>—</span>}
+                        </td>
+                        <td style={{ padding: '14px 20px', fontSize: 12, color: 'var(--fg-sub)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>{fmtDateShort(sub.current_period_end)}</td>
+                        <td style={{ padding: '14px 20px', fontSize: 12, color: 'var(--fg-sub)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>{fmtDateShort(u.created_at)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile cards */}
+            <div className="sf-admin-cards">
+              {filtered.map((u, i) => {
+                const sub = (Array.isArray(u.subscriptions) ? u.subscriptions[0] : u.subscriptions) || {};
+                const name = u.business_name || u.full_name || '—';
+                const pct = sub.qr_allocated > 0 && sub.qr_allocated !== -1 ? (sub.qr_used / sub.qr_allocated) * 100 : 0;
+                const pColor = planColor[sub.plan_id] || '#9aaea9';
+                return (
+                  <div key={u.id} style={{ padding: '16px 20px', borderTop: i > 0 ? '1px solid var(--border)' : 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 10 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--sf-primary)', color: 'var(--sf-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12, flexShrink: 0 }}>{initials(name)}</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--sf-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</p>
+                        <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--fg-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</p>
+                      </div>
+                      {sub.status && <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 99, textTransform: 'uppercase', background: sub.status === 'active' ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)', color: sub.status === 'active' ? '#16a34a' : 'var(--danger)', flexShrink: 0 }}>{sub.status === 'past_due' ? 'past due' : sub.status}</span>}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 12px', fontSize: 11 }}>
+                      <div><span style={{ color: 'var(--fg-muted)' }}>Plan: </span><span style={{ fontWeight: 700, color: pColor }}>{sub.plan_id || '—'}</span>{sub.billing_cycle && <span style={{ color: 'var(--fg-muted)' }}> · {sub.billing_cycle}</span>}</div>
+                      <div><span style={{ color: 'var(--fg-muted)' }}>QR: </span><span style={{ fontFamily: 'var(--font-mono)' }}>{sub.qr_used != null ? `${sub.qr_used} / ${sub.qr_allocated === -1 ? '∞' : sub.qr_allocated}` : '—'}</span></div>
+                      <div><span style={{ color: 'var(--fg-muted)' }}>Renews: </span><span style={{ fontFamily: 'var(--font-mono)' }}>{fmtDateShort(sub.current_period_end)}</span></div>
+                      <div><span style={{ color: 'var(--fg-muted)' }}>Joined: </span><span style={{ fontFamily: 'var(--font-mono)' }}>{fmtDateShort(u.created_at)}</span></div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
-
-      {loading ? (
-        <div className="flex justify-center py-16">
-          <div className="w-7 h-7 border-2 border-[#0F4C3A] border-t-transparent rounded-full animate-spin" />
-        </div>
-      ) : filtered.length === 0 ? (
-        <p className="text-[#555] text-sm text-center py-16">{q ? `No users matching "${query}"` : 'No users found.'}</p>
-      ) : (
-        <>
-          {/* Desktop table */}
-          <div className="hidden sm:block overflow-x-auto rounded-xl border border-white/8">
-            <table className="w-full min-w-[700px]">
-              <thead className="border-b border-white/8">
-                <tr>
-                  <th className={th}>Name / Email</th>
-                  <th className={th}>Plan</th>
-                  <th className={th}>QR Used / Allocated</th>
-                  <th className={th}>Sub Status</th>
-                  <th className={th}>Renews</th>
-                  <th className={th}>Joined</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((u, i) => {
-                  const sub = (Array.isArray(u.subscriptions) ? u.subscriptions[0] : u.subscriptions) || {};
-                  return (
-                    <tr key={u.id} className={`border-b border-white/5 ${i % 2 === 0 ? 'bg-white/[0.02]' : ''}`}>
-                      <td className={td}>
-                        <div className="font-semibold text-white">{u.business_name || u.full_name || '—'}</div>
-                        <div className="text-[11px] text-[#555]">{u.email || u.full_name}</div>
-                      </td>
-                      <td className={td}>
-                        <div className="text-[11px] font-bold text-[#D4AF37]">{sub.plan_id || '—'}</div>
-                        {sub.billing_cycle && (
-                          <div className="text-[10px] text-[#555] capitalize">{sub.billing_cycle}</div>
-                        )}
-                      </td>
-                      <td className={td}>
-                        {sub.qr_used != null
-                          ? `${sub.qr_used} / ${sub.qr_allocated === -1 ? '∞' : sub.qr_allocated}`
-                          : '—'}
-                      </td>
-                      <td className={td}>
-                        {sub.status
-                          ? <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full
-                              ${sub.status === 'active' ? 'bg-green-500/15 text-green-400' : 'bg-red-500/15 text-red-400'}`}>
-                              {sub.status}
-                            </span>
-                          : '—'}
-                      </td>
-                      <td className={`${td} whitespace-nowrap`}>{fmtDate(sub.current_period_end)}</td>
-                      <td className={`${td} whitespace-nowrap`}>{fmtDate(u.created_at)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile cards */}
-          <div className="sm:hidden flex flex-col divide-y divide-white/5 rounded-xl border border-white/8 overflow-hidden">
-            {filtered.map((u, i) => {
-              const sub = (Array.isArray(u.subscriptions) ? u.subscriptions[0] : u.subscriptions) || {};
-              return (
-                <div key={u.id} className={`p-4 ${i % 2 === 0 ? 'bg-white/[0.02]' : ''}`}>
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="min-w-0">
-                      <div className="font-semibold text-white text-sm truncate">{u.business_name || u.full_name || '—'}</div>
-                      <div className="text-[11px] text-[#555] truncate">{u.email}</div>
-                    </div>
-                    {sub.status && (
-                      <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full shrink-0
-                        ${sub.status === 'active' ? 'bg-green-500/15 text-green-400' : 'bg-red-500/15 text-red-400'}`}>
-                        {sub.status}
-                      </span>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
-                    <div>
-                      <span className="text-[#555]">Plan: </span>
-                      <span className="text-[#D4AF37] font-bold">{sub.plan_id || '—'}</span>
-                      {sub.billing_cycle && <span className="text-[#555] capitalize"> · {sub.billing_cycle}</span>}
-                    </div>
-                    <div>
-                      <span className="text-[#555]">QR: </span>
-                      <span className="text-[#ccc]">
-                        {sub.qr_used != null ? `${sub.qr_used} / ${sub.qr_allocated === -1 ? '∞' : sub.qr_allocated}` : '—'}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-[#555]">Renews: </span>
-                      <span className="text-[#ccc]">{fmtDate(sub.current_period_end)}</span>
-                    </div>
-                    <div>
-                      <span className="text-[#555]">Joined: </span>
-                      <span className="text-[#ccc]">{fmtDate(u.created_at)}</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </>
-      )}
-    </div>
+    </>
   );
 }
 
-// ── Tab: Newsletter ───────────────────────────────────────────────────────────
+// ─── Tab: Newsletter ──────────────────────────────────────────────────────────
 function NewsletterTab() {
-  const [subs, setSubs]     = useState([]);
-  const [loading, setLoad]  = useState(true);
+  const [subs, setSubs]    = useState([]);
+  const [loading, setLoad] = useState(true);
 
   useEffect(() => {
     adminGetNewsletter().then(({ subscribers: data }) => { setSubs(data); setLoad(false); });
   }, []);
 
-  function download() {
-    downloadCSV(subs.map(s => ({ email: s.email, subscribed_at: s.created_at })), 'newsletter.csv');
-  }
-
-  const th = 'text-left text-[10px] font-bold uppercase tracking-widest text-[#555] pb-3 px-3';
-  const td = 'px-3 py-3 text-sm text-[#ccc]';
+  function download() { downloadCSV(subs.map(s => ({ email: s.email, subscribed_at: s.created_at })), 'newsletter.csv'); }
 
   return (
-    <div>
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <h2 className="text-white font-bold text-lg">
-          Newsletter <span className="text-[#555] font-normal text-base ml-1">({subs.length})</span>
-        </h2>
-        <button onClick={download} disabled={subs.length === 0}
-          className="bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/30 px-4 py-2 rounded-xl text-sm font-bold hover:opacity-80 transition-opacity disabled:opacity-30">
-          ↓ Download CSV
-        </button>
-      </div>
+    <>
+      <AdminHeader
+        title="Newsletter"
+        eyebrow="Audience"
+        kpis={[
+          { label: 'Total subscribers', value: subs.length, sub: 'all-time' },
+          { label: 'This month', value: subs.filter(s => new Date(s.created_at) > new Date(Date.now() - 30*24*60*60*1000)).length, sub: 'new' },
+          { label: 'This week', value: subs.filter(s => new Date(s.created_at) > new Date(Date.now() - 7*24*60*60*1000)).length, sub: 'new' },
+        ]}
+        action={
+          <button onClick={download} disabled={subs.length === 0} className="sf-btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Download CSV
+          </button>
+        }
+      />
 
-      {loading ? (
-        <div className="flex justify-center py-16">
-          <div className="w-7 h-7 border-2 border-[#0F4C3A] border-t-transparent rounded-full animate-spin" />
-        </div>
-      ) : subs.length === 0 ? (
-        <p className="text-[#555] text-sm text-center py-16">No subscribers yet.</p>
-      ) : (
-        <>
-          {/* Desktop table */}
-          <div className="hidden sm:block overflow-x-auto rounded-xl border border-white/8">
-            <table className="w-full min-w-[400px]">
-              <thead className="border-b border-white/8">
-                <tr>
-                  <th className={th}>#</th>
-                  <th className={th}>Email</th>
-                  <th className={th}>Subscribed</th>
+      <div style={{ padding: '0 36px 32px', flex: 1, background: 'var(--bg)' }}>
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
+            <div style={{ width: 28, height: 28, border: '2.5px solid var(--sf-primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+          </div>
+        ) : subs.length === 0 ? (
+          <p style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--fg-muted)', fontSize: 13 }}>No subscribers yet.</p>
+        ) : (
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden' }}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--sf-primary)' }}>All subscribers</p>
+            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: 'var(--bg-subtle)' }}>
+                  <th style={{ textAlign: 'left', padding: '12px 20px', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-muted)', width: 60 }}>#</th>
+                  <th style={{ textAlign: 'left', padding: '12px 20px', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-muted)' }}>Email</th>
+                  <th style={{ textAlign: 'left', padding: '12px 20px', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-muted)' }}>Subscribed</th>
                 </tr>
               </thead>
               <tbody>
                 {subs.map((s, i) => (
-                  <tr key={s.id || i} className={`border-b border-white/5 ${i % 2 === 0 ? 'bg-white/[0.02]' : ''}`}>
-                    <td className={`${td} text-[#555]`}>{i + 1}</td>
-                    <td className={td}>{s.email}</td>
-                    <td className={`${td} whitespace-nowrap`}>{fmtDate(s.created_at)}</td>
+                  <tr key={s.id || i} style={{ borderTop: '1px solid var(--border)' }}>
+                    <td style={{ padding: '12px 20px', color: 'var(--fg-muted)', fontSize: 12, fontFamily: 'var(--font-mono)' }}>{String(i + 1).padStart(3, '0')}</td>
+                    <td style={{ padding: '12px 20px', color: 'var(--fg-body)', fontSize: 13 }}>{s.email}</td>
+                    <td style={{ padding: '12px 20px', color: 'var(--fg-sub)', fontSize: 12, fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>{fmtDateShort(s.created_at)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-
-          {/* Mobile cards */}
-          <div className="sm:hidden flex flex-col divide-y divide-white/5 rounded-xl border border-white/8 overflow-hidden">
-            {subs.map((s, i) => (
-              <div key={s.id || i} className={`px-4 py-3 flex items-center justify-between gap-3 ${i % 2 === 0 ? 'bg-white/[0.02]' : ''}`}>
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="text-[#555] text-[11px] shrink-0">#{i + 1}</span>
-                  <span className="text-sm text-[#ccc] truncate">{s.email}</span>
-                </div>
-                <span className="text-[11px] text-[#555] whitespace-nowrap shrink-0">{fmtDate(s.created_at)}</span>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
+        )}
+      </div>
+    </>
   );
 }
 
-// ── Tab: Push Notifications ───────────────────────────────────────────────────
+// ─── Tab: Push Notifications ──────────────────────────────────────────────────
 const AUDIENCE_OPTIONS = [
   { value: 'all',         label: 'All users' },
   { value: 'subscribers', label: 'All active subscribers' },
-  { value: 'basic',       label: 'Basic plan only' },
-  { value: 'pro',         label: 'Pro plan only' },
-  { value: 'business',    label: 'Business plan only' },
+  { value: 'basic',       label: 'Basic plan' },
+  { value: 'pro',         label: 'Pro plan' },
+  { value: 'business',    label: 'Business plan' },
 ];
 
 const TYPE_OPTIONS = [
   { value: 'info',    label: 'Info',    color: '#3b82f6' },
-  { value: 'success', label: 'Success', color: '#22c55e' },
+  { value: 'success', label: 'Success', color: '#16a34a' },
   { value: 'alert',   label: 'Alert',   color: '#ca8a04' },
   { value: 'error',   label: 'Error',   color: '#ef4444' },
   { value: 'update',  label: 'Update',  color: '#a855f7' },
 ];
 
 function NotificationsTab() {
-  const [audience,  setAudience]  = useState('all');
-  const [type,      setType]      = useState('info');
-  const [message,   setMessage]   = useState('');
-  const [fullDesc,  setFullDesc]  = useState('');
-  const [sending,   setSending]   = useState(false);
-  const [result,    setResult]    = useState(null); // { count, error } | null
+  const [audience, setAudience] = useState('all');
+  const [type,     setType]     = useState('info');
+  const [message,  setMessage]  = useState('');
+  const [fullDesc, setFullDesc] = useState('');
+  const [sending,  setSending]  = useState(false);
+  const [result,   setResult]   = useState(null);
 
-  const inp  = 'w-full bg-[#1a1a1a] border border-white/10 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#D4AF37]/50 placeholder:text-[#444]';
-  const lbl  = 'text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] mb-1.5 block';
+  const selectedType = TYPE_OPTIONS.find(t => t.value === type);
+  const selectedAud  = AUDIENCE_OPTIONS.find(a => a.value === audience);
+
+  const lbl = { display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--fg-sub)', marginBottom: 8 };
+  const inp = { width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontFamily: 'inherit', color: 'var(--fg-body)', outline: 'none', boxSizing: 'border-box' };
 
   async function handleSend(e) {
     e.preventDefault();
     if (!message.trim()) return;
-    const audienceLabel = AUDIENCE_OPTIONS.find(o => o.value === audience)?.label ?? audience;
-    if (!confirm(`Send "${type}" notification to "${audienceLabel}"?\n\nThis will appear in all targeted users' notification panels and cannot be undone.`)) return;
-    setSending(true);
-    setResult(null);
+    if (!confirm(`Send "${type}" notification to "${selectedAud.label}"?\n\nThis cannot be undone.`)) return;
+    setSending(true); setResult(null);
     const { count, error } = await adminPushNotification({ audience, type, message: message.trim(), full_description: fullDesc.trim() || null });
-    setSending(false);
-    setResult({ count, error });
+    setSending(false); setResult({ count, error });
     if (!error) { setMessage(''); setFullDesc(''); }
   }
 
-  const selectedType = TYPE_OPTIONS.find(t => t.value === type);
-
   return (
-    <div className="max-w-2xl">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-6">
-        <h2 className="text-white font-bold text-lg">Push Notification</h2>
-        <span className="text-[#555] text-xs">Sends to all matched users simultaneously</span>
-      </div>
+    <>
+      <AdminHeader title="Push notification" eyebrow="Broadcast" kpis={[
+        { label: 'Audiences', value: AUDIENCE_OPTIONS.length, sub: 'targeting options' },
+        { label: 'Types', value: TYPE_OPTIONS.length, sub: 'info · alert · update…' },
+      ]} />
 
-      <form onSubmit={handleSend} className="flex flex-col gap-5">
-        {/* Audience */}
-        <div>
-          <label className={lbl}>Target audience</label>
-          <select className={inp} value={audience} onChange={e => setAudience(e.target.value)}>
-            {AUDIENCE_OPTIONS.map(o => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-        </div>
+      <div style={{ padding: '0 36px 32px', flex: 1, background: 'var(--bg)', display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 16 }}>
+        {/* Compose */}
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 28, display: 'flex', flexDirection: 'column' }}>
+          <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-muted)' }}>Compose</p>
+          <h3 style={{ margin: '0 0 24px', fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, color: 'var(--sf-primary)' }}>New broadcast</h3>
 
-        {/* Type */}
-        <div>
-          <label className={lbl}>Notification type</label>
-          <div className="flex flex-wrap gap-2">
-            {TYPE_OPTIONS.map(o => (
-              <button
-                key={o.value} type="button"
-                onClick={() => setType(o.value)}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold border transition-all ${type === o.value ? 'border-transparent' : 'border-white/10 text-[#888]'}`}
-                style={type === o.value ? { background: `${o.color}22`, color: o.color, borderColor: `${o.color}44` } : {}}>
-                {o.label}
+          <form onSubmit={handleSend} style={{ display: 'flex', flexDirection: 'column', gap: 20, flex: 1 }}>
+            <div>
+              <label style={lbl}>Audience</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+                {AUDIENCE_OPTIONS.map(a => (
+                  <button key={a.value} type="button" onClick={() => setAudience(a.value)} style={{ padding: '10px 14px', borderRadius: 10, cursor: 'pointer', background: audience === a.value ? 'rgba(15,76,58,0.06)' : 'var(--bg-subtle)', border: audience === a.value ? '1.5px solid var(--sf-primary)' : '1px solid var(--border)', textAlign: 'left', fontFamily: 'inherit' }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: audience === a.value ? 'var(--sf-primary)' : 'var(--fg-body)' }}>{a.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label style={lbl}>Type</label>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {TYPE_OPTIONS.map(t => (
+                  <button key={t.value} type="button" onClick={() => setType(t.value)} style={{ padding: '6px 14px', borderRadius: 99, background: type === t.value ? `${t.color}18` : 'var(--bg-subtle)', border: type === t.value ? `1px solid ${t.color}66` : '1px solid var(--border)', color: type === t.value ? t.color : 'var(--fg-sub)', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', fontFamily: 'inherit' }}>{t.label}</button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label style={lbl}>Message <span style={{ textTransform: 'none', fontWeight: 400, letterSpacing: 0, color: 'var(--fg-muted)' }}>· {message.length}/160</span></label>
+              <input style={inp} required maxLength={160} value={message} onChange={e => setMessage(e.target.value)} placeholder="e.g. We've updated our Terms of Service." />
+            </div>
+
+            <div>
+              <label style={lbl}>Full description <span style={{ textTransform: 'none', fontWeight: 400, letterSpacing: 0, color: 'var(--fg-muted)' }}>· optional</span></label>
+              <textarea style={{ ...inp, resize: 'vertical', minHeight: 80 }} rows={3} value={fullDesc} onChange={e => setFullDesc(e.target.value)} placeholder="Detailed explanation shown when the user expands the notification…" />
+            </div>
+
+            {result && (
+              <div style={{ borderRadius: 10, padding: '10px 14px', fontSize: 12, fontWeight: 600, background: result.error ? 'rgba(239,68,68,0.08)' : 'rgba(34,197,94,0.08)', color: result.error ? '#ef4444' : '#16a34a', border: `1px solid ${result.error ? 'rgba(239,68,68,0.2)' : 'rgba(34,197,94,0.2)'}` }}>
+                {result.error ? `Error: ${result.error}` : `✓ Sent to ${result.count} user${result.count !== 1 ? 's' : ''} successfully.`}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 16, borderTop: '1px solid var(--border)', marginTop: 'auto' }}>
+              <p style={{ margin: 0, fontSize: 12, color: 'var(--fg-muted)' }}>Sending to <strong style={{ color: 'var(--sf-primary)' }}>{selectedAud.label}</strong></p>
+              <button type="submit" disabled={sending || !message.trim()} className="sf-btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                {sending ? 'Sending…' : 'Send broadcast'}
               </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Short message */}
-        <div>
-          <label className={lbl}>Message <span className="text-[#555] normal-case font-normal">(shown in notification list)</span></label>
-          <input
-            className={inp} required maxLength={160}
-            placeholder="e.g. We've updated our Terms of Service."
-            value={message} onChange={e => setMessage(e.target.value)} />
-          <p className="text-[#555] text-[11px] mt-1">{message.length}/160</p>
-        </div>
-
-        {/* Full description */}
-        <div>
-          <label className={lbl}>Full description <span className="text-[#555] normal-case font-normal">(shown when user clicks — optional)</span></label>
-          <textarea
-            className={`${inp} resize-none`} rows={4}
-            placeholder="Detailed explanation shown when the user expands the notification…"
-            value={fullDesc} onChange={e => setFullDesc(e.target.value)} />
+            </div>
+          </form>
         </div>
 
         {/* Preview */}
         {message && (
-          <div className="rounded-xl border border-white/8 p-4 bg-white/[0.02]">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[#555] mb-3">Preview</p>
-            <div className="flex items-start gap-3">
-              <span className="text-[10px] font-bold px-2 py-1 rounded-md capitalize tracking-wide whitespace-nowrap"
-                style={{ background: `${selectedType?.color}22`, color: selectedType?.color }}>
-                {type}
-              </span>
-              <div>
-                <p className="text-sm text-white">{message}</p>
-                {fullDesc && <p className="text-xs text-[#888] mt-1.5 leading-relaxed">{fullDesc}</p>}
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 24 }}>
+            <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-muted)' }}>Preview</p>
+            <h3 style={{ margin: '0 0 16px', fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: 'var(--sf-primary)' }}>How vendors will see it</h3>
+            <div style={{ background: 'var(--sf-primary-deep)', borderRadius: 14, padding: 18 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 10, flexShrink: 0, background: `${selectedType.color}25`, border: `1px solid ${selectedType.color}55`, color: selectedType.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700 }}>!</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: 99, color: selectedType.color, background: `${selectedType.color}1a`, border: `1px solid ${selectedType.color}33` }}>{type}</span>
+                    <span style={{ fontSize: 10, color: 'rgba(250,245,221,0.5)', fontFamily: 'var(--font-mono)' }}>now</span>
+                  </div>
+                  <p style={{ margin: '0 0 6px', fontSize: 13, color: 'var(--sf-secondary)', lineHeight: 1.5 }}>{message}</p>
+                  {fullDesc && <p style={{ margin: 0, fontSize: 12, color: 'rgba(250,245,221,0.6)', lineHeight: 1.55 }}>{fullDesc}</p>}
+                </div>
               </div>
             </div>
           </div>
         )}
-
-        {/* Result banner */}
-        {result && (
-          <div className={`rounded-xl px-4 py-3 text-sm font-medium ${result.error ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-green-500/10 text-green-400 border border-green-500/20'}`}>
-            {result.error
-              ? `Error: ${result.error}`
-              : `✓ Sent to ${result.count} user${result.count !== 1 ? 's' : ''} successfully.`
-            }
-          </div>
-        )}
-
-        <div className="flex justify-end pt-2 border-t border-white/8">
-          <button type="submit" disabled={sending || !message.trim()}
-            className="bg-[#0F4C3A] text-[#FAF5DD] px-8 py-2.5 rounded-xl text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-40">
-            {sending ? 'Sending…' : `Send to ${AUDIENCE_OPTIONS.find(o => o.value === audience)?.label}`}
-          </button>
-        </div>
-      </form>
-    </div>
+      </div>
+      <style>{`.sf-admin-notif-grid { display:grid; grid-template-columns:1.3fr 1fr; gap:16px; } @media(max-width:700px){ .sf-admin-notif-grid { grid-template-columns:1fr; } }`}</style>
+    </>
   );
 }
 
-// ── Main Admin component ──────────────────────────────────────────────────────
+// ─── Main Admin ───────────────────────────────────────────────────────────────
 export default function Admin() {
   const [authed, setAuthed] = useState(() => sessionStorage.getItem('sf_admin') === '1');
   const [tab, setTab]       = useState('posts');
 
-  if (!authed) return <LoginScreen onLogin={() => setAuthed(true)} />;
+  function signOut() { sessionStorage.removeItem('sf_admin'); setAuthed(false); }
 
   const tabs = [
-    { id: 'posts',         label: 'Blog Posts' },
-    { id: 'users',         label: 'Users' },
-    { id: 'newsletter',    label: 'Newsletter' },
-    { id: 'notifications', label: 'Push Notifications' },
+    { id: 'posts',         label: 'Blog Posts',        icon: 'M4 4h16v4H4zM4 12h16v8H4z' },
+    { id: 'users',         label: 'Users',             icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0' },
+    { id: 'newsletter',    label: 'Newsletter',        icon: 'M3 7l9 6 9-6M3 7v10h18V7M3 7l9-4 9 4' },
+    { id: 'notifications', label: 'Push Notifications',icon: 'M18 16v-5a6 6 0 10-12 0v5l-2 3h16l-2-3zM10 22a2 2 0 004 0' },
   ];
 
-  return (
-    <div className="min-h-screen bg-[#0a0a0a]">
-      {/* Top bar */}
-      <header className="border-b border-white/8 max-w-7xl mx-auto">
-        <div className="px-4 sm:px-6 py-4 flex items-center justify-between">
-          <span className="text-white font-bold text-lg tracking-tight">ScanMyFrame Admin</span>
-          <button
-            onClick={() => { sessionStorage.removeItem('sf_admin'); setAuthed(false); }}
-            className="text-[#555] border border-[#555] rounded-md px-3 py-1 hover:text-white hover:border-white text-xs transition-colors"
-          >
-            Sign out
-          </button>
-        </div>
-        <nav className="flex items-center gap-1 px-4 sm:px-6 pb-2 overflow-x-auto">
-          {tabs.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)}
-              className={`px-3 sm:px-4 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap
-                ${tab === t.id ? 'bg-white/10 text-white' : 'text-[#666] hover:text-white'}`}>
-              {t.label}
-            </button>
-          ))}
-        </nav>
-      </header>
+  if (!authed) return (
+    <div className="sf-admin">
+      <style>{ADMIN_STYLES}</style>
+      <LoginScreen onLogin={() => setAuthed(true)} />
+    </div>
+  );
 
-      {/* Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+  return (
+    <div className="sf-admin" style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-subtle)' }}>
+      <style>{ADMIN_STYLES}</style>
+
+      {/* Sidebar */}
+      <aside className="sf-admin-aside" style={{ width: 240, background: 'var(--sf-primary-deep)', color: 'var(--sf-secondary)', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0, position: 'sticky', top: 0, height: '100vh', overflowY: 'auto' }}>
+        <div style={{ padding: '4px 12px 6px', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <img src={scanframeLogo} alt="ScanMyFrame" style={{ height: 20, filter: 'brightness(0) invert(1)', opacity: 0.85 }} />
+        </div>
+        <p style={{ margin: '0 12px 18px', fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--sf-gold)' }}>Admin console</p>
+
+        {tabs.map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, background: tab === t.id ? 'rgba(212,175,55,0.12)' : 'transparent', color: tab === t.id ? 'var(--sf-gold)' : 'rgba(250,245,221,0.7)', border: tab === t.id ? '1px solid rgba(212,175,55,0.3)' : '1px solid transparent', cursor: 'pointer', textAlign: 'left', fontSize: 13, fontWeight: tab === t.id ? 600 : 500, fontFamily: 'inherit' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <path d={t.icon} />
+            </svg>
+            {t.label}
+          </button>
+        ))}
+
+        <div style={{ flex: 1 }} />
+        <button onClick={signOut} style={{ padding: '10px 12px', borderRadius: 10, background: 'transparent', color: 'rgba(250,245,221,0.5)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontSize: 12, fontWeight: 500, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'inherit' }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          Sign out
+        </button>
+      </aside>
+
+      {/* Mobile top nav */}
+      <div className="sf-admin-mobile-nav" style={{ background: 'var(--sf-primary-deep)', padding: '12px 16px', alignItems: 'center', gap: 8, position: 'sticky', top: 0, zIndex: 10, overflowX: 'auto' }}>
+        <img src={scanframeLogo} alt="" style={{ height: 18, filter: 'brightness(0) invert(1)', opacity: 0.85, flexShrink: 0, marginRight: 8 }} />
+        {tabs.map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: '6px 12px', borderRadius: 8, background: tab === t.id ? 'rgba(212,175,55,0.15)' : 'transparent', color: tab === t.id ? 'var(--sf-gold)' : 'rgba(250,245,221,0.7)', border: tab === t.id ? '1px solid rgba(212,175,55,0.3)' : '1px solid transparent', cursor: 'pointer', fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', fontFamily: 'inherit' }}>{t.label}</button>
+        ))}
+        <button onClick={signOut} style={{ marginLeft: 'auto', padding: '6px 12px', borderRadius: 8, background: 'transparent', color: 'rgba(250,245,221,0.5)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit', whiteSpace: 'nowrap', flexShrink: 0 }}>Sign out</button>
+      </div>
+
+      {/* Main content */}
+      <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
         {tab === 'posts'         && <PostsTab />}
         {tab === 'users'         && <UsersTab />}
         {tab === 'newsletter'    && <NewsletterTab />}
