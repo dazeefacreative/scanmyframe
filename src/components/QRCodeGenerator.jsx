@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import QRCode from 'qrcode';
-import { createFrame, uploadMedia, addMediaToFrame, consumeQRCode, sendQREmail } from '../services/supabaseHelpers';
+import { createFrame, uploadMedia, addMediaToFrame, consumeQRCode, sendQREmail, sendTrialUpgradeNudge } from '../services/supabaseHelpers';
 import { supabase } from '../services/supabaseClient';
 import StoryEditor from './StoryEditor';
 
@@ -48,11 +48,11 @@ async function sha256(str) {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-async function generateBrandedQR(url) {
+async function generateBrandedQR(url, fgColor = '#000000', bgColor = '#ffffff', iconUrl = null, strokeColor = '#0F4C3A') {
   const TOTAL = QR_SIZE + PADDING * 2 + BORDER_WIDTH * 2;
   const qrDataUrl = await QRCode.toDataURL(url, {
     width: QR_SIZE, margin: 2,
-    color: { dark: '#000000', light: '#ffffff' },
+    color: { dark: fgColor, light: bgColor },
     errorCorrectionLevel: 'H',
   });
 
@@ -76,33 +76,36 @@ async function generateBrandedQR(url) {
     qrImg.src = qrDataUrl;
   });
 
-  ctx.strokeStyle = BORDER_COLOR;
+  ctx.strokeStyle = strokeColor;
   ctx.lineWidth   = BORDER_WIDTH * 2;
   ctx.beginPath();
   ctx.roundRect(0, 0, TOTAL, TOTAL, BORDER_RADIUS);
   ctx.stroke();
 
+  const usedIconSrc    = iconUrl || SYMBOL_DATA_URI;
+  const usedIconAspect = iconUrl ? 1 : ICON_ASPECT;
   const ICON_W  = Math.round(QR_SIZE * 0.20);
-  const ICON_H  = Math.round(ICON_W * ICON_ASPECT);
+  const ICON_H  = Math.round(ICON_W * usedIconAspect);
   const ICON_PAD = 10;
   const BG_W    = ICON_W + ICON_PAD * 2;
   const BG_H    = ICON_H + ICON_PAD * 2;
   const cx      = TOTAL / 2;
   const cy      = TOTAL / 2;
 
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = bgColor;
   ctx.beginPath();
   ctx.roundRect(cx - BG_W / 2, cy - BG_H / 2, BG_W, BG_H, 12);
   ctx.fill();
 
-  await new Promise((resolve, reject) => {
+  await new Promise((resolve) => {
     const icon = new Image();
+    icon.crossOrigin = 'anonymous';
     icon.onload = () => {
       ctx.drawImage(icon, cx - ICON_W / 2, cy - ICON_H / 2, ICON_W, ICON_H);
       resolve();
     };
-    icon.onerror = reject;
-    icon.src = SYMBOL_DATA_URI;
+    icon.onerror = resolve; // skip icon silently on error
+    icon.src = usedIconSrc;
   });
 
   return canvas.toDataURL('image/png');
@@ -391,6 +394,11 @@ export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }
       const qrResult = await consumeQRCode(user.id);
       if (!qrResult.success) { setModal('limit_reached'); setLoading(false); return; }
 
+      // Fire nudge when trial user hits 8/10 QR codes used
+      if (qrResult.plan_id === 'trial' && qrResult.qr_used === 8) {
+        sendTrialUpgradeNudge({ userId: user.id, toEmail: user.email, userName: user.user_metadata?.full_name || user.user_metadata?.business_name });
+      }
+
       const slug =
         form.title.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') +
         '-' + Date.now();
@@ -433,7 +441,8 @@ export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }
         }
       }
 
-      const brandedDataUrl = await generateBrandedQR(`${BASE_URL}/frame/${slug}`);
+      const qrBrand = (() => { try { return JSON.parse(localStorage.getItem(`sf_qr_brand_${user.id}`) || '{}'); } catch { return {}; } })();
+      const brandedDataUrl = await generateBrandedQR(`${BASE_URL}/frame/${slug}`, qrBrand.fg || '#000000', qrBrand.bg || '#ffffff', qrBrand.logo || null, qrBrand.stroke || '#0F4C3A');
       setQrDataUrl(brandedDataUrl);
       setFrameSlug(slug);
       localStorage.removeItem(DRAFT_KEY);

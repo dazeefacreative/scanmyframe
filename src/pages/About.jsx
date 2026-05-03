@@ -24,7 +24,7 @@ export default function About() {
   return (
     <main className={`${isDark ? 'bg-black text-white' : 'bg-white text-gray-900'} min-h-screen transition-colors duration-200`}>
       <SEO
-        title="About Us | ScanFrame"
+        title="About Us | ScanMyFrame"
         description="Learn who we are, our mission to bring frames to life, and our vision to build a global marketplace for frame vendors."
         url="/about"
       />

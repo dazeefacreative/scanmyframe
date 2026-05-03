@@ -296,14 +296,14 @@ export const consumeQRCode = async (userId) => {
     // 1. Fetch current subscription row
     const { data: sub, error: fetchErr } = await supabase
       .from('subscriptions')
-      .select('id, qr_allocated, qr_used, status, current_period_end')
+      .select('id, qr_allocated, qr_used, status, current_period_end, plan_id')
       .eq('user_id', userId)
       .single();
 
     if (fetchErr) return { success: false, error: fetchErr.message };
     if (!sub)     return { success: false, error: 'No subscription found.' };
 
-    const { qr_allocated, qr_used, status, current_period_end } = sub;
+    const { qr_allocated, qr_used, status, current_period_end, plan_id } = sub;
     const isUnlimited = qr_allocated === -1;
 
     // 2. Guard: block if billing period has expired, regardless of status field
@@ -331,6 +331,7 @@ export const consumeQRCode = async (userId) => {
       success:      true,
       qr_used:      newUsed,
       qr_allocated: qr_allocated,
+      plan_id:      plan_id,
     };
   } catch (err) {
     return { success: false, error: err.message };
@@ -875,13 +876,41 @@ async function adminDataFetch(payload) {
  * Push a notification to a targeted audience.
  * audience: 'all' | 'subscribers' | 'basic' | 'pro' | 'business'
  */
-export const adminPushNotification = async ({ audience, type, message, full_description }) => {
+export const adminPushNotification = async ({ audience, user_id, type, message, full_description }) => {
   try {
-    const data = await adminDataFetch({ resource: 'push_notification', audience, type, message, full_description });
+    const data = await adminDataFetch({ resource: 'push_notification', audience, user_id, type, message, full_description });
     return { count: data.count ?? 0, error: null };
   } catch (err) {
     return { count: 0, error: err.message };
   }
+};
+
+/**
+ * Send a trial upgrade nudge (in-app notification + email) when a trial user
+ * reaches 8 of their 10 free QR codes. Fire-and-forget safe — never throws.
+ */
+export const sendTrialUpgradeNudge = async ({ userId, toEmail, userName }) => {
+  const displayName = userName || 'there';
+
+  // 1. In-app notification
+  try {
+    await supabase.from('notification').insert({
+      user_id:          userId,
+      type:             'alert',
+      message:          "You've used 8 of your 10 free QR codes.",
+      full_description: `You have 2 QR codes left on your free trial. Upgrade to a paid plan to keep creating frames without interruption — your existing frames and QR codes will remain active.`,
+      is_read:          false,
+    });
+  } catch (_) {}
+
+  // 2. Upgrade nudge email
+  try {
+    await adminDataFetch({
+      resource:     'send_trial_nudge',
+      to_email:     toEmail,
+      name:         displayName,
+    });
+  } catch (_) {}
 };
 
 /**

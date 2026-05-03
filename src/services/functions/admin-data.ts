@@ -9,41 +9,51 @@ function esc(s: string) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function emailHeader(): string {
+  return `
+  <tr><td style="background:#0F4C3A;padding:24px 40px;text-align:center;">
+    <h1 style="margin:0;font-size:22px;font-weight:700;color:#D4AF37;font-family:Georgia,serif;letter-spacing:0.04em;">SCANMYFRAME</h1>
+    <p style="margin:4px 0 0;font-size:10px;color:#FAF5DD;opacity:0.7;letter-spacing:0.14em;text-transform:uppercase;">Smart QR Frames</p>
+  </td></tr>`;
+}
+
+function emailFooter(note: string): string {
+  return `
+  <tr><td style="background:#FAF5DD;padding:20px 40px;border-top:1px solid #e5e8e4;">
+    <p style="margin:0 0 6px;font-size:12px;color:#4a7c6f;line-height:1.6;">${note}</p>
+    <p style="margin:0;font-size:11px;color:#9aaea9;">&copy; 2026 ScanMyFrame &nbsp;&middot;&nbsp;
+      <a href="${SITE_URL}" style="color:#0F4C3A;text-decoration:none;">scanmyframe.com</a>
+    </p>
+  </td></tr>`;
+}
+
 function loginAlertHtml(name: string, ip: string, deviceInfo?: string): string {
   const locationLine = deviceInfo ? esc(deviceInfo) : esc(ip);
   return `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="color-scheme" content="dark"><title>New Login Detected</title></head>
-<body style="margin:0;padding:0;background:#0a0a0a;font-family:Helvetica,Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;background:#0a0a0a;"><tr><td align="center">
-<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#111111;border-radius:20px;overflow:hidden;border:1px solid #222;">
-  <tr><td style="background:#0F4C3A;padding:28px 40px;text-align:center;">
-    <img src="https://scanmyframe.com/logo.png" alt="ScanMyFrame" width="48" height="48" style="display:block;margin:0 auto 12px;border:0;" />
-    <h1 style="margin:0;font-size:24px;font-weight:700;color:#D4AF37;font-family:Georgia,serif;letter-spacing:0.04em;">SCANMYFRAME</h1>
-    <p style="margin:4px 0 0;font-size:11px;color:#FAF5DD;letter-spacing:0.12em;text-transform:uppercase;">Smart QR Frames</p>
-  </td></tr>
-  <tr><td style="padding:36px 40px;background:#111111;">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>New Login Detected</title></head>
+<body style="margin:0;padding:0;background:#f0efe9;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0efe9;padding:40px 16px;"><tr><td align="center">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,0.08);">
+  ${emailHeader()}
+  <tr><td style="padding:36px 40px;background:#ffffff;">
     <table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;">
-      <tr><td width="44" height="44" style="background:#2a1a1a;border-radius:22px;text-align:center;vertical-align:middle;font-size:22px;">&#x26A0;</td></tr>
+      <tr><td width="44" height="44" style="background:#fef3cd;border-radius:22px;text-align:center;vertical-align:middle;font-size:22px;border:1px solid #f6d860;">&#x26A0;</td></tr>
     </table>
-    <h2 style="margin:0 0 10px;font-size:20px;color:#FAF5DD;font-family:Georgia,serif;">New login detected, ${esc(name)}!</h2>
-    <p style="margin:0 0 16px;font-size:14px;color:#aaa;line-height:1.75;">We noticed a login to your ScanMyFrame account from a new device or location:</p>
+    <h2 style="margin:0 0 10px;font-size:20px;color:#0F4C3A;font-family:Georgia,serif;">New login detected, ${esc(name)}!</h2>
+    <p style="margin:0 0 16px;font-size:14px;color:#555;line-height:1.75;">We noticed a sign-in to your ScanMyFrame account from a new device or location:</p>
     <table cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 20px;">
-      <tr><td style="background:#1a1a1a;border-radius:10px;padding:14px 20px;font-size:14px;color:#D4AF37;font-weight:700;border:1px solid #2a2a2a;">${locationLine}</td></tr>
+      <tr><td style="background:#f0efe9;border-radius:10px;padding:14px 20px;font-size:14px;color:#0F4C3A;font-weight:700;border:1px solid #e5e8e4;">${locationLine}</td></tr>
     </table>
-    <p style="margin:0 0 12px;font-size:14px;color:#aaa;line-height:1.75;"><strong style="color:#FAF5DD;">If this was you</strong>, no action is needed.</p>
-    <p style="margin:0 0 28px;font-size:14px;color:#aaa;line-height:1.75;">If you <strong style="color:#FAF5DD;">don&rsquo;t recognise this activity</strong>, reset your password immediately. Go to your dashboard &rarr; Settings and click <em>&ldquo;Request password reset&rdquo;</em>.</p>
+    <p style="margin:0 0 12px;font-size:14px;color:#555;line-height:1.75;"><strong style="color:#0F4C3A;">If this was you</strong>, no action is needed.</p>
+    <p style="margin:0 0 28px;font-size:14px;color:#555;line-height:1.75;">If you <strong style="color:#0F4C3A;">don&rsquo;t recognise this</strong>, reset your password immediately via Dashboard &rarr; Settings &rarr; &ldquo;Request password reset&rdquo;.</p>
     <table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 8px;"><tr>
-      <td style="background:#D4AF37;border-radius:10px;">
-        <a href="${SITE_URL}/dashboard" style="display:inline-block;padding:13px 34px;font-size:14px;font-weight:700;color:#0F4C3A;text-decoration:none;">Go to Dashboard</a>
+      <td style="background:#0F4C3A;border-radius:10px;">
+        <a href="${SITE_URL}/dashboard" style="display:inline-block;padding:13px 34px;font-size:14px;font-weight:700;color:#FAF5DD;text-decoration:none;">Go to Dashboard</a>
       </td>
     </tr></table>
   </td></tr>
-  <tr><td style="background:#0a0a0a;padding:20px 40px;border-top:1px solid #222;">
-    <p style="margin:0;font-size:11px;color:#444;">&copy; 2026 ScanMyFrame &nbsp;&middot;&nbsp;
-      <a href="${SITE_URL}" style="color:#D4AF37;text-decoration:none;">scanmyframe.com</a>
-    </p>
-  </td></tr>
+  ${emailFooter('If this email landed in spam, please mark it as Not Spam.')}
 </table>
 </td></tr></table>
 </body></html>`;
@@ -107,7 +117,7 @@ Deno.serve(async (req: Request) => {
 
   // ── Push notification to targeted audience ───────────────────────────────────
   if (resource === 'push_notification') {
-    const { audience, type, message, full_description } = body;
+    const { audience, user_id, type, message, full_description } = body;
     if (!message?.trim()) return json({ error: 'message is required' }, 400);
 
     let userIds: string[] = [];
@@ -118,6 +128,9 @@ Deno.serve(async (req: Request) => {
     } else if (audience === 'subscribers') {
       const { data } = await supabase.from('subscriptions').select('user_id').eq('status', 'active');
       userIds = (data ?? []).map((s: any) => s.user_id);
+    } else if (audience === 'user') {
+      if (!user_id) return json({ error: 'user_id is required for specific user audience' }, 400);
+      userIds = [user_id];
     } else {
       // plan-specific: basic | pro | business
       const { data } = await supabase.from('subscriptions').select('user_id')
@@ -171,53 +184,44 @@ Deno.serve(async (req: Request) => {
     const displayName = esc(name ?? 'there');
     const welcomeHtml = `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="color-scheme" content="dark"><title>Welcome to ScanMyFrame</title></head>
-<body style="margin:0;padding:0;background:#0a0a0a;font-family:Helvetica,Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;background:#0a0a0a;"><tr><td align="center">
-<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#111111;border-radius:20px;overflow:hidden;border:1px solid #222;">
-  <tr><td style="background:#0F4C3A;padding:28px 40px;text-align:center;">
-    <img src="https://scanmyframe.com/logo.png" alt="ScanMyFrame" width="48" height="48" style="display:block;margin:0 auto 12px;border:0;" />
-    <h1 style="margin:0;font-size:24px;font-weight:700;color:#D4AF37;font-family:Georgia,serif;letter-spacing:0.04em;">SCANMYFRAME</h1>
-    <p style="margin:4px 0 0;font-size:11px;color:#FAF5DD;letter-spacing:0.12em;text-transform:uppercase;">Smart QR Frames</p>
-  </td></tr>
-  <tr><td style="padding:36px 40px;background:#111111;">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Welcome to ScanMyFrame</title></head>
+<body style="margin:0;padding:0;background:#f0efe9;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0efe9;padding:40px 16px;"><tr><td align="center">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,0.08);">
+  ${emailHeader()}
+  <tr><td style="padding:36px 40px;background:#ffffff;">
     <table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;">
-      <tr><td width="44" height="44" style="background:#1e1a0a;border-radius:22px;text-align:center;vertical-align:middle;font-size:22px;">&#127881;</td></tr>
+      <tr><td width="44" height="44" style="background:#fef9e7;border-radius:22px;text-align:center;vertical-align:middle;font-size:22px;border:1px solid #f9e79f;">&#127881;</td></tr>
     </table>
-    <h2 style="margin:0 0 10px;font-size:20px;color:#FAF5DD;font-family:Georgia,serif;">Welcome, ${displayName}!</h2>
-    <p style="margin:0 0 16px;font-size:14px;color:#aaa;line-height:1.75;">Your ScanMyFrame account is ready. You have <strong style="color:#D4AF37;">10 free QR codes</strong> waiting — no credit card needed.</p>
-    <p style="margin:0 0 24px;font-size:14px;color:#aaa;line-height:1.75;">Start creating frames and let every piece you sell carry its own digital story.</p>
-    <table cellpadding="0" cellspacing="0" border="0" style="background:#1a1a1a;border-radius:12px;width:100%;margin:0 0 28px;border:1px solid #2a2a2a;">
+    <h2 style="margin:0 0 10px;font-size:20px;color:#0F4C3A;font-family:Georgia,serif;">Welcome, ${displayName}!</h2>
+    <p style="margin:0 0 16px;font-size:14px;color:#555;line-height:1.75;">Your ScanMyFrame account is ready. You have <strong style="color:#0F4C3A;">10 free QR codes</strong> waiting — no credit card needed.</p>
+    <p style="margin:0 0 24px;font-size:14px;color:#555;line-height:1.75;">Start creating frames and let every piece you sell carry its own digital story.</p>
+    <table cellpadding="0" cellspacing="0" border="0" style="background:#f0efe9;border-radius:12px;width:100%;margin:0 0 28px;border:1px solid #e5e8e4;">
       <tr><td style="padding:18px 24px;">
-        <p style="margin:0 0 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#D4AF37;">Get started in 3 steps</p>
+        <p style="margin:0 0 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#0F4C3A;">Get started in 3 steps</p>
         <table cellpadding="0" cellspacing="0" width="100%">
           <tr>
             <td width="28" valign="top" style="padding-bottom:12px;"><table cellpadding="0" cellspacing="0"><tr><td width="24" height="24" style="background:#0F4C3A;border-radius:12px;text-align:center;vertical-align:middle;font-size:11px;font-weight:700;color:#D4AF37;">1</td></tr></table></td>
-            <td style="padding:3px 0 12px 10px;font-size:13px;color:#bbb;">Create a frame and attach your content</td>
+            <td style="padding:3px 0 12px 10px;font-size:13px;color:#555;">Create a frame and attach your content</td>
           </tr>
           <tr>
             <td width="28" valign="top" style="padding-bottom:12px;"><table cellpadding="0" cellspacing="0"><tr><td width="24" height="24" style="background:#0F4C3A;border-radius:12px;text-align:center;vertical-align:middle;font-size:11px;font-weight:700;color:#D4AF37;">2</td></tr></table></td>
-            <td style="padding:3px 0 12px 10px;font-size:13px;color:#bbb;">Generate and download your QR code</td>
+            <td style="padding:3px 0 12px 10px;font-size:13px;color:#555;">Generate and download your QR code</td>
           </tr>
           <tr>
             <td width="28" valign="top"><table cellpadding="0" cellspacing="0"><tr><td width="24" height="24" style="background:#0F4C3A;border-radius:12px;text-align:center;vertical-align:middle;font-size:11px;font-weight:700;color:#D4AF37;">3</td></tr></table></td>
-            <td style="padding:3px 0 0 10px;font-size:13px;color:#bbb;">Stick it on the frame — your customers do the rest</td>
+            <td style="padding:3px 0 0 10px;font-size:13px;color:#555;">Stick it on the frame — your customers do the rest</td>
           </tr>
         </table>
       </td></tr>
     </table>
     <table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 8px;"><tr>
-      <td style="background:#D4AF37;border-radius:10px;">
-        <a href="${SITE_URL}/dashboard" style="display:inline-block;padding:13px 34px;font-size:14px;font-weight:700;color:#0F4C3A;text-decoration:none;">Go to my dashboard</a>
+      <td style="background:#0F4C3A;border-radius:10px;">
+        <a href="${SITE_URL}/dashboard" style="display:inline-block;padding:13px 34px;font-size:14px;font-weight:700;color:#FAF5DD;text-decoration:none;">Go to my dashboard</a>
       </td>
     </tr></table>
   </td></tr>
-  <tr><td style="background:#0a0a0a;padding:20px 40px;border-top:1px solid #222;">
-    <p style="margin:0 0 6px;font-size:12px;color:#888;">If this email landed in spam, please mark it as <strong style="color:#D4AF37;">Not Spam</strong> so you don't miss future updates and your QR codes.</p>
-    <p style="margin:0;font-size:11px;color:#444;">You received this because you just created a ScanMyFrame account. &nbsp;&middot;&nbsp;
-      <a href="${SITE_URL}" style="color:#D4AF37;text-decoration:none;">scanmyframe.com</a>
-    </p>
-  </td></tr>
+  ${emailFooter("If this email landed in spam, please mark it as Not Spam so you don't miss your QR codes. You received this because you just created a ScanMyFrame account.")}
 </table>
 </td></tr></table>
 </body></html>`;
@@ -236,6 +240,59 @@ Deno.serve(async (req: Request) => {
     return json({ sent: true });
   }
 
+  if (resource === 'send_trial_nudge') {
+    const { to_email, name } = body;
+    if (!to_email) return json({ error: 'to_email is required' }, 400);
+    if (!RESEND_API_KEY) return json({ error: 'Email service not configured' }, 503);
+
+    const displayName = esc(name ?? 'there');
+    const nudgeHtml = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>You're almost at your QR limit</title></head>
+<body style="margin:0;padding:0;background:#f0efe9;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0efe9;padding:40px 16px;"><tr><td align="center">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,0.08);">
+  ${emailHeader()}
+  <tr><td style="padding:36px 40px;background:#ffffff;">
+    <table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;">
+      <tr><td width="44" height="44" style="background:#fff8e1;border-radius:22px;text-align:center;vertical-align:middle;font-size:22px;border:1px solid #ffe082;">&#9888;</td></tr>
+    </table>
+    <h2 style="margin:0 0 10px;font-size:20px;color:#0F4C3A;font-family:Georgia,serif;">You've used 8 of your 10 free QR codes, ${displayName}.</h2>
+    <p style="margin:0 0 16px;font-size:14px;color:#555;line-height:1.75;">You have just <strong style="color:#0F4C3A;">2 QR codes left</strong> on your free trial. Once you hit your limit, you won't be able to create new frames until you upgrade.</p>
+    <table cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 24px;background:#f0efe9;border-radius:12px;border:1px solid #e5e8e4;">
+      <tr><td style="padding:18px 24px;">
+        <p style="margin:0 0 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#0F4C3A;">Why upgrade?</p>
+        <p style="margin:0 0 8px;font-size:13px;color:#555;">&#10003; &nbsp;More QR codes — grow without limits</p>
+        <p style="margin:0 0 8px;font-size:13px;color:#555;">&#10003; &nbsp;Vendor card on every public frame page</p>
+        <p style="margin:0 0 8px;font-size:13px;color:#555;">&#10003; &nbsp;Password-protect your frames</p>
+        <p style="margin:0;font-size:13px;color:#555;">&#10003; &nbsp;Real-time analytics and more</p>
+      </td></tr>
+    </table>
+    <table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px;"><tr>
+      <td style="background:#D4AF37;border-radius:10px;">
+        <a href="${SITE_URL}/pricing" style="display:inline-block;padding:13px 34px;font-size:14px;font-weight:700;color:#0F4C3A;text-decoration:none;">View plans &amp; pricing</a>
+      </td>
+    </tr></table>
+    <p style="margin:0;font-size:12px;color:#888;line-height:1.6;">Your existing frames and QR codes will remain active after you upgrade. No reprinting needed.</p>
+  </td></tr>
+  ${emailFooter('You received this because you are on a ScanMyFrame free trial. If this landed in spam, please mark it as Not Spam.')}
+</table>
+</td></tr></table>
+</body></html>`;
+
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: FROM_EMAIL, to: [to_email], subject: `You've used 8 of your 10 free QR codes — keep going with a plan`, html: nudgeHtml }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      console.error('Resend trial nudge error:', err);
+      return json({ error: 'Failed to send email' }, 500);
+    }
+    return json({ sent: true });
+  }
 
   return json({ error: 'Unknown resource' }, 400);
 });

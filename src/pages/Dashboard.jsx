@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import QRCode from 'qrcode';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -52,6 +53,15 @@ const NAV = [
   { id: 'analytics', label: 'Analytics',   icon: 'chart'    },
   { id: 'billing',   label: 'Billing',      icon: 'billing'  },
   { id: 'settings',  label: 'Settings',     icon: 'settings' },
+];
+
+const SETTINGS_SECTIONS = [
+  { id: 'profile',       label: 'Profile',       icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0' },
+  { id: 'business',      label: 'Business',      icon: 'M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6' },
+  { id: 'branding',      label: 'QR Branding',   icon: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM17 17h3v3h-3z', plans: ['business', 'trial'] },
+  { id: 'notifications', label: 'Notifications', icon: 'M18 16v-5a6 6 0 10-12 0v5l-2 3h16l-2-3zM10 22a2 2 0 004 0' },
+  { id: 'security',      label: 'Security',      icon: 'M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z' },
+  { id: 'danger',        label: 'Danger zone',   icon: 'M12 2L1 21h22L12 2zM12 9v5M12 18v.01' },
 ];
 
 // ─── Theme-aware colour tokens (no Tailwind gray) ────────────────────────────
@@ -1357,7 +1367,178 @@ function AnalyticsTab({ frames, isDark, planId, notificationData }) {
 // }
 
 // ─── Settings tab ─────────────────────────────────────────────────────────────
-function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccount, onProfileUpdated, notificationData, onMarkNotificationRead, onDeleteNotification, onClearAllNotifications }) {
+function AccountIdField({ userId, isDark, labelStyle }) {
+  const [copied, setCopied] = useState(false);
+  function copy() {
+    if (!userId) return;
+    navigator.clipboard.writeText(userId);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+  return (
+    <div>
+      <label style={labelStyle}>Account ID</label>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: `1px solid ${t.border(isDark)}`, background: t.inputBg(isDark), fontSize: 11, fontFamily: 'monospace', color: t.textMuted(isDark), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {userId || '—'}
+        </div>
+        <button onClick={copy} style={{ flexShrink: 0, padding: '9px 14px', borderRadius: 10, border: `1px solid ${t.border(isDark)}`, background: copied ? '#0F4C3A' : 'transparent', color: copied ? '#FAF5DD' : t.textSub(isDark), fontSize: 11, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 5 }}>
+          {copied ? (
+            <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7"/></svg> Copied</>
+          ) : (
+            <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy</>
+          )}
+        </button>
+      </div>
+      <p style={{ fontSize: 11, color: t.textMuted(isDark), marginTop: 5 }}>Share this with support if you need account-specific help.</p>
+    </div>
+  );
+}
+
+async function compressQRLogo(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      if (file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg')) {
+        resolve(e.target.result); // SVG: use as data URI directly
+        return;
+      }
+      // PNG: resize to max 80×80 to hit ~10-15 KB
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 80;
+        const scale = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight));
+        const w = Math.round(img.naturalWidth * scale);
+        const h = Math.round(img.naturalHeight * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// Exact same constants as QRCodeGenerator.jsx
+const SF_SYMBOL_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 215.88 255.99"><rect fill="#d3af37" x="87.69" y="154.96" width="40.5" height="40.5" rx="13.21" ry="13.21"/><path fill="#d3af37" d="m206.07,0H9.81C4.4,0,0,4.4,0,9.81v236.38c0,5.41,4.4,9.81,9.81,9.81h196.26c5.41,0,9.81-4.4,9.81-9.81V9.81c0-5.41-4.4-9.81-9.81-9.81ZM26.4,230.71V27.47h162.49v203.24H26.4Z"/></svg>`;
+const SF_SYMBOL_URI  = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(SF_SYMBOL_SVG)}`;
+const SF_ICON_ASPECT = 255.99 / 215.88; // height/width of the SF symbol
+
+function QRPreview({ fg, bg, stroke, logoUrl }) {
+  const [imgUrl, setImgUrl] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function build() {
+      // Match QRCodeGenerator constants exactly (scaled down for preview)
+      const SCALE        = 0.55;
+      const QR_SIZE      = Math.round(400 * SCALE);
+      const PADDING      = Math.round(24  * SCALE);
+      const BORDER_W     = Math.round(6   * SCALE);
+      const BORDER_R     = Math.round(20  * SCALE);
+      const TOTAL        = QR_SIZE + PADDING * 2 + BORDER_W * 2;
+
+      const qrData = await QRCode.toDataURL('https://scanmyframe.com/frame/preview', {
+        width: QR_SIZE, margin: 2,
+        color: { dark: fg, light: bg },
+        errorCorrectionLevel: 'H',
+      });
+
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = TOTAL;
+      const ctx = canvas.getContext('2d');
+
+      const clip = new Path2D();
+      clip.roundRect(0, 0, TOTAL, TOTAL, BORDER_R);
+      ctx.clip(clip);
+
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, TOTAL, TOTAL);
+
+      const offset = BORDER_W + PADDING;
+      await new Promise((res, rej) => {
+        const img = new Image();
+        img.onload = () => { ctx.drawImage(img, offset, offset, QR_SIZE, QR_SIZE); res(); };
+        img.onerror = rej;
+        img.src = qrData;
+      });
+
+      ctx.strokeStyle = stroke;
+      ctx.lineWidth   = BORDER_W * 2;
+      ctx.beginPath();
+      ctx.roundRect(0, 0, TOTAL, TOTAL, BORDER_R);
+      ctx.stroke();
+
+      // Centre icon: user logo (square) or ScanMyFrame symbol
+      const iconSrc    = logoUrl || SF_SYMBOL_URI;
+      const iconAspect = logoUrl ? 1 : SF_ICON_ASPECT;
+      const ICON_W     = Math.round(QR_SIZE * 0.20);
+      const ICON_H     = Math.round(ICON_W * iconAspect);
+      const ICON_PAD   = Math.round(10 * SCALE);
+      const BG_W       = ICON_W + ICON_PAD * 2;
+      const BG_H       = ICON_H + ICON_PAD * 2;
+      const cx         = TOTAL / 2;
+      const cy         = TOTAL / 2;
+
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.roundRect(cx - BG_W / 2, cy - BG_H / 2, BG_W, BG_H, Math.round(12 * SCALE));
+      ctx.fill();
+
+      await new Promise((res) => {
+        const icon = new Image();
+        icon.crossOrigin = 'anonymous';
+        icon.onload = () => { ctx.drawImage(icon, cx - ICON_W / 2, cy - ICON_H / 2, ICON_W, ICON_H); res(); };
+        icon.onerror = res; // skip icon on error
+        icon.src = iconSrc;
+      });
+
+      if (!cancelled) setImgUrl(canvas.toDataURL('image/png'));
+    }
+    build().catch(() => {});
+    return () => { cancelled = true; };
+  }, [fg, bg, stroke, logoUrl]);
+
+  return (
+    <div style={{ textAlign: 'center' }}>
+      {imgUrl
+        ? <img src={imgUrl} alt="QR preview" style={{ width: 200, height: 200, display: 'block', margin: '0 auto' }} />
+        : <div style={{ width: 200, height: 200, borderRadius: 14, background: bg, border: `4px solid ${stroke}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+            <div style={{ width: 20, height: 20, borderRadius: 10, border: `2px solid ${stroke}`, borderTopColor: 'transparent', animation: 'spin 0.7s linear infinite' }} />
+          </div>
+      }
+    </div>
+  );
+}
+
+function Tog({ isDark, on, fn, dis }) {
+  return (
+    <button onClick={() => !dis && fn(!on)} style={{ flexShrink:0, width:44, height:24, borderRadius:12, border:'none', cursor: dis?'not-allowed':'pointer', background: on?'#0F4C3A':t.border(isDark), position:'relative', transition:'background 0.2s', opacity: dis?0.6:1 }}>
+      <span style={{ position:'absolute', top:3, left: on?23:3, width:18, height:18, borderRadius:9, background:'#fff', transition:'left 0.2s', boxShadow:'0 1px 4px rgba(0,0,0,0.2)' }} />
+    </button>
+  );
+}
+
+function SCard({ isDark, title, eyebrow, children, footer }) {
+  return (
+    <div style={{ background:t.cardBg(isDark), border:`1px solid ${t.border(isDark)}`, borderRadius:16, overflow:'hidden', marginBottom:16 }}>
+      <div style={{ padding:'20px 22px 0' }}>
+        {eyebrow && <p style={{ margin:'0 0 3px', fontSize:10, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:t.textMuted(isDark) }}>{eyebrow}</p>}
+        <p style={{ margin:0, fontSize:15, fontWeight:700, color:t.textPrimary(isDark), fontFamily:'Poltawski Nowy, serif' }}>{title}</p>
+      </div>
+      <div style={{ padding:'16px 22px' }}>{children}</div>
+      {footer && <div style={{ padding:'12px 22px', background: isDark?'rgba(255,255,255,0.02)':'#f8f7f4', borderTop:`1px solid ${t.border(isDark)}`, display:'flex', justifyContent:'flex-end', gap:10 }}>{footer}</div>}
+    </div>
+  );
+}
+
+function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccount, onProfileUpdated, notificationData, onMarkNotificationRead, onDeleteNotification, onClearAllNotifications, section = 'profile', planId = 'free' }) {
+
+  // Profile state
   const [name,         setName]         = useState(userProfile?.full_name      || '');
   const [bizName,      setBizName]      = useState(userProfile?.business_name  || '');
   const [bizEmail,     setBizEmail]     = useState(userProfile?.business_email || '');
@@ -1373,6 +1554,57 @@ function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccou
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
   const [expandedNotifId, setExpandedNotifId] = useState(null);
   const logoInputRef = useRef(null);
+
+  // QR Branding state (localStorage keyed by user ID)
+  const QR_BRAND_KEY = `sf_qr_brand_${user?.id}`;
+  const loadBrand = (k, def) => { try { return JSON.parse(localStorage.getItem(QR_BRAND_KEY) || '{}')[k] || def; } catch { return def; } };
+  const [qrFg,        setQrFg]        = useState(() => loadBrand('fg',      '#000000'));
+  const [qrBg,        setQrBg]        = useState(() => loadBrand('bg',      '#ffffff'));
+  const [qrStroke,    setQrStroke]    = useState(() => loadBrand('stroke',  '#0F4C3A'));
+  const [qrLogo,      setQrLogo]      = useState(() => loadBrand('logo',    null));
+  const [qrLogoError, setQrLogoError] = useState('');
+  const [qrLogoLoading, setQrLogoLoading] = useState(false);
+  const qrLogoInputRef = useRef(null);
+
+  async function handleQrLogoUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setQrLogoError('');
+    const isSvg = file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg');
+    const isPng = file.type === 'image/png';
+    if (!isSvg && !isPng) { setQrLogoError('Only SVG or PNG files are allowed.'); e.target.value = ''; return; }
+    if (file.size > 100 * 1024) { setQrLogoError('File must be under 100 KB.'); e.target.value = ''; return; }
+    setQrLogoLoading(true);
+    try {
+      const dataUrl = await compressQRLogo(file);
+      setQrLogo(dataUrl);
+    } catch { setQrLogoError('Could not process the file. Try a different one.'); }
+    setQrLogoLoading(false);
+    e.target.value = '';
+  }
+  const [brandSaved, setBrandSaved] = useState(false);
+
+  const canQRBrand = ['business', 'trial'].includes(planId);
+
+  // Reset QR branding when user loses access (e.g. downgrade from Business)
+  useEffect(() => {
+    if (!canQRBrand && user?.id) {
+      const key = `sf_qr_brand_${user.id}`;
+      const stored = JSON.parse(localStorage.getItem(key) || '{}');
+      if (stored.fg || stored.bg !== '#ffffff' || stored.stroke !== '#0F4C3A' || stored.logo) {
+        const defaults = { fg: '#000000', bg: '#ffffff', stroke: '#0F4C3A', logo: null };
+        localStorage.setItem(key, JSON.stringify(defaults));
+        setQrFg(defaults.fg); setQrBg(defaults.bg); setQrStroke(defaults.stroke);
+        setQrLogo(null);
+      }
+    }
+  }, [canQRBrand, user?.id]);
+
+  function saveQRBrand() {
+    localStorage.setItem(QR_BRAND_KEY, JSON.stringify({ fg: qrFg, bg: qrBg, stroke: qrStroke, logo: qrLogo || null }));
+    setBrandSaved(true);
+    setTimeout(() => setBrandSaved(false), 2000);
+  }
 
   // Compute restriction info from last update
   const lastUpdated = userProfile?.settings_updated_at ? new Date(userProfile.settings_updated_at) : null;
@@ -1463,270 +1695,282 @@ function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccou
   };
   const labelStyle = { display: 'block', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: t.textMuted(isDark), marginBottom: 6 };
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <h2 className="db-tab-h2" style={{ fontWeight: 700, color: t.textPrimary(isDark), fontFamily: 'Poltawski Nowy, serif' }}>Settings</h2>
+  const Card = ({ title, eyebrow, children, footer }) => (
+    <div style={{ background: t.cardBg(isDark), border: `1px solid ${t.border(isDark)}`, borderRadius: 16, overflow: 'hidden', marginBottom: 16 }}>
+      <div style={{ padding: '22px 24px 0' }}>
+        {eyebrow && <p style={{ margin: '0 0 4px', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.textMuted(isDark) }}>{eyebrow}</p>}
+        <p style={{ margin: '0 0 0', fontSize: 15, fontWeight: 700, color: t.textPrimary(isDark), fontFamily: 'Poltawski Nowy, serif' }}>{title}</p>
+      </div>
+      <div style={{ padding: '18px 24px' }}>{children}</div>
+      {footer && <div style={{ padding: '12px 24px', background: isDark ? 'rgba(255,255,255,0.02)' : '#f8f7f4', borderTop: `1px solid ${t.border(isDark)}`, display: 'flex', justifyContent: 'flex-end', gap: 10 }}>{footer}</div>}
+    </div>
+  );
 
-      <div className="db-card" style={{ background: t.cardBg(isDark), border: `1px solid ${t.border(isDark)}`, borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: t.textPrimary(isDark) }}>Account</p>
-        <div>
-          <label style={labelStyle}>Full name</label>
-          <input style={inputStyle} value={name} onChange={e => setName(e.target.value)} placeholder="Your name" />
-        </div>
-        <div>
-          <label style={labelStyle}>Business name</label>
-          <input style={inputStyle} value={bizName} onChange={e => setBizName(e.target.value)} placeholder="Your business name" />
-        </div>
-        <div>
-          <label style={labelStyle}>Business email</label>
-          <input style={inputStyle} type="email" value={bizEmail} onChange={e => setBizEmail(e.target.value)} placeholder="contact@yourbusiness.com" />
-          <p style={{ fontSize: 11, color: t.textMuted(isDark), marginTop: 5 }}>Shown publicly on your frame pages as a contact address.</p>
-        </div>
-        <div>
-          <label style={labelStyle}>Phone number</label>
-          <input style={inputStyle} type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+234 800 000 0000" />
-          <p style={{ fontSize: 11, color: t.textMuted(isDark), marginTop: 5 }}>Shown on your frame pages so visitors can call you directly.</p>
-        </div>
-        <div>
-          <label style={labelStyle}>Account email</label>
-          <input style={{ ...inputStyle, opacity: 0.5 }} value={user?.email || ''} disabled />
-        </div>
-        {saveError && (
-          <p style={{ fontSize: 12, color: '#ef4444', padding: '8px 12px', background: 'rgba(239,68,68,0.08)', borderRadius: 8, border: '1px solid rgba(239,68,68,0.2)' }}>
-            {saveError}
-          </p>
-        )}
-        {lastUpdated && !isRestricted && (
-          <p style={{ fontSize: 11, color: t.textMuted(isDark) }}>
-            Last updated {lastUpdated.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}.
-          </p>
-        )}
-        <button onClick={handleSaveClick} disabled={saving}
-          style={{ background: isRestricted ? (isDark ? '#2a2a2a' : '#e8e8e4') : '#0F4C3A', color: isRestricted ? t.textMuted(isDark) : '#FAF5DD', fontWeight: 700, padding: '10px 22px', borderRadius: 12, fontSize: 13, border: 'none', cursor: isRestricted ? 'not-allowed' : 'pointer', alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 6 }}>
-          {saved ? <><Icon path={icons.check} size={13} style={{ color: '#FAF5DD' }} /> Saved!</> : saving ? 'Saving…' : 'Save changes'}
-        </button>
+  const Toggle = ({ on, onChange, disabled }) => (
+    <button onClick={() => !disabled && onChange(!on)} style={{ flexShrink: 0, width: 44, height: 24, borderRadius: 12, border: 'none', cursor: disabled ? 'not-allowed' : 'pointer', background: on ? '#0F4C3A' : t.border(isDark), position: 'relative', transition: 'background 0.2s', opacity: disabled ? 0.6 : 1 }}>
+      <span style={{ position: 'absolute', top: 3, left: on ? 23 : 3, width: 18, height: 18, borderRadius: 9, background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }} />
+    </button>
+  );
+
+  const Row = ({ title, sub, control }) => (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '13px 0', borderBottom: `1px dashed ${t.border(isDark)}` }}>
+      <div style={{ flex: 1, paddingRight: 20 }}>
+        <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 600, color: t.textPrimary(isDark) }}>{title}</p>
+        <p style={{ margin: 0, fontSize: 12, color: t.textSub(isDark), lineHeight: 1.5 }}>{sub}</p>
+      </div>
+      {control}
+    </div>
+  );
+
+  const saveBtn = (
+    <button onClick={handleSaveClick} disabled={saving} style={{ background: isRestricted?(isDark?'#2a2a2a':'#e8e8e4'):'#0F4C3A', color: isRestricted?t.textMuted(isDark):'#FAF5DD', fontWeight:700, padding:'9px 20px', borderRadius:10, fontSize:12, border:'none', cursor: isRestricted?'not-allowed':'pointer', display:'flex', alignItems:'center', gap:6 }}>
+      {saved ? <><Icon path={icons.check} size={12} style={{ color:'#FAF5DD' }} /> Saved!</> : saving ? 'Saving…' : 'Save changes'}
+    </button>
+  );
+
+  const navSections = [
+    { id:'profile',       label:'Profile',       icon:'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0' },
+    { id:'business',      label:'Business',      icon:'M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6' },
+    { id:'branding',      label:'QR Branding',   icon:'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM17 17h3v3h-3z' },
+    { id:'notifications', label:'Notifications', icon:'M18 16v-5a6 6 0 10-12 0v5l-2 3h16l-2-3zM10 22a2 2 0 004 0' },
+    { id:'security',      label:'Security',      icon:'M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z' },
+    { id:'danger',        label:'Danger zone',   icon:'M12 2L1 21h22L12 2zM12 9v5M12 18v.01' },
+  ];
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+      <h2 className="db-tab-h2" style={{ fontWeight:700, color:t.textPrimary(isDark), fontFamily:'Poltawski Nowy, serif' }}>Settings</h2>
+
+      <div>
+
+          {/* Profile */}
+          {section === 'profile' && (
+            <>
+              <SCard isDark={isDark} title="Your profile" eyebrow="Public details" footer={saveBtn}>
+                <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+                  <AccountIdField userId={user?.id} isDark={isDark} labelStyle={labelStyle} />
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }} className="db-2col">
+                    <div><label style={labelStyle}>Full name</label><input style={inputStyle} value={name} onChange={e => setName(e.target.value)} placeholder="Your name" /></div>
+                    <div><label style={labelStyle}>Phone</label><input style={inputStyle} type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+234 800 000 0000" /></div>
+                  </div>
+                  <div><label style={labelStyle}>Account email</label><input style={{ ...inputStyle, opacity:0.5 }} value={user?.email||''} disabled /></div>
+                  {saveError && <p style={{ fontSize:12, color:'#ef4444', padding:'8px 12px', background:'rgba(239,68,68,0.08)', borderRadius:8, border:'1px solid rgba(239,68,68,0.2)', margin:0 }}>{saveError}</p>}
+                  {lastUpdated && !isRestricted && <p style={{ fontSize:11, color:t.textMuted(isDark), margin:0 }}>Last updated {lastUpdated.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}.</p>}
+                </div>
+              </SCard>
+              <SCard isDark={isDark} title="Profile photo" eyebrow="Brand identity">
+                <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+                  <div style={{ width:64, height:64, borderRadius:12, background: isDark?'#2a2a2a':'#f0efe9', border:`1px solid ${t.border(isDark)}`, display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden', flexShrink:0 }}>
+                    {logoUrl ? <img src={logoUrl} alt="logo" style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : <Icon path={icons.frame} size={22} style={{ color:t.textMuted(isDark), opacity:0.4 }} />}
+                  </div>
+                  <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                    <p style={{ margin:0, fontSize:12, color:t.textSub(isDark) }}>Appears on public frame pages. JPG only, max 500kb.</p>
+                    <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+                      <input ref={logoInputRef} type="file" accept=".jpg,.jpeg" onChange={handleLogoChange} style={{ display:'none' }} />
+                      <button onClick={() => logoInputRef.current?.click()} disabled={logoUploading} style={{ background:'#0F4C3A', color:'#FAF5DD', fontWeight:700, padding:'7px 16px', borderRadius:9, fontSize:12, border:'none', cursor: logoUploading?'not-allowed':'pointer', opacity: logoUploading?0.6:1 }}>
+                        {logoUploading ? 'Uploading…' : logoUrl ? 'Change' : 'Upload'}
+                      </button>
+                      {logoUrl && !logoUploading && (
+                        <button onClick={async () => { await supabase.from('users').update({ business_logo:null, updated_at:new Date().toISOString() }).eq('id',user.id); setLogoUrl(null); onProfileUpdated?.(prev=>({...prev,business_logo:null})); }} style={{ background:'transparent', border:'1px solid rgba(239,68,68,0.35)', color:'#ef4444', fontWeight:600, padding:'6px 14px', borderRadius:9, fontSize:12, cursor:'pointer' }}>Remove</button>
+                      )}
+                    </div>
+                    {logoError && <p style={{ margin:0, fontSize:12, color:'#ef4444' }}>{logoError}</p>}
+                  </div>
+                </div>
+                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+              </SCard>
+            </>
+          )}
+
+          {/* Business */}
+          {section === 'business' && (
+            <SCard isDark={isDark} title="Business profile" eyebrow="Customer-facing" footer={saveBtn}>
+              <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+                <div><label style={labelStyle}>Business name</label><input style={inputStyle} value={bizName} onChange={e => setBizName(e.target.value)} placeholder="Your business name" /></div>
+                <div>
+                  <label style={labelStyle}>Business email</label>
+                  <input style={inputStyle} type="email" value={bizEmail} onChange={e => setBizEmail(e.target.value)} placeholder="contact@yourbusiness.com" />
+                  <p style={{ fontSize:11, color:t.textMuted(isDark), marginTop:5 }}>Shown publicly on your frame pages as a contact address.</p>
+                </div>
+                {saveError && <p style={{ fontSize:12, color:'#ef4444', padding:'8px 12px', background:'rgba(239,68,68,0.08)', borderRadius:8, border:'1px solid rgba(239,68,68,0.2)', margin:0 }}>{saveError}</p>}
+              </div>
+            </SCard>
+          )}
+
+          {/* QR Branding */}
+          {section === 'branding' && !canQRBrand && (
+            <SCard isDark={isDark} title="QR code branding" eyebrow="Business only">
+              <div style={{ textAlign:'center', padding:'24px 0' }}>
+                
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ display:"inline-block", margin:"auto", marginBottom:14 }}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                <p style={{ margin:'0 0 6px', fontSize:15, fontWeight:700, color:t.textPrimary(isDark), fontFamily:'Poltawski Nowy, serif' }}>Upgrade to unlock QR Branding</p>
+                <p style={{ margin:'0 0 20px', fontSize:13, color:t.textSub(isDark), lineHeight:1.6 }}>Customise your QR code colours, border and logo with a Business plan.</p>
+                <button onClick={() => {}} style={{ background:'#D4AF37', color:'#0F4C3A', fontWeight:700, padding:'10px 24px', borderRadius:12, fontSize:13, border:'none', cursor:'pointer' }}>View Business plan</button>
+              </div>
+            </SCard>
+          )}
+          {section === 'branding' && canQRBrand && (
+            <SCard isDark={isDark} title="QR code branding" eyebrow="Customise your code"
+              footer={<>
+                <button onClick={() => { setQrFg('#000000'); setQrBg('#ffffff'); setQrStroke('#0F4C3A'); setQrLogo(null); setQrLogoError(''); }} style={{ padding:'9px 16px', borderRadius:10, border:`1px solid ${t.border(isDark)}`, background:'transparent', color:t.textSub(isDark), fontSize:12, fontWeight:600, cursor:'pointer' }}>Reset to default</button>
+                <button onClick={saveQRBrand} style={{ background:'#0F4C3A', color:'#FAF5DD', fontWeight:700, padding:'9px 20px', borderRadius:10, fontSize:12, border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
+                  {brandSaved ? <><Icon path={icons.check} size={12} style={{ color:'#FAF5DD' }} /> Saved!</> : 'Save branding'}
+                </button>
+              </>}>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr auto', gap:24, alignItems:'flex-start' }} className="db-brand-grid">
+                <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+
+                  {/* Colours */}
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12 }} className="db-brand-colors">
+                    {[
+                      { label:'Foreground', val:qrFg,     set:setQrFg     },
+                      { label:'Background', val:qrBg,     set:setQrBg     },
+                      { label:'Border',     val:qrStroke, set:setQrStroke },
+                    ].map(({ label, val, set }) => (
+                      <div key={label}>
+                        <label style={labelStyle}>{label}</label>
+                        <div style={{ display:'flex', alignItems:'center', gap:8, padding:'9px 12px', border:`1px solid ${t.border(isDark)}`, borderRadius:10, background:t.inputBg(isDark) }}>
+                          <input type="color" value={val} onChange={e => set(e.target.value)} style={{ width:28, height:28, padding:2, border:'none', borderRadius:6, cursor:'pointer', background:'transparent' }} />
+                          <span style={{ fontSize:11, fontFamily:'monospace', color:t.textPrimary(isDark) }}>{val}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+
+                  {/* Brand logo */}
+                  <div>
+                    <label style={labelStyle}>Brand logo <span style={{ textTransform:'none', fontWeight:400, letterSpacing:0 }}>· RECOMMENDED · Type: SVG or PNG, Size: 24px by 24px, max 100 KB </span></label>
+                    <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                      {/* Current logo preview */}
+                      <div style={{ width:60, height:60, borderRadius:10, background: isDark?'#2a2a2a':'#f0efe9', border:`1px solid ${t.border(isDark)}`, display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden', flexShrink:0 }}>
+                        {qrLogo
+                          ? <img src={qrLogo} alt="brand logo" style={{ width:'100%', height:'100%', objectFit:'contain', padding:4 }} />
+                          : <svg viewBox="0 0 215.88 255.99" width="22" height="22" style={{ opacity:0.5 }}><rect fill="#d3af37" x="87.69" y="154.96" width="40.5" height="40.5" rx="13.21"/><path fill="#d3af37" d="m206.07,0H9.81C4.4,0,0,4.4,0,9.81v236.38c0,5.41,4.4,9.81,9.81,9.81h196.26c5.41,0,9.81-4.4,9.81-9.81V9.81c0-5.41-4.4-9.81-9.81-9.81ZM26.4,230.71V27.47h162.49v203.24H26.4Z"/></svg>
+                        }
+                      </div>
+                      <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                        <p style={{ margin:0, fontSize:12, color:t.textSub(isDark) }}>{qrLogo ? 'Custom logo active' : 'ScanMyFrame logo (default)'}</p>
+                        <div style={{ display:'flex', gap:8 }}>
+                          <input ref={qrLogoInputRef} type="file" accept=".svg,.png,image/svg+xml,image/png" onChange={handleQrLogoUpload} style={{ display:'none' }} />
+                          <button onClick={() => qrLogoInputRef.current?.click()} disabled={qrLogoLoading} style={{ background:'#0F4C3A', color:'#FAF5DD', fontWeight:700, padding:'6px 14px', borderRadius:8, fontSize:11, border:'none', cursor: qrLogoLoading?'not-allowed':'pointer', opacity: qrLogoLoading?0.6:1 }}>
+                            {qrLogoLoading ? 'Processing…' : qrLogo ? 'Change' : 'Upload'}
+                          </button>
+                          {qrLogo && <button onClick={() => { setQrLogo(null); setQrLogoError(''); }} style={{ background:'transparent', border:'1px solid rgba(239,68,68,0.35)', color:'#ef4444', fontWeight:600, padding:'5px 12px', borderRadius:8, fontSize:11, cursor:'pointer' }}>Remove</button>}
+                        </div>
+                        {qrLogoError && <p style={{ margin:0, fontSize:11, color:'#ef4444' }}>{qrLogoError}</p>}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ padding:'10px 14px', borderRadius:10, background: isDark?'rgba(212,175,55,0.06)':'rgba(15,76,58,0.04)', border:`1px solid ${isDark?'rgba(212,175,55,0.2)':'rgba(15,76,58,0.1)'}` }}>
+                    <p style={{ margin:0, fontSize:12, color:t.textSub(isDark), lineHeight:1.6 }}>Applies to new QR codes only. Existing printed codes are not affected.</p>
+                  </div>
+                </div>
+
+                {/* Preview */}
+                <div>
+                  <label style={{ ...labelStyle, marginBottom:10 }}>Preview</label>
+                  <QRPreview fg={qrFg} bg={qrBg} stroke={qrStroke} logoUrl={qrLogo} />
+                </div>
+              </div>
+            </SCard>
+          )}
+
+          {/* Notifications */}
+          {section === 'notifications' && (
+            <>
+              <SCard isDark={isDark} title="Email preferences" eyebrow="Delivery">
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'6px 0' }}>
+                  <div style={{ flex:1, paddingRight:20 }}>
+                    <p style={{ margin:'0 0 2px', fontSize:13, fontWeight:600, color:t.textPrimary(isDark) }}>Email QR code on creation</p>
+                    <p style={{ margin:0, fontSize:12, color:t.textSub(isDark), lineHeight:1.5 }}>{emailQR ? "QR codes will be sent to your inbox after each generation. Check spam if missing." : "Currently off — QR codes won't be emailed."}</p>
+                  </div>
+                  <Tog isDark={isDark} on={emailQR} fn={() => handleQRToggle()} dis={qrToggling} />
+                </div>
+              </SCard>
+              <SCard isDark={isDark} title="Notifications" eyebrow="Inbox"
+                footer={notificationData?.length > 0 ? <button onClick={onClearAllNotifications} style={{ fontSize:11, fontWeight:600, color:'#ef4444', background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:8, padding:'6px 14px', cursor:'pointer' }}>Clear all</button> : null}>
+                {!notificationData || notificationData.length === 0 ? (
+                  <p style={{ fontSize:13, color:t.textSub(isDark), textAlign:'center', padding:'16px 0', margin:0 }}>No notifications yet.</p>
+                ) : (
+                  <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                    {notificationData.map(n => {
+                      const isExp = expandedNotifId === n.id;
+                      const bc = ({ info:{bg:'rgba(59,130,246,0.1)',color:'#3b82f6'}, success:{bg:'rgba(34,197,94,0.1)',color:'#22c55e'}, error:{bg:'rgba(239,68,68,0.1)',color:'#ef4444'}, alert:{bg:'rgba(234,179,8,0.1)',color:'#ca8a04'}, update:{bg:'rgba(168,85,247,0.1)',color:'#a855f7'} })[n.type] || {bg:'rgba(59,130,246,0.1)',color:'#3b82f6'};
+                      return (
+                        <div key={n.id} style={{ borderRadius:10, border:`1px solid ${n.is_read?t.border(isDark):'rgba(212,175,55,0.3)'}`, background: n.is_read?'transparent':(isDark?'rgba(212,175,55,0.04)':'rgba(212,175,55,0.06)'), overflow:'hidden' }}>
+                          <div style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'10px 12px' }}>
+                            <span style={{ width:7, height:7, borderRadius:'50%', marginTop:5, flexShrink:0, background: n.is_read?'transparent':'#D4AF37', border: n.is_read?`1.5px solid ${t.border(isDark)}`:'none' }} />
+                            <span style={{ flexShrink:0, fontSize:10, fontWeight:700, padding:'2px 8px', borderRadius:6, background:bc.bg, color:bc.color, textTransform:'capitalize' }}>{n.type}</span>
+                            <button onClick={() => { if(!n.is_read) onMarkNotificationRead(n.id,true); setExpandedNotifId(prev => prev===n.id?null:n.id); }} style={{ flex:1, textAlign:'left', background:'none', border:'none', cursor:'pointer', padding:0, fontSize:12, color:t.textPrimary(isDark), lineHeight:1.5 }}>{n.message}</button>
+                            <div style={{ display:'flex', gap:6, flexShrink:0 }}>
+                              <button onClick={() => onMarkNotificationRead(n.id,!n.is_read)} style={{ fontSize:10, fontWeight:600, padding:'2px 8px', borderRadius:6, background:'transparent', border:`1px solid ${t.border(isDark)}`, color:t.textMuted(isDark), cursor:'pointer', whiteSpace:'nowrap' }}>{n.is_read?'Unread':'Read'}</button>
+                              <button onClick={() => onDeleteNotification(n.id)} style={{ width:26, height:26, borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', background:'transparent', border:'1px solid rgba(239,68,68,0.25)', color:'#ef4444', cursor:'pointer' }}><Icon path={icons.trash} size={11} /></button>
+                            </div>
+                          </div>
+                          <AnimatePresence>
+                            {isExp && n.full_description && (
+                              <motion.div initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:'auto' }} exit={{ opacity:0, height:0 }} transition={{ duration:0.18 }} style={{ overflow:'hidden', borderTop:`1px solid ${t.border(isDark)}`, padding:'10px 12px 10px 39px', fontSize:12, color:t.textSub(isDark), lineHeight:1.6 }}>
+                                {n.full_description}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </SCard>
+            </>
+          )}
+
+          {/* Security */}
+          {section === 'security' && (
+            <SCard isDark={isDark} title="Password & access" eyebrow="Security">
+              <p style={{ margin:'0 0 16px', fontSize:13, color:t.textSub(isDark) }}>We'll send a reset link to <strong style={{ color:t.textPrimary(isDark) }}>{user?.email}</strong>.</p>
+              <button onClick={onResetPassword} style={{ background:'#0F4C3A', color:'#FAF5DD', fontWeight:700, padding:'10px 22px', borderRadius:12, fontSize:13, border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>Request password reset</button>
+            </SCard>
+          )}
+
+          {/* Danger zone */}
+          {section === 'danger' && (
+            <div style={{ background:t.cardBg(isDark), border:'1px solid rgba(239,68,68,0.25)', borderRadius:16, overflow:'hidden' }}>
+              <div style={{ padding:'20px 22px 0' }}>
+                <p style={{ margin:'0 0 3px', fontSize:10, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'#ef4444' }}>Irreversible</p>
+                <p style={{ margin:0, fontSize:15, fontWeight:700, color:'#ef4444', fontFamily:'Poltawski Nowy, serif' }}>Danger zone</p>
+              </div>
+              <div style={{ padding:'14px 22px' }}>
+                <p style={{ fontSize:12, color:t.textSub(isDark), marginBottom:14 }}>These actions are permanent and cannot be undone.</p>
+                <button onClick={onDeleteAccount} style={{ display:'flex', alignItems:'center', gap:6, padding:'9px 18px', borderRadius:10, border:'1px solid rgba(239,68,68,0.35)', background:'transparent', color:'#ef4444', fontSize:13, fontWeight:600, cursor:'pointer' }}>
+                  <Icon path={icons.signout} size={13} style={{ color:'#ef4444' }} /> Delete account
+                </button>
+              </div>
+            </div>
+          )}
+
       </div>
 
-      {/* Save confirmation modal — 14-day warning */}
+      {/* 14-day save confirmation modal */}
       <AnimatePresence>
         {showSaveConfirm && (
           <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setShowSaveConfirm(false)}
-              style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(3px)' }} />
-            <div style={{ position: 'fixed', inset: 0, zIndex: 2001, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.94, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.94, y: 16 }}
-                transition={{ type: 'spring', stiffness: 340, damping: 28 }}
-                style={{ pointerEvents: 'all', width: 'min(400px, 90vw)', background: isDark ? '#111' : '#fff', border: `1px solid ${isDark ? '#2a2a2a' : '#e8e8e4'}`, borderRadius: 20, padding: 28, boxShadow: '0 24px 72px rgba(0,0,0,0.28)' }}
-              >
-                <div style={{ width: 44, height: 44, borderRadius: 22, background: 'rgba(212,175,55,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
-                  <Icon path={icons.settings} size={20} style={{ color: '#D4AF37' }} />
-                </div>
-                <p style={{ fontSize: 16, fontWeight: 700, color: isDark ? '#fff' : '#0F4C3A', marginBottom: 8 }}>Confirm settings update</p>
-                <p style={{ fontSize: 13, color: isDark ? '#aaa' : '#666', lineHeight: 1.6, marginBottom: 6 }}>
-                  After saving, your account settings will be <strong style={{ color: '#D4AF37' }}>locked for 14 days</strong>.
-                </p>
-                <p style={{ fontSize: 13, color: isDark ? '#aaa' : '#666', lineHeight: 1.6, marginBottom: 22 }}>
-                  Make sure everything looks correct before continuing.
-                </p>
-                <div style={{ display: 'flex', gap: 10 }}>
-                  <button onClick={() => setShowSaveConfirm(false)}
-                    style={{ flex: 1, padding: '10px 0', borderRadius: 12, fontSize: 13, fontWeight: 600, border: `1px solid ${isDark ? '#2a2a2a' : '#e8e8e4'}`, background: 'transparent', color: isDark ? '#aaa' : '#555', cursor: 'pointer' }}>
-                    Cancel
-                  </button>
-                  <button onClick={handleSaveConfirm}
-                    style={{ flex: 1, padding: '10px 0', borderRadius: 12, fontSize: 13, fontWeight: 600, background: '#0F4C3A', color: '#FAF5DD', border: 'none', cursor: 'pointer' }}>
-                    Save &amp; lock
-                  </button>
+            <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} onClick={() => setShowSaveConfirm(false)} style={{ position:'fixed', inset:0, zIndex:2000, background:'rgba(0,0,0,0.55)', backdropFilter:'blur(3px)' }} />
+            <div style={{ position:'fixed', inset:0, zIndex:2001, display:'flex', alignItems:'center', justifyContent:'center', pointerEvents:'none' }}>
+              <motion.div initial={{ opacity:0, scale:0.94, y:16 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.94, y:16 }} transition={{ type:'spring', stiffness:340, damping:28 }} style={{ pointerEvents:'all', width:'min(400px,90vw)', background: isDark?'#111':'#fff', border:`1px solid ${isDark?'#2a2a2a':'#e8e8e4'}`, borderRadius:20, padding:28, boxShadow:'0 24px 72px rgba(0,0,0,0.28)' }}>
+                <div style={{ width:44, height:44, borderRadius:22, background:'rgba(212,175,55,0.12)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:14 }}><Icon path={icons.settings} size={20} style={{ color:'#D4AF37' }} /></div>
+                <p style={{ fontSize:16, fontWeight:700, color: isDark?'#fff':'#0F4C3A', marginBottom:8 }}>Confirm settings update</p>
+                <p style={{ fontSize:13, color: isDark?'#aaa':'#666', lineHeight:1.6, marginBottom:6 }}>After saving, your account settings will be <strong style={{ color:'#D4AF37' }}>locked for 14 days</strong>.</p>
+                <p style={{ fontSize:13, color: isDark?'#aaa':'#666', lineHeight:1.6, marginBottom:22 }}>Make sure everything looks correct before continuing.</p>
+                <div style={{ display:'flex', gap:10 }}>
+                  <button onClick={() => setShowSaveConfirm(false)} style={{ flex:1, padding:'10px 0', borderRadius:12, fontSize:13, fontWeight:600, border:`1px solid ${isDark?'#2a2a2a':'#e8e8e4'}`, background:'transparent', color: isDark?'#aaa':'#555', cursor:'pointer' }}>Cancel</button>
+                  <button onClick={handleSaveConfirm} style={{ flex:1, padding:'10px 0', borderRadius:12, fontSize:13, fontWeight:600, background:'#0F4C3A', color:'#FAF5DD', border:'none', cursor:'pointer' }}>Save &amp; lock</button>
                 </div>
               </motion.div>
             </div>
           </>
         )}
       </AnimatePresence>
-
-      {/* Business logo upload */}
-      <div className="db-card" style={{ background: t.cardBg(isDark), border: `1px solid ${t.border(isDark)}`, borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: t.textPrimary(isDark) }}>Business Logo</p>
-        <p style={{ fontSize: 12, color: t.textSub(isDark), marginTop: -10, lineHeight: 1.6 }}>
-          Your logo appears on public frame pages as your creator identity. JPG only, max 2 MB.
-        </p>
-        <div className="db-logo-row">
-          {/* Preview */}
-          <div style={{ width: 64, height: 64, borderRadius: 12, background: isDark ? '#2a2a2a' : '#f0efe9', border: `1px solid ${t.border(isDark)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-            {logoUrl
-              ? <img src={logoUrl} alt="Business logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              : <Icon path={icons.frame} size={22} style={{ color: t.textMuted(isDark), opacity: 0.4 }} />
-            }
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <input
-              ref={logoInputRef}
-              type="file"
-              accept=".jpg,.jpeg"
-              onChange={handleLogoChange}
-              style={{ display: 'none' }}
-            />
-            <button
-              onClick={() => logoInputRef.current?.click()}
-              disabled={logoUploading}
-              style={{ background: '#0F4C3A', color: '#FAF5DD', fontWeight: 700, padding: '8px 18px', borderRadius: 10, fontSize: 12, border: 'none', cursor: logoUploading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6, opacity: logoUploading ? 0.6 : 1 }}>
-              {logoUploading
-                ? <><span style={{ width: 12, height: 12, borderRadius: 6, border: '2px solid #FAF5DD', borderTopColor: 'transparent', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} /> Uploading…</>
-                : logoUrl ? 'Change logo' : 'Upload logo'
-              }
-            </button>
-            {logoUrl && !logoUploading && (
-              <button
-                onClick={async () => {
-                  await supabase.from('users').update({ business_logo: null, updated_at: new Date().toISOString() }).eq('id', user.id);
-                  setLogoUrl(null);
-                  onProfileUpdated?.(prev => ({ ...prev, business_logo: null }));
-                }}
-                style={{ background: 'transparent', border: `1px solid rgba(239,68,68,0.35)`, color: '#ef4444', fontWeight: 600, padding: '6px 14px', borderRadius: 10, fontSize: 11, cursor: 'pointer' }}>
-                Remove
-              </button>
-            )}
-          </div>
-        </div>
-        {logoError && <p style={{ fontSize: 12, color: '#ef4444' }}>{logoError}</p>}
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
-
-      {/* QR email preference */}
-      <div className="db-card" style={{ background: t.cardBg(isDark), border: `1px solid ${t.border(isDark)}`, borderRadius: 16 }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: t.textPrimary(isDark), marginBottom: 16 }}>Email preferences</p>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-          <div style={{ flex: 1 }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: t.textPrimary(isDark), marginBottom: 3 }}>Email QR code on creation</p>
-            <p style={{ fontSize: 12, color: t.textSub(isDark), lineHeight: 1.6 }}>
-              Every time you generate a new QR frame, we'll send the branded QR code image directly to your inbox so you always have a copy.
-              {emailQR && <span style={{ display: 'block', marginTop: 4 }}>If you don't see it, check your spam folder and mark us as safe.</span>}
-              {!emailQR && <span style={{ display: 'block', marginTop: 4, color: '#D4AF37', fontWeight: 600 }}>Currently off — QR codes won't be emailed.</span>}
-            </p>
-          </div>
-          {/* Toggle switch */}
-          <button
-            onClick={handleQRToggle}
-            disabled={qrToggling}
-            aria-label={emailQR ? 'Disable QR email' : 'Enable QR email'}
-            style={{
-              flexShrink: 0, width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
-              background: emailQR ? '#0F4C3A' : t.border(isDark),
-              position: 'relative', transition: 'background 0.2s', opacity: qrToggling ? 0.6 : 1,
-            }}
-          >
-            <span style={{
-              position: 'absolute', top: 3, left: emailQR ? 23 : 3,
-              width: 18, height: 18, borderRadius: 9, background: '#ffffff',
-              transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
-            }} />
-          </button>
-        </div>
-      </div>
-
-      {/* Notifications management */}
-      <div className="db-card" style={{ background: t.cardBg(isDark), border: `1px solid ${t.border(isDark)}`, borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: t.textPrimary(isDark) }}>
-            Notifications
-            {notificationData?.some(n => !n.is_read) && (
-              <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, background: '#D4AF37', color: '#0F4C3A', padding: '2px 7px', borderRadius: 20 }}>
-                {notificationData.filter(n => !n.is_read).length} unread
-              </span>
-            )}
-          </p>
-          {notificationData?.length > 0 && (
-            <button onClick={onClearAllNotifications}
-              style={{ fontSize: 11, fontWeight: 600, color: '#ef4444', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, padding: '4px 12px', cursor: 'pointer' }}>
-              Clear all
-            </button>
-          )}
-        </div>
-
-        {!notificationData || notificationData.length === 0 ? (
-          <p style={{ fontSize: 13, color: t.textSub(isDark), textAlign: 'center', padding: '20px 0' }}>No notifications yet.</p>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {notificationData.map(n => {
-              const isExpanded = expandedNotifId === n.id;
-              const badgeColors = {
-                info:    { bg: 'rgba(59,130,246,0.1)',   color: '#3b82f6' },
-                success: { bg: 'rgba(34,197,94,0.1)',    color: '#22c55e' },
-                error:   { bg: 'rgba(239,68,68,0.1)',    color: '#ef4444' },
-                alert:   { bg: 'rgba(234,179,8,0.1)',    color: '#ca8a04' },
-                update:  { bg: 'rgba(168,85,247,0.1)',   color: '#a855f7' },
-              };
-              const bc = badgeColors[n.type] || badgeColors.info;
-              return (
-                <div key={n.id} style={{ borderRadius: 10, border: `1px solid ${n.is_read ? t.border(isDark) : 'rgba(212,175,55,0.3)'}`, background: n.is_read ? 'transparent' : (isDark ? 'rgba(212,175,55,0.04)' : 'rgba(212,175,55,0.06)'), overflow: 'hidden' }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 12px' }}>
-                    {/* Unread dot */}
-                    <span style={{ width: 7, height: 7, borderRadius: '50%', marginTop: 5, flexShrink: 0, background: n.is_read ? 'transparent' : '#D4AF37', border: n.is_read ? `1.5px solid ${t.border(isDark)}` : 'none' }} />
-                    {/* Type badge */}
-                    <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: bc.bg, color: bc.color, textTransform: 'capitalize' }}>
-                      {n.type}
-                    </span>
-                    {/* Message */}
-                    <button
-                      onClick={() => {
-                        if (!n.is_read) onMarkNotificationRead(n.id, true);
-                        setExpandedNotifId(prev => prev === n.id ? null : n.id);
-                      }}
-                      style={{ flex: 1, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 12, color: t.textPrimary(isDark), lineHeight: 1.5 }}
-                    >
-                      {n.message}
-                    </button>
-                    {/* Actions */}
-                    <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                      <button
-                        onClick={() => onMarkNotificationRead(n.id, !n.is_read)}
-                        title={n.is_read ? 'Mark as unread' : 'Mark as read'}
-                        style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 6, background: 'transparent', border: `1px solid ${t.border(isDark)}`, color: t.textMuted(isDark), cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                        {n.is_read ? 'Unread' : 'Read'}
-                      </button>
-                      <button
-                        onClick={() => onDeleteNotification(n.id)}
-                        title="Delete"
-                        style={{ width: 26, height: 26, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: `1px solid rgba(239,68,68,0.25)`, color: '#ef4444', cursor: 'pointer' }}>
-                        <Icon path={icons.trash} size={11} />
-                      </button>
-                    </div>
-                  </div>
-                  {/* Full description */}
-                  <AnimatePresence>
-                    {isExpanded && n.full_description && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.18 }}
-                        style={{ overflow: 'hidden', borderTop: `1px solid ${t.border(isDark)}`, padding: '10px 12px 10px 39px', fontSize: 12, color: t.textSub(isDark), lineHeight: 1.6 }}>
-                        {n.full_description}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      <div className="db-card" style={{ background: t.cardBg(isDark), border: `1px solid ${t.border(isDark)}`, borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <button onClick={onResetPassword}
-          style={{ background: '#0F4C3A', color: '#FAF5DD', fontWeight: 700, padding: '10px 22px', borderRadius: 12, fontSize: 13, border: 'none', cursor: 'pointer', alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 6 }}>
-            Request password reset
-        </button>
-      </div>
-
-      <div className="db-card" style={{ background: t.cardBg(isDark), border: '1px solid rgba(239,68,68,0.2)', borderRadius: 16 }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: '#ef4444', marginBottom: 4 }}>Danger zone</p>
-        <p style={{ fontSize: 12, color: t.textSub(isDark), marginBottom: 14 }}>These actions are permanent and cannot be undone.</p>
-        <button onClick={onDeleteAccount}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, border: '1px solid rgba(239,68,68,0.35)', background: 'transparent', color: '#ef4444', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-          <Icon path={icons.signout} size={13} style={{ color: '#ef4444' }} /> Delete account
-        </button>
-      </div>
     </div>
   );
 }
@@ -1747,7 +1991,8 @@ export default function Dashboard() {
     return cached ? { subscription: { plan_id: cached } } : null;
   });
   const [notificationData, setNotificationData] = useState([])
-  const [activeTab,    setActiveTab]    = useState('overview');
+  const [activeTab,      setActiveTab]      = useState('overview');
+  const [settingsSection, setSettingsSection] = useState('profile');
   const loginAlertSent  = useRef(false);
   const notifContainerRef = useRef(null);
 
@@ -1978,16 +2223,49 @@ export default function Dashboard() {
       <nav style={{ flex: 1, padding: '0 10px' }}>
         {NAV.filter(item => item.id !== 'analytics' || canViewAnalytics).map(item => {
           const active = activeTab === item.id;
+          const isSettings = item.id === 'settings';
+
+          if (isSettings) {
+            return (
+              <div key="settings">
+                <button onClick={() => navTo('settings')}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, marginBottom: 2, fontSize: 13, fontWeight: 500, border: 'none', cursor: 'pointer', background: active ? '#0F4C3A' : 'transparent', color: active ? '#FAF5DD' : t.textSub(isDark), transition: 'all 0.15s' }}>
+                  <Icon path={icons.settings} size={15} />
+                  Settings
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 'auto', transition: 'transform 0.2s', transform: active ? 'rotate(180deg)' : 'rotate(0deg)', opacity: 0.6 }}>
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                </button>
+                {active && (
+                  <div style={{ paddingLeft: 10, marginBottom: 4 }}>
+                    {SETTINGS_SECTIONS.map(sub => {
+                      const isPlanLocked = sub.plans && !sub.plans.includes(currentPlanId);
+                      const subActive = settingsSection === sub.id;
+                      return (
+                        <button key={sub.id}
+                          onClick={() => { setSettingsSection(sub.id); setSidebarOpen(false); }}
+                          style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '7px 12px', borderRadius: 8, marginBottom: 1, fontSize: 12, fontWeight: subActive ? 600 : 400, border: 'none', cursor: 'pointer', background: subActive ? 'rgba(212,175,55,0.12)' : 'transparent', color: sub.id === 'danger' ? '#ef4444' : subActive ? '#D4AF37' : t.textSub(isDark), transition: 'all 0.15s', textAlign: 'left' }}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                            <path d={sub.icon}/>
+                          </svg>
+                          {sub.label}
+                          {isPlanLocked && (
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 'auto', opacity: 0.4 }}>
+                              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+                            </svg>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          }
+
           return (
             <button key={item.id} onClick={() => navTo(item.id)}
-              style={{
-                width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-                padding: '10px 12px', borderRadius: 10, marginBottom: 2,
-                fontSize: 13, fontWeight: 500, border: 'none', cursor: 'pointer',
-                background: active ? '#0F4C3A' : 'transparent',
-                color: active ? '#FAF5DD' : t.textSub(isDark),
-                transition: 'all 0.15s',
-              }}>
+              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, marginBottom: 2, fontSize: 13, fontWeight: 500, border: 'none', cursor: 'pointer', background: active ? '#0F4C3A' : 'transparent', color: active ? '#FAF5DD' : t.textSub(isDark), transition: 'all 0.15s' }}>
               <Icon path={icons[item.icon]} size={15} />
               {item.label}
               {item.id === 'create' && (
@@ -2094,6 +2372,9 @@ export default function Dashboard() {
           .db-actions-grid   { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
           .db-frame-grid     { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; }
           .db-overview-twoup { display:grid; grid-template-columns:2fr 1fr; gap:16px; }
+          .db-settings-grid  { display:grid; grid-template-columns:180px 1fr; gap:24px; align-items:flex-start; }
+          .db-brand-grid     { display:grid; grid-template-columns:1fr auto; gap:24px; align-items:flex-start; }
+          .db-2col           { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
 
           /* ── Responsive layout helpers ── */
           .db-main     { padding:24px 20px; }
@@ -2124,6 +2405,10 @@ export default function Dashboard() {
             .db-search-row    { width:100%; }
             .db-search-input  { width:100% !important; flex:1; }
             .db-logo-row      { flex-direction:column; align-items:flex-start; }
+            .db-settings-grid  { grid-template-columns:1fr !important; }
+            .db-brand-grid     { grid-template-columns:1fr !important; }
+            .db-2col           { grid-template-columns:1fr !important; }
+            .db-brand-colors   { grid-template-columns:1fr !important; }
             .db-overview-frame-right { padding-left:8px; gap:6px; }
           }
 
@@ -2161,7 +2446,7 @@ export default function Dashboard() {
               <button onClick={() => navTo('billing')}
                 style={{ background: 'rgba(212,175,55,0.12)', color: '#D4AF37', fontWeight: 700, padding: '7px 14px', borderRadius: 10, fontSize: 12, border: '1px solid rgba(212,175,55,0.35)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}
                 title={currentPlanId === 'pro' ? 'Upgrade to Business' : 'Upgrade to Pro'}
-                                className='hidden md:flex'>
+                                className='hidden sm:flex'>
                 ✦ <span className="hide-label-mobile">{currentPlanId === 'pro' ? 'Upgrade to Business' : 'Upgrade to Pro'}</span>
                 <style>{`@media(max-width:639px){.hide-label-mobile{display:none}}`}</style>
               </button>
@@ -2197,7 +2482,7 @@ export default function Dashboard() {
                     {activeTab === 'create'    && <CreateTab editingFrame={editingFrame} onSaved={handleFrameSaved} isDark={isDark} onNavigateToBilling={() => navTo('billing')} planId={currentPlanId} />}
                     {activeTab === 'analytics' && canViewAnalytics && <AnalyticsTab frames={frames} isDark={isDark} planId={currentPlanId} notificationData={notificationData} />}
                     {activeTab === 'billing'   && null}
-                    {activeTab === 'settings'  && <SettingsTab user={user} userProfile={userProfile} isDark={isDark} onResetPassword={handleResetPassword} onDeleteAccount={handleDeleteAccount} onProfileUpdated={setUserProfile} notificationData={notificationData} onMarkNotificationRead={handleMarkNotificationRead} onDeleteNotification={handleDeleteNotification} onClearAllNotifications={handleClearAllNotifications} />}
+                    {activeTab === 'settings'  && <SettingsTab user={user} userProfile={userProfile} isDark={isDark} onResetPassword={handleResetPassword} onDeleteAccount={handleDeleteAccount} onProfileUpdated={setUserProfile} notificationData={notificationData} onMarkNotificationRead={handleMarkNotificationRead} onDeleteNotification={handleDeleteNotification} onClearAllNotifications={handleClearAllNotifications} section={settingsSection} planId={currentPlanId} />}
                   </>
               }
             </motion.div>

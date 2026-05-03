@@ -1,5 +1,6 @@
 # Dependencies
 node_modules
+node_modules/
 
 # Environment variables — never commit secrets
 .env
@@ -36,6 +37,7 @@ yarn-error.log*
 
 # Local Supabase (if you ever run it locally)
 .supabase
+supabase/
 
 # Documents / investor decks — keep off git
 *.pdf

@@ -3,7 +3,7 @@ import {
   adminGetAllPosts, adminCreatePost, adminUpdatePost, adminDeletePost,
   adminGetAllUsers, adminGetNewsletter, uploadBlogImage, adminPushNotification,
 } from '../services/supabaseHelpers';
-import scanframeLogo from '../assets/images/Scanframe alt.png';
+import scanMyFrameLogo from '../assets/images/Scanframe alt.png';
 
 const ADMIN_USERNAME = 'scanframe_admin';
 const ADMIN_PASSWORD = 'Scanframe@2025';
@@ -45,9 +45,33 @@ const ADMIN_STYLES = `
   .sf-input:focus { border-color: var(--sf-primary); }
   .sf-textarea { resize: vertical; min-height: 80px; }
   .sf-admin-mobile-nav { display: none; }
+  .sf-admin-cards { display: none; }
+  .sf-admin-login-form { width: 480px; background: var(--bg); padding: 60px 56px; display: flex; flex-direction: column; justify-content: center; flex-shrink: 0; }
+
+  /* Layout helpers */
+  .sf-admin-header-wrap { padding: 32px 36px 0; background: var(--bg); }
+  .sf-admin-kpi-grid    { display: grid; gap: 12px; margin-bottom: 24px; }
+  .sf-admin-content     { padding: 0 36px 32px; flex: 1; background: var(--bg); }
+  .sf-admin-compose-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; }
+  .sf-admin-modal-inner { width: 100%; max-width: 720px; background: var(--bg); border-radius: 20px; padding: 32px 36px; border: 1px solid var(--border); box-shadow: 0 24px 60px rgba(0,0,0,0.15); }
+
   @media (max-width: 900px) {
     .sf-admin-aside { display: none !important; }
     .sf-admin-mobile-nav { display: flex !important; }
+  }
+
+  @media (max-width: 640px) {
+    .sf-admin-login-brand { display: none !important; }
+    .sf-admin-login-form  { width: 100% !important; padding: 40px 24px !important; }
+    .sf-admin-table       { display: none !important; }
+    .sf-admin-cards       { display: block !important; }
+    .sf-admin-header-wrap { padding: 20px 16px 0 !important; }
+    .sf-admin-content     { padding: 0 16px 20px !important; }
+    .sf-admin-kpi-grid    { grid-template-columns: repeat(2, 1fr) !important; }
+    .sf-admin-compose-grid { grid-template-columns: 1fr !important; }
+    .sf-admin-modal-inner { padding: 20px 16px !important; border-radius: 14px !important; }
+    .sf-admin-modal-grid  { grid-template-columns: 1fr !important; }
+    .sf-admin-notif-grid  { grid-template-columns: 1fr !important; }
   }
 `;
 
@@ -83,19 +107,37 @@ function initials(name = '') {
 
 const EMPTY_POST = { title: '', slug: '', excerpt: '', cover_image: '', tags: '', author: 'ScanMyFrame', status: 'draft', body: [] };
 
+function CopyIdButton({ id }) {
+  const [copied, setCopied] = useState(false);
+  function copy() {
+    navigator.clipboard.writeText(id);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+  return (
+    <button onClick={copy} title={id} style={{ display: 'flex', alignItems: 'center', gap: 5, background: copied ? 'rgba(15,76,58,0.08)' : 'var(--bg-subtle)', border: '1px solid var(--border)', borderRadius: 7, padding: '4px 10px', cursor: 'pointer', fontSize: 11, color: copied ? 'var(--sf-primary)' : 'var(--fg-muted)', fontFamily: 'var(--font-mono)', transition: 'all 0.15s', whiteSpace: 'nowrap' }}>
+      {copied ? (
+        <><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7"/></svg> Copied</>
+      ) : (
+        <><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> {id.slice(0, 8)}…</>
+      )}
+    </button>
+  );
+}
+
 // ─── KPI Header ───────────────────────────────────────────────────────────────
 function AdminHeader({ title, eyebrow, kpis = [], action }) {
   return (
-    <div style={{ padding: '32px 36px 0', background: 'var(--bg)' }}>
+    <div className="sf-admin-header-wrap">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-muted)' }}>{eyebrow}</p>
-          <h1 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 700, color: 'var(--sf-primary)' }}>{title}</h1>
+          <h1 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 700, color: 'var(--sf-primary)' }}>{title}</h1>
         </div>
         {action}
       </div>
       {kpis.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${kpis.length}, 1fr)`, gap: 12, marginBottom: 24 }}>
+        <div className="sf-admin-kpi-grid" style={{ gridTemplateColumns: `repeat(${kpis.length}, 1fr)` }}>
           {kpis.map((k, i) => (
             <div key={i} style={{
               background: i === 0 ? 'var(--sf-primary)' : 'var(--surface)',
@@ -243,8 +285,8 @@ function PostModal({ post, onClose, onSaved }) {
   const lbl = { display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--fg-sub)', marginBottom: 8 };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(10,46,34,0.55)', backdropFilter: 'blur(4px)', overflowY: 'auto', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 16px' }}>
-      <div style={{ width: '100%', maxWidth: 720, background: 'var(--bg)', borderRadius: 20, padding: '32px 36px', border: '1px solid var(--border)', boxShadow: '0 24px 60px rgba(0,0,0,0.15)' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(10,46,34,0.55)', backdropFilter: 'blur(4px)', overflowY: 'auto', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '20px 12px' }}>
+      <div className="sf-admin-modal-inner">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
           <div>
             <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-muted)' }}>Content</p>
@@ -270,7 +312,7 @@ function PostModal({ post, onClose, onSaved }) {
             {form.cover_image && <img src={form.cover_image} alt="" style={{ marginTop: 8, maxHeight: 120, objectFit: 'cover', borderRadius: 10 }} />}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div className="sf-admin-modal-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <div><label style={lbl}>Author</label><input className="sf-input" value={form.author} onChange={e => set('author', e.target.value)} /></div>
             <div>
               <label style={lbl}>Status</label>
@@ -311,22 +353,22 @@ function LoginScreen({ onLogin }) {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', background: 'var(--sf-primary)' }}>
       {/* Left brand panel */}
-      <div style={{ flex: 1, padding: '56px 64px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', overflow: 'hidden' }} className="sf-admin-brand">
-        <img src={scanframeLogo} alt="ScanMyFrame" style={{ height: 26, filter: 'brightness(0) invert(1)', opacity: 0.9 }} />
+      <div className="sf-admin-brand sf-admin-login-brand" style={{ flex: 1, padding: '56px 64px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', overflow: 'hidden' }}>
+        <img src={scanMyFrameLogo} alt="ScanMyFrame" style={{ width: 60, filter: 'brightness(0) invert(1)', opacity: 0.9 }} />
         <div>
           <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase', padding: '6px 16px', borderRadius: 999, color: 'var(--sf-gold)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', marginBottom: 24 }}>Internal tool</span>
           <h1 style={{ margin: '0 0 16px', fontFamily: 'var(--font-display)', fontSize: 44, color: 'var(--sf-secondary)', fontWeight: 700, lineHeight: 1.08, maxWidth: 440 }}>
             Manage every story behind every frame.
           </h1>
           <p style={{ margin: 0, color: 'rgba(250,245,221,0.65)', fontSize: 15, lineHeight: 1.6, maxWidth: 400 }}>
-            Posts, vendors, newsletter and notifications — all in one place.
+            Posts, vendors, newsletter and notifications - all in one place.
           </p>
         </div>
         <p style={{ margin: 0, fontSize: 11, color: 'rgba(250,245,221,0.4)', fontFamily: 'var(--font-mono)' }}>v1.0 · scanmyframe.com</p>
       </div>
 
       {/* Right form panel */}
-      <div style={{ width: 480, background: 'var(--bg)', padding: '60px 56px', display: 'flex', flexDirection: 'column', justifyContent: 'center', flexShrink: 0 }}>
+      <div className="sf-admin-login-form">
         <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-muted)' }}>Sign in</p>
         <h2 style={{ margin: '0 0 32px', fontFamily: 'var(--font-display)', fontSize: 26, color: 'var(--sf-primary)', fontWeight: 700 }}>Welcome back, admin.</h2>
         <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -406,7 +448,7 @@ function PostsTab() {
         }
       />
 
-      <div style={{ padding: '0 36px 32px', flex: 1, background: 'var(--bg)' }}>
+      <div className="sf-admin-content">
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
             <div style={{ width: 28, height: 28, border: '2.5px solid var(--sf-primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
@@ -505,7 +547,7 @@ function PostsTab() {
       </div>
 
       {modal !== null && <PostModal post={modal} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />}
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } } .sf-admin-cards { display: none; } @media(max-width:640px){ .sf-admin-table { display: none !important; } .sf-admin-cards { display: block !important; } }`}</style>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </>
   );
 }
@@ -548,7 +590,7 @@ function UsersTab() {
         }
       />
 
-      <div style={{ padding: '0 36px 32px', flex: 1, background: 'var(--bg)' }}>
+      <div className="sf-admin-content">
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
             <div style={{ width: 28, height: 28, border: '2.5px solid var(--sf-primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
@@ -562,7 +604,7 @@ function UsersTab() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: 'var(--bg-subtle)' }}>
-                    {['Vendor', 'Plan', 'QR usage', 'Status', 'Renews', 'Joined'].map(h => (
+                    {['Vendor', 'Plan', 'QR usage', 'Status', 'Renews', 'Joined', 'User ID'].map(h => (
                       <th key={h} style={{ textAlign: 'left', padding: '12px 20px', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-muted)' }}>{h}</th>
                     ))}
                   </tr>
@@ -606,6 +648,9 @@ function UsersTab() {
                         </td>
                         <td style={{ padding: '14px 20px', fontSize: 12, color: 'var(--fg-sub)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>{fmtDateShort(sub.current_period_end)}</td>
                         <td style={{ padding: '14px 20px', fontSize: 12, color: 'var(--fg-sub)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>{fmtDateShort(u.created_at)}</td>
+                        <td style={{ padding: '14px 20px' }}>
+                          <CopyIdButton id={u.id} />
+                        </td>
                       </tr>
                     );
                   })}
@@ -676,7 +721,7 @@ function NewsletterTab() {
         }
       />
 
-      <div style={{ padding: '0 36px 32px', flex: 1, background: 'var(--bg)' }}>
+      <div className="sf-admin-content">
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
             <div style={{ width: 28, height: 28, border: '2.5px solid var(--sf-primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
@@ -717,9 +762,12 @@ function NewsletterTab() {
 const AUDIENCE_OPTIONS = [
   { value: 'all',         label: 'All users' },
   { value: 'subscribers', label: 'All active subscribers' },
+  { value: 'free',        label: 'Free plan' },
+  { value: 'trial',       label: 'Trial plan' },
   { value: 'basic',       label: 'Basic plan' },
   { value: 'pro',         label: 'Pro plan' },
   { value: 'business',    label: 'Business plan' },
+  { value: 'user',        label: 'Specific user' },
 ];
 
 const TYPE_OPTIONS = [
@@ -732,6 +780,7 @@ const TYPE_OPTIONS = [
 
 function NotificationsTab() {
   const [audience, setAudience] = useState('all');
+  const [userId,   setUserId]   = useState('');
   const [type,     setType]     = useState('info');
   const [message,  setMessage]  = useState('');
   const [fullDesc, setFullDesc] = useState('');
@@ -749,9 +798,9 @@ function NotificationsTab() {
     if (!message.trim()) return;
     if (!confirm(`Send "${type}" notification to "${selectedAud.label}"?\n\nThis cannot be undone.`)) return;
     setSending(true); setResult(null);
-    const { count, error } = await adminPushNotification({ audience, type, message: message.trim(), full_description: fullDesc.trim() || null });
+    const { count, error } = await adminPushNotification({ audience, user_id: audience === 'user' ? userId.trim() : undefined, type, message: message.trim(), full_description: fullDesc.trim() || null });
     setSending(false); setResult({ count, error });
-    if (!error) { setMessage(''); setFullDesc(''); }
+    if (!error) { setMessage(''); setFullDesc(''); setUserId(''); }
   }
 
   return (
@@ -761,7 +810,7 @@ function NotificationsTab() {
         { label: 'Types', value: TYPE_OPTIONS.length, sub: 'info · alert · update…' },
       ]} />
 
-      <div style={{ padding: '0 36px 32px', flex: 1, background: 'var(--bg)', display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 16 }}>
+      <div className="sf-admin-content sf-admin-compose-grid">
         {/* Compose */}
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 28, display: 'flex', flexDirection: 'column' }}>
           <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-muted)' }}>Compose</p>
@@ -778,6 +827,14 @@ function NotificationsTab() {
                 ))}
               </div>
             </div>
+
+            {audience === 'user' && (
+              <div>
+                <label style={lbl}>User ID</label>
+                <input style={inp} value={userId} onChange={e => setUserId(e.target.value)} placeholder="Paste user UUID here…" />
+                <p style={{ margin: '6px 0 0', fontSize: 11, color: 'var(--fg-muted)' }}>Find it in the user's dashboard under Settings → Account ID.</p>
+              </div>
+            )}
 
             <div>
               <label style={lbl}>Type</label>
@@ -806,7 +863,7 @@ function NotificationsTab() {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 16, borderTop: '1px solid var(--border)', marginTop: 'auto' }}>
               <p style={{ margin: 0, fontSize: 12, color: 'var(--fg-muted)' }}>Sending to <strong style={{ color: 'var(--sf-primary)' }}>{selectedAud.label}</strong></p>
-              <button type="submit" disabled={sending || !message.trim()} className="sf-btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button type="submit" disabled={sending || !message.trim() || (audience === 'user' && !userId.trim())} className="sf-btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
                 {sending ? 'Sending…' : 'Send broadcast'}
               </button>
@@ -868,7 +925,7 @@ export default function Admin() {
       {/* Sidebar */}
       <aside className="sf-admin-aside" style={{ width: 240, background: 'var(--sf-primary-deep)', color: 'var(--sf-secondary)', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0, position: 'sticky', top: 0, height: '100vh', overflowY: 'auto' }}>
         <div style={{ padding: '4px 12px 6px', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src={scanframeLogo} alt="ScanMyFrame" style={{ height: 20, filter: 'brightness(0) invert(1)', opacity: 0.85 }} />
+          <img src={scanMyFrameLogo} alt="ScanMyFrame" style={{ height: 20, filter: 'brightness(0) invert(1)', opacity: 0.85 }} />
         </div>
         <p style={{ margin: '0 12px 18px', fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--sf-gold)' }}>Admin console</p>
 
@@ -888,22 +945,30 @@ export default function Admin() {
         </button>
       </aside>
 
-      {/* Mobile top nav */}
-      <div className="sf-admin-mobile-nav" style={{ background: 'var(--sf-primary-deep)', padding: '12px 16px', alignItems: 'center', gap: 8, position: 'sticky', top: 0, zIndex: 10, overflowX: 'auto' }}>
-        <img src={scanframeLogo} alt="" style={{ height: 18, filter: 'brightness(0) invert(1)', opacity: 0.85, flexShrink: 0, marginRight: 8 }} />
-        {tabs.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: '6px 12px', borderRadius: 8, background: tab === t.id ? 'rgba(212,175,55,0.15)' : 'transparent', color: tab === t.id ? 'var(--sf-gold)' : 'rgba(250,245,221,0.7)', border: tab === t.id ? '1px solid rgba(212,175,55,0.3)' : '1px solid transparent', cursor: 'pointer', fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', fontFamily: 'inherit' }}>{t.label}</button>
-        ))}
-        <button onClick={signOut} style={{ marginLeft: 'auto', padding: '6px 12px', borderRadius: 8, background: 'transparent', color: 'rgba(250,245,221,0.5)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit', whiteSpace: 'nowrap', flexShrink: 0 }}>Sign out</button>
-      </div>
+      {/* Content column: mobile nav stacked above main */}
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
 
-      {/* Main content */}
-      <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
-        {tab === 'posts'         && <PostsTab />}
-        {tab === 'users'         && <UsersTab />}
-        {tab === 'newsletter'    && <NewsletterTab />}
-        {tab === 'notifications' && <NotificationsTab />}
-      </main>
+        {/* Mobile top nav — inside content column so it sits above, not beside, main */}
+        <div className="sf-admin-mobile-nav" style={{ background: 'var(--sf-primary-deep)', padding: '10px 12px', alignItems: 'center', gap: 6, position: 'sticky', top: 0, zIndex: 10, overflowX: 'auto' }}>
+          <img src={scanMyFrameLogo} alt="" style={{ height: 18, filter: 'brightness(0) invert(1)', opacity: 0.85, flexShrink: 0, marginRight: 4 }} />
+          {tabs.map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 10px', borderRadius: 8, background: tab === t.id ? 'rgba(212,175,55,0.15)' : 'transparent', color: tab === t.id ? 'var(--sf-gold)' : 'rgba(250,245,221,0.65)', border: tab === t.id ? '1px solid rgba(212,175,55,0.3)' : '1px solid transparent', cursor: 'pointer', fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap', fontFamily: 'inherit', flexShrink: 0 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={t.icon}/></svg>
+              {t.label}
+            </button>
+          ))}
+          <button onClick={signOut} style={{ marginLeft: 'auto', padding: '6px 10px', borderRadius: 8, background: 'transparent', color: 'rgba(250,245,221,0.5)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontSize: 11, fontFamily: 'inherit', whiteSpace: 'nowrap', flexShrink: 0 }}>Out</button>
+        </div>
+
+        {/* Main content */}
+        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
+          {tab === 'posts'         && <PostsTab />}
+          {tab === 'users'         && <UsersTab />}
+          {tab === 'newsletter'    && <NewsletterTab />}
+          {tab === 'notifications' && <NotificationsTab />}
+        </main>
+
+      </div>
     </div>
   );
 }
