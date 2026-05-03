@@ -13,4 +13,4 @@ Disallow: /verify-email-pending
 Disallow: /auth/
 
 # Sitemap
-Sitemap: https://scanframe.co/sitemap.xml
+Sitemap: https://scanmyframe.com/sitemap.xml
