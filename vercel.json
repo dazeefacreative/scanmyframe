@@ -7,6 +7,15 @@
       "destination": "/api/sitemap"
     },
     {
+      "source": "/blog/:slug",
+      "has": [{ "type": "query", "key": "_spa", "value": "1" }],
+      "destination": "/index.html"
+    },
+    {
+      "source": "/blog/:slug",
+      "destination": "/api/blog-og?slug=:slug"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

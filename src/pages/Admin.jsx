@@ -159,6 +159,8 @@ function AdminHeader({ title, eyebrow, kpis = [], action }) {
 // ─── Block Editor ─────────────────────────────────────────────────────────────
 function BlockEditor({ blocks, onChange }) {
   const [uploading, setUploading] = useState({});
+  const [dragOver, setDragOver] = useState(null);
+  const dragSrc = useRef(null);
 
   function addBlock(type) {
     const defaults = {
@@ -169,6 +171,7 @@ function BlockEditor({ blocks, onChange }) {
       list:      { type: 'list',      ordered: false, items: [''] },
       image:     { type: 'image',     url: '', caption: '' },
       divider:   { type: 'divider' },
+      link:      { type: 'link', text: '', url: '' },
     };
     onChange([...blocks, defaults[type]]);
   }
@@ -192,16 +195,38 @@ function BlockEditor({ blocks, onChange }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {blocks.map((block, i) => (
-        <div key={i} style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
+        <div
+          key={i}
+          draggable
+          onDragStart={() => { dragSrc.current = i; }}
+          onDragOver={e => { e.preventDefault(); setDragOver(i); }}
+          onDrop={() => {
+            const src = dragSrc.current;
+            setDragOver(null);
+            if (src === null || src === i) return;
+            const next = [...blocks];
+            const [moved] = next.splice(src, 1);
+            next.splice(i, 0, moved);
+            onChange(next);
+            dragSrc.current = null;
+          }}
+          onDragEnd={() => { dragSrc.current = null; setDragOver(null); }}
+          style={{ background: 'var(--bg-subtle)', border: `1px solid ${dragOver === i ? 'var(--sf-primary)' : 'var(--border)'}`, borderRadius: 12, padding: 16, transition: 'border-color 0.15s' }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--fg-muted)' }}>
-              {block.type === 'h2' ? 'Heading 2' : block.type === 'h3' ? 'Heading 3' : block.type}
-            </span>
-            <div style={{ display: 'flex', gap: 4 }}>
-              <button type="button" onClick={() => moveBlock(i, -1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--fg-muted)', padding: 4 }}>↑</button>
-              <button type="button" onClick={() => moveBlock(i, 1)}  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--fg-muted)', padding: 4 }}>↓</button>
-              <button type="button" onClick={() => removeBlock(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: 4, marginLeft: 4 }}>✕</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ cursor: 'grab', color: 'var(--fg-muted)', lineHeight: 1, flexShrink: 0 }} title="Drag to reorder">
+                <svg width="10" height="16" viewBox="0 0 10 20" fill="currentColor">
+                  <circle cx="3" cy="4" r="1.5"/><circle cx="7" cy="4" r="1.5"/>
+                  <circle cx="3" cy="10" r="1.5"/><circle cx="7" cy="10" r="1.5"/>
+                  <circle cx="3" cy="16" r="1.5"/><circle cx="7" cy="16" r="1.5"/>
+                </svg>
+              </span>
+              <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--fg-muted)' }}>
+                {block.type === 'h2' ? 'Heading 2' : block.type === 'h3' ? 'Heading 3' : block.type}
+              </span>
             </div>
+            <button type="button" onClick={() => removeBlock(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: 4 }}>✕</button>
           </div>
 
           {(block.type === 'paragraph') && <textarea rows={4} className="sf-input sf-textarea" placeholder="Paragraph…" value={block.content} onChange={e => updateBlock(i, { content: e.target.value })} />}
@@ -236,11 +261,18 @@ function BlockEditor({ blocks, onChange }) {
           )}
 
           {block.type === 'divider' && <hr style={{ border: 'none', borderTop: '1px solid var(--border)', margin: 0 }} />}
+
+          {block.type === 'link' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <input className="sf-input" placeholder="Link display text" value={block.text} onChange={e => updateBlock(i, { text: e.target.value })} />
+              <input className="sf-input" placeholder="https://…" value={block.url} onChange={e => updateBlock(i, { url: e.target.value })} />
+            </div>
+          )}
         </div>
       ))}
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
-        {['paragraph','h2','h3','quote','list','image','divider'].map(type => (
+        {['paragraph','h2','h3','quote','list','image','divider','link'].map(type => (
           <button key={type} type="button" onClick={() => addBlock(type)} style={{
             fontSize: 11, fontWeight: 600, padding: '6px 12px', borderRadius: 8,
             background: 'var(--surface)', border: '1px solid var(--border)',
