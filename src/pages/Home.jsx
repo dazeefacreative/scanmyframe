@@ -582,10 +582,12 @@ export default function Home() {
             </h2>
           </div>
           <div className="relative flex flex-col px-4 py-16 items-center border rounded-xl transition-colors duration-200 bg-[#162722] border-gray-700 overflow-hidden">
+            <div className='z-10'>
             <QRCodeGenerator />
+            </div>
             <motion.img
               initial={{ y: 100, opacity: 0 }}
-              whileInView={{ y: 0, opacity: 1 }}
+              whileInView={{ y: 0, opacity: 0.5 }}
               transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
               src={qrCode}
               alt="QR Code"

@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
   profile_picture_url TEXT,
   qr_codes_remaining INT DEFAULT 10,
   is_vendor BOOLEAN DEFAULT FALSE,
+  known_devices JSONB DEFAULT '[]'::jsonb,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

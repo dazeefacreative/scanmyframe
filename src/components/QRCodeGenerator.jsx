@@ -5,6 +5,7 @@ import QRCode from 'qrcode';
 import { createFrame, uploadMedia, addMediaToFrame, consumeQRCode, sendQREmail, sendTrialUpgradeNudge } from '../services/supabaseHelpers';
 import { supabase } from '../services/supabaseClient';
 import StoryEditor from './StoryEditor';
+import FramePreview from './FramePreview';
 
 const BASE_URL = window.location.origin;
 
@@ -649,8 +650,9 @@ export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }
 
   // ── Form view ─────────────────────────────────────────────────────────────
   return (
+    <div className="flex gap-8 items-start w-full">
     <motion.div ref={rootRef} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
-      className="bg-white rounded-2xl p-4 sm:p-6 w-full max-w-md mx-auto">
+      className="bg-white rounded-2xl p-4 sm:p-6 w-full max-w-md">
 
       <StepIndicator step={step} />
 
@@ -956,5 +958,9 @@ export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }
         )}
       </AnimatePresence>
     </motion.div>
+      <div className="hidden lg:block flex-shrink-0">
+        <FramePreview form={form} artworkFile={artworkFile} />
+      </div>
+    </div>
   );
 }

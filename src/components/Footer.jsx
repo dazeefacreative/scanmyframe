@@ -53,13 +53,13 @@ export default function Footer() {
           <span className="font-bold">Stay Connected</span>
           <p>Follow us on social media and be part of the community bringing frames to life.</p>
           <div className="flex gap-2 mt-2">
-            <a href="https://www.instagram.com/scanframeng" target="_blank" rel="noopener noreferrer" className="text-brand-green hover:text-brand-green-hover transition-colors duration-200">
+            <a href="https://www.instagram.com/scanmyframe" target="_blank" rel="noopener noreferrer" className="text-brand-green hover:text-brand-green-hover transition-colors duration-200">
               <Icon icon="iconoir:instagram" className="size-6" />
             </a>
-            <a href="https://www.linkedin.com/in/scanframeng/" target="_blank" rel="noopener noreferrer" className="text-brand-green hover:text-brand-green-hover transition-colors duration-200">
-              <Icon icon="iconoir:linkedin" className="size-6" />
+            <a href="https://www.tiktok.com/@scanmyframe" target="_blank" rel="noopener noreferrer" className="text-brand-green hover:text-brand-green-hover transition-colors duration-200">
+              <Icon icon="iconoir:tiktok" className="size-6" />
             </a>
-            <a href="https://www.x.com/scanframeng" target="_blank" rel="noopener noreferrer" className="text-brand-green hover:text-brand-green-hover transition-colors duration-200">
+            <a href="https://www.x.com/scanmyframe" target="_blank" rel="noopener noreferrer" className="text-brand-green hover:text-brand-green-hover transition-colors duration-200">
               <Icon icon="iconoir:x" className="size-6" />
             </a>
           </div>

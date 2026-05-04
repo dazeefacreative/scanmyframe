@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Helmet } from 'react-helmet-async';
 import QRCode from 'qrcode';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,7 +14,7 @@ import AIChatWidget from '../components/AIChatWidget';
 import scanFrameLogo from '../assets/images/Scanframe.png';
 import scanFrameLogoAlt from '../assets/images/Scanframe alt.png';
 import NotificationDropdown from '../components/NotificationDropDown';
-import { sendLoginAlertEmail } from '../services/supabaseHelpers';
+import { sendLoginAlertEmail, checkAndUpdateKnownDevices, buildDeviceInfo } from '../services/supabaseHelpers';
 
 // ─── Icon primitive ───────────────────────────────────────────────────────────
 const Icon = ({ path, size = 20, className = '', style }) => (
@@ -1378,9 +1379,11 @@ function AccountIdField({ userId, isDark, labelStyle }) {
   return (
     <div>
       <label style={labelStyle}>Account ID</label>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <div style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: `1px solid ${t.border(isDark)}`, background: t.inputBg(isDark), fontSize: 11, fontFamily: 'monospace', color: t.textMuted(isDark), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8}}>
+        <div style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: `1px solid ${t.border(isDark)}`, background: t.inputBg(isDark), fontSize: 11, fontFamily: 'monospace', color: t.textMuted(isDark), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+        className='max-w-[220px] sm:max-w-full' >
           {userId || '—'}
+          
         </div>
         <button onClick={copy} style={{ flexShrink: 0, padding: '9px 14px', borderRadius: 10, border: `1px solid ${t.border(isDark)}`, background: copied ? '#0F4C3A' : 'transparent', color: copied ? '#FAF5DD' : t.textSub(isDark), fontSize: 11, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 5 }}>
           {copied ? (
@@ -1390,7 +1393,7 @@ function AccountIdField({ userId, isDark, labelStyle }) {
           )}
         </button>
       </div>
-      <p style={{ fontSize: 11, color: t.textMuted(isDark), marginTop: 5 }}>Share this with support if you need account-specific help.</p>
+      <p style={{ fontSize: 11, color: t.textMuted(isDark), marginTop: 5 }}>Share this with support when required.</p>
     </div>
   );
 }
@@ -1802,7 +1805,7 @@ function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccou
             <SCard isDark={isDark} title="QR code branding" eyebrow="Business only">
               <div style={{ textAlign:'center', padding:'24px 0' }}>
                 
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ display:"inline-block", margin:"auto", marginBottom:14 }}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ display:'block', margin:'0 auto 14px' }}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
                 <p style={{ margin:'0 0 6px', fontSize:15, fontWeight:700, color:t.textPrimary(isDark), fontFamily:'Poltawski Nowy, serif' }}>Upgrade to unlock QR Branding</p>
                 <p style={{ margin:'0 0 20px', fontSize:13, color:t.textSub(isDark), lineHeight:1.6 }}>Customise your QR code colours, border and logo with a Business plan.</p>
                 <button onClick={() => {}} style={{ background:'#D4AF37', color:'#0F4C3A', fontWeight:700, padding:'10px 24px', borderRadius:12, fontSize:13, border:'none', cursor:'pointer' }}>View Business plan</button>
@@ -2037,7 +2040,7 @@ export default function Dashboard() {
       if (profileRes.data) {
         setUserProfile(profileRes.data);
 
-        // ── Login-from-new-location alert ───────────────────────────────────
+        // ── Login-from-new-device alert ────────────────────────────────────
         if (!loginAlertSent.current) {
           loginAlertSent.current = true;
           (async () => {
@@ -2046,62 +2049,47 @@ export default function Dashboard() {
               if (!ipRes.ok) return;
               const { ip } = await ipRes.json();
               if (!ip) return;
-              const storedIp = profileRes.data.last_known_ip;
 
-              if (storedIp === ip) {
-                // Same IP — nothing to do
-              } else {
-                // IP changed or was never stored — build device info then alert (or silently record for brand-new accounts)
-                let locationStr = '';
-                try {
-                  const geoRes = await fetch(`https://ipapi.co/${ip}/json/`, { signal: AbortSignal.timeout(4000) });
-                  if (geoRes.ok) {
-                    const geo = await geoRes.json();
-                    const parts = [geo.city, geo.country_name].filter(Boolean);
-                    if (parts.length) locationStr = parts.join(', ');
-                  }
-                } catch (_) { /* geo lookup optional */ }
+              const { isNewDevice, browser, device } = await checkAndUpdateKnownDevices(user.id, ip, navigator.userAgent);
 
-                const ua = navigator.userAgent;
-                const isMobile = /Mobi|Android|iPhone/i.test(ua);
-                const isTablet = /iPad|Tablet/i.test(ua);
-                const device   = isTablet ? 'Tablet' : isMobile ? 'Mobile' : 'Desktop';
-                const browser  =
-                  /Edg\//i.test(ua)              ? 'Edge'    :
-                  /OPR\/|Opera/i.test(ua)        ? 'Opera'   :
-                  /Firefox\//i.test(ua)           ? 'Firefox' :
-                  /Chrome\//i.test(ua)            ? 'Chrome'  :
-                  /Safari\//i.test(ua)            ? 'Safari'  : 'Browser';
+              if (!isNewDevice) return;
 
-                const deviceInfo = locationStr
-                  ? `${device}, ${browser} in ${locationStr}`
-                  : `${device}, ${browser}`;
-
-                // Always update stored IP
-                await supabase.from('users').update({ last_known_ip: ip }).eq('id', user.id);
-
-                // Send alert — skip only on the very first ever login (no prior IP AND account < 10 min old)
-                const accountAgeMin = (Date.now() - new Date(profileRes.data.created_at).getTime()) / 60000;
-                const isFirstEverLogin = !storedIp && accountAgeMin < 10;
-
-                if (!isFirstEverLogin) {
-                  const { data: newNotif } = await supabase.from('notification').insert({
-                    user_id:          user.id,
-                    type:             'alert',
-                    message:          'We noticed a login to your ScanMyFrame account from a new device or location.',
-                    full_description: `From ${deviceInfo}.\n\nIf this was you, no action is needed. If you don't recognise this activity, reset your password immediately — go to Settings and click "Request password reset".`,
-                    is_read:          false,
-                  }).select().single();
-
-                  if (newNotif) setNotificationData(prev => [newNotif, ...prev]);
-
-                  sendLoginAlertEmail({
-                    toEmail:    user.email,
-                    userName:   profileRes.data.full_name || profileRes.data.business_name || 'there',
-                    deviceInfo,
-                    ip,
-                  });
+              let locationStr = '';
+              try {
+                const geoRes = await fetch(`https://ipapi.co/${ip}/json/`, { signal: AbortSignal.timeout(4000) });
+                if (geoRes.ok) {
+                  const geo = await geoRes.json();
+                  const parts = [geo.city, geo.country_name].filter(Boolean);
+                  if (parts.length) locationStr = parts.join(', ');
                 }
+              } catch (_) { /* geo lookup optional */ }
+
+              const deviceTitle = device.charAt(0).toUpperCase() + device.slice(1);
+              const browserTitle = browser.charAt(0).toUpperCase() + browser.slice(1);
+              const deviceInfo = locationStr
+                ? `${deviceTitle}, ${browserTitle} in ${locationStr}`
+                : `${deviceTitle}, ${browserTitle}`;
+
+              const accountAgeMin = (Date.now() - new Date(profileRes.data.created_at).getTime()) / 60000;
+              const isFirstEverLogin = accountAgeMin < 10;
+
+              if (!isFirstEverLogin) {
+                const { data: newNotif } = await supabase.from('notification').insert({
+                  user_id:          user.id,
+                  type:             'alert',
+                  message:          'We noticed a login to your ScanMyFrame account from a new device or location.',
+                  full_description: `From ${deviceInfo}.\n\nIf this was you, no action is needed. If you don't recognise this activity, reset your password immediately — go to Settings and click "Request password reset".`,
+                  is_read:          false,
+                }).select().single();
+
+                if (newNotif) setNotificationData(prev => [newNotif, ...prev]);
+
+                sendLoginAlertEmail({
+                  toEmail:    user.email,
+                  userName:   profileRes.data.full_name || profileRes.data.business_name || 'there',
+                  deviceInfo,
+                  ip,
+                });
               }
             } catch (_) { /* silently ignore IP fetch failures */ }
           })();
@@ -2332,7 +2320,10 @@ export default function Dashboard() {
   const SIDEBAR_W = 220;
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', background: t.pageBg(isDark), transition: 'background 0.2s' }}>
+    <main style={{ minHeight: '100vh', display: 'flex', background: t.pageBg(isDark), transition: 'background 0.2s' }}>
+      <Helmet>
+        <title>Dashboard - ScanMyFrame</title>        
+      </Helmet>
 
       {/* Desktop sidebar */}
       <aside style={{ width: SIDEBAR_W, flexShrink: 0, position: 'fixed', top: 0, left: 0, overflow: 'hidden', background: t.sidebarBg(isDark), borderRight: `1px solid ${t.border(isDark)}`, zIndex: 30, display: 'none' }}
@@ -2602,6 +2593,6 @@ export default function Dashboard() {
           </>
         )}
       </AnimatePresence>
-    </div>
+    </main>
   );
 }

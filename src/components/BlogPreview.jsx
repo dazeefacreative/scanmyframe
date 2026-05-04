@@ -91,13 +91,13 @@ export default function BlogPreview() {
                 <div className="flex flex-col flex-1 p-4">
                   {/* Tags */}
                   {post.tags?.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mb-2">
+                    <div className="flex flex-wrap gap-1 text-xs mb-2">
                       {post.tags.slice(0, 2).map(tag => (
                         <Link
                           key={tag}
                           to={`/blog?tag=${encodeURIComponent(tag)}`}
                           onClick={e => e.stopPropagation()}
-                          className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full transition-opacity hover:opacity-70
+                          className={`text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full transition-opacity hover:opacity-70
                             ${isDark ? 'bg-[#D4AF37]/15 text-[#D4AF37]' : 'bg-secondary/30 text-[#0F4C3A]'}`}
                         >
                           {tag}

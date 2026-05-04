@@ -961,3 +961,81 @@ export const sendWelcomeNotification = async ({ userId, toEmail, userName }) => 
     // Silently ignore — email is best-effort
   }
 };
+
+// ============================================
+// DEVICE TRACKING HELPERS
+// ============================================
+
+async function hashDeviceFingerprint(ip, browser, device) {
+  const fingerprint = `${ip}::${browser}::${device}`;
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(fingerprint));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
+}
+
+export function buildDeviceInfo(userAgent) {
+  const ua = userAgent || navigator.userAgent;
+  const isMobile = /Mobi|Android|iPhone/i.test(ua);
+  const isTablet = /iPad|Tablet/i.test(ua);
+  const device = isTablet ? 'tablet' : isMobile ? 'mobile' : 'desktop';
+  const browser =
+    /Edg/i.test(ua) ? 'edge' :
+    /OPR|Opera/i.test(ua) ? 'opera' :
+    /Firefox/i.test(ua) ? 'firefox' :
+    /Chrome/i.test(ua) ? 'chrome' :
+    /Safari/i.test(ua) ? 'safari' : 'browser';
+  return { browser, device };
+}
+
+export async function checkAndUpdateKnownDevices(userId, currentIp, userAgent) {
+  const { browser, device } = buildDeviceInfo(userAgent);
+  const hash = await hashDeviceFingerprint(currentIp, browser, device);
+
+  const { data: user, error: fetchErr } = await supabase
+    .from('users')
+    .select('known_devices')
+    .eq('id', userId)
+    .single();
+
+  if (fetchErr) throw fetchErr;
+
+  const knownDevices = Array.isArray(user?.known_devices) ? user.known_devices : [];
+  const existingDeviceIndex = knownDevices.findIndex(d => d.browser === browser && d.device === device);
+  const isNewDevice = existingDeviceIndex === -1;
+
+  if (isNewDevice) {
+    const newDevice = {
+      hash,
+      ip: currentIp,
+      browser,
+      device,
+      added_at: new Date().toISOString(),
+    };
+    const updated = [...knownDevices, newDevice];
+
+    const { error: updateErr } = await supabase
+      .from('users')
+      .update({ known_devices: updated })
+      .eq('id', userId);
+
+    if (updateErr) throw updateErr;
+  } else {
+    const existing = knownDevices[existingDeviceIndex];
+    if (existing.ip !== currentIp) {
+      const updatedDevices = [...knownDevices];
+      updatedDevices[existingDeviceIndex] = {
+        ...existing,
+        ip: currentIp,
+        last_seen_at: new Date().toISOString(),
+      };
+
+      const { error: updateErr } = await supabase
+        .from('users')
+        .update({ known_devices: updatedDevices })
+        .eq('id', userId);
+
+      if (updateErr) throw updateErr;
+    }
+  }
+
+  return { isNewDevice, browser, device };
+}

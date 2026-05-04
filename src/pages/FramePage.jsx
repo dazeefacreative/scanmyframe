@@ -924,13 +924,12 @@ export default function FramePage() {
 
       {/* Header */}
       <header className={`border-b ${border} px-6 py-4 flex items-center justify-between max-w-3xl mx-auto`}>
-        {isBusinessOrTrial && businessLogo ? (
+        {isBusinessOrTrial && businessLogo && 
           <img src={businessLogo} alt={creatorName || 'Vendor'} className="h-8 w-auto object-contain max-w-[140px]" />
-        ) : isBusinessOrTrial && creatorName ? (
-          <span className={`text-sm font-bold ${textPrim}`}>{creatorName}</span>
-        ) : (
+          }
+        {!isBusinessOrTrial &&
           <Link to="/"><img src={logo} alt="ScanMyFrame" className="h-7 w-auto" /></Link>
-        )}
+        }
         <div className="flex items-center gap-3">
           <button onClick={toggleTheme}
             className={`w-8 h-8 rounded-full flex items-center justify-center border ${border} ${cardBg} ${textSub} hover:opacity-80 transition-opacity`}
