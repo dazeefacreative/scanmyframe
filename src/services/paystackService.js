@@ -121,7 +121,10 @@ async function createPendingPayment(userId, planId, billingCycle, amountKobo, re
 // paystackRef = response.reference (Paystack v1 inline does NOT return response.transaction)
 async function activateSubscription(userId, planId, billingCycle, paystackRef, paymentId) {
   const plan            = PLAN_CONFIG[planId];
-  const newQrAllocation = plan.qr_allocation; // -1 = unlimited
+  // Yearly subscribers get all 12 months of credits upfront
+  const newQrAllocation = plan.qr_allocation === -1
+    ? -1
+    : billingCycle === 'yearly' ? plan.qr_allocation * 12 : plan.qr_allocation;
 
   const now       = new Date();
   const periodEnd = new Date(now);
@@ -164,6 +167,7 @@ async function activateSubscription(userId, planId, billingCycle, paystackRef, p
         qr_used:              0,
         current_period_start: now.toISOString(),
         current_period_end:   periodEnd.toISOString(),
+        last_qr_reset_at:     now.toISOString(),
         trial_ends_at:        null,
         cancelled_at:         null,
         updated_at:           now.toISOString(),

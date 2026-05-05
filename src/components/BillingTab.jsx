@@ -26,7 +26,6 @@ const PLAN_META = {
     description: 'Perfect for getting started',
     discount:    'Save 10%',
     features: [
-      'Up to 10 QR credits',
       '2MB max image upload',
       '1 extra image per frame',
       '20MB max video upload',
@@ -37,32 +36,31 @@ const PLAN_META = {
   pro: {
     description: 'Best for growing vendors',
     discount:    'Save 15%',
-      features: [
-        'Up to 30 QR credits',
-        '5MB max image upload',
-        '4 extra images per frame',
-        '30MB max video upload',
-        'PNG, SVG & print-ready PDF export',
-        'Your card on public frame page',
-        'Brand logo on public frame page',
-        'Password-protect frames',
-        'AI Story Assistant',
-        'Real-time analytics data',
-      ],
+    features: [
+      '5MB max image upload',
+      '4 extra images per frame',
+      '30MB max video upload',
+      'PNG, SVG & print-ready PDF export',
+      'Your card on public frame page',
+      'Brand logo on public frame page',
+      'Password-protect frames',
+      'AI Story Assistant',
+      'Real-time analytics data',
+    ],
   },
   business: {
     description: 'For large-scale operations',
     discount:    'Save 20%',
-      features: [
-        'Everything in Pro +',
-        'Unlimited QR credits',
-        'Customize QR Code to your brand',
-        'Full white label experience',
-        '8 extra images per frame',
-        '50MB max video upload',
-        'Featured on homepage',
-        '24/7 priority support',
-      ],
+    features: [
+      'Everything in Pro +',
+      'Unlimited QR credits',
+      'Customize QR Code to your brand',
+      'Full white label experience',
+      '8 extra images per frame',
+      '50MB max video upload',
+      'Featured on homepage',
+      '24/7 priority support',
+    ],
   },
 };
 
@@ -126,6 +124,14 @@ function PlanCard({ plan, currentPlanId, billingCycle, onSelect, payLoading, isD
   const meta        = PLAN_META[plan.id] || {};
 
   const buttonLabel = isCurrent ? 'Repurchase' : isDowngrade ? 'Downgrade' : 'Upgrade';
+
+  // Dynamic QR credit label based on billing cycle
+  const qrLabel = plan.qr_allocation === -1
+    ? null // business already has 'Unlimited QR credits' in its features list
+    : billingCycle === 'yearly'
+      ? `${plan.qr_allocation * 12} QR credits`
+      : `${plan.qr_allocation} QR credits / month`;
+  const isUpfront = plan.qr_allocation !== -1 && billingCycle === 'yearly';
 
   const textMain = isPro ? 'text-white'      : isDark ? 'text-white'        : 'text-[#0F4C3A]';
   const textSub  = isPro ? 'text-white/70'   : isDark ? 'text-neutral-400'  : 'text-neutral-500';
@@ -207,12 +213,26 @@ function PlanCard({ plan, currentPlanId, billingCycle, onSelect, payLoading, isD
       {meta.features?.length > 0 && <hr className={`border-t ${divider}`} />}
 
       {/* Features */}
-      {meta.features?.length > 0 && (
+      {(qrLabel || meta.features?.length > 0) && (
         <ul className="flex flex-col gap-2">
-          {meta.features.map(f => (
+          {/* Dynamic QR credit line — updates with billing cycle toggle */}
+          {qrLabel && (
+            <li className="flex items-center gap-2 text-xs">
+              <span className={`mt-px text-sm leading-none ${checkClr}`}>✓</span>
+              <span className={`font-bold ${textMain}`}>{qrLabel}</span>
+              {isUpfront && (
+                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isPro ? 'bg-[#D4AF37]/20 text-[#D4AF37]' : 'bg-emerald-100 text-emerald-600'}`}>
+                  upfront
+                </span>
+              )}
+            </li>
+          )}
+          {meta.features?.map(f => (
             <li key={f} className={`flex items-start gap-2 text-xs ${textSub}`}>
               <span className={`mt-px text-sm leading-none ${checkClr}`}>✓</span>
-              {f}
+              <span className={!isPro && (f === 'Everything in Pro +' || f === 'Unlimited QR credits') ? 'font-bold' : ''}>
+                {f}
+              </span>
             </li>
           ))}
         </ul>
@@ -242,6 +262,7 @@ export default function BillingTab() {
   const [showCancel,    setShowCancel]    = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [showHistory,   setShowHistory]   = useState(false);
+  const [switchWarning, setSwitchWarning] = useState(null); // { planId, daysLeft, unusedCredits, currentPlanName, currentCycle }
 
   useEffect(() => { if (user?.id) loadData(); }, [user?.id]);
 
@@ -258,6 +279,41 @@ export default function BillingTab() {
 
   async function handleSelectPlan(planId) {
     setPayError('');
+
+    // Show a warning if the user is switching away from an active plan mid-period
+    const hasActivePeriod =
+      sub?.status === 'active' &&
+      sub?.current_period_end &&
+      new Date(sub.current_period_end) > new Date() &&
+      rawPlanId !== 'free' &&
+      rawPlanId !== 'trial';
+
+    const currentIndex      = PLAN_ORDER.indexOf(rawPlanId);
+    const newIndex          = PLAN_ORDER.indexOf(planId);
+    const isDowngrade       = newIndex < currentIndex;
+    const isYearlyToMonthly = sub?.billing_cycle === 'yearly' && billingCycle === 'monthly';
+
+    if (hasActivePeriod && (isDowngrade || isYearlyToMonthly)) {
+      const msLeft      = new Date(sub.current_period_end) - new Date();
+      const daysLeft    = Math.ceil(msLeft / (1000 * 60 * 60 * 24));
+      const unusedCredits = sub.qr_allocated === -1
+        ? null
+        : Math.max(0, (sub.qr_allocated ?? 0) - (sub.qr_used ?? 0));
+
+      setSwitchWarning({
+        planId,
+        daysLeft,
+        unusedCredits,
+        currentPlanName: PLAN_CONFIG[rawPlanId]?.name ?? rawPlanId,
+        currentCycle:    sub.billing_cycle ?? 'monthly',
+      });
+      return;
+    }
+
+    await proceedWithPayment(planId);
+  }
+
+  async function proceedWithPayment(planId) {
     setPayLoading(planId);
     await initializePayment({
       userId:       user.id,
@@ -265,8 +321,8 @@ export default function BillingTab() {
       planId,
       billingCycle,
       onSuccess: () => { window.location.reload(); },
-      onCancel:  ()       => { setPayLoading(''); },
-      onError:   (msg)    => { setPayError(msg); setPayLoading(''); },
+      onCancel:  ()  => { setPayLoading(''); },
+      onError:   (msg) => { setPayError(msg); setPayLoading(''); },
     });
   }
 
@@ -395,7 +451,7 @@ export default function BillingTab() {
           <div>
             <p className={`text-sm font-bold ${text}`}>You're on a free Trial</p>
             <p className={`text-xs mt-1 leading-relaxed ${muted}`}>
-              Your trial gives you full Business-level access for 30 days — including AI Story Assistant, analytics, unlimited uploads, and more. Upgrade before your trial ends to keep all features.
+              Your trial gives you full Business-level access for 30 days - including AI Story Assistant, analytics, unlimited uploads, and more. Upgrade before your trial ends to keep all features.
             </p>
           </div>
         </div>
@@ -518,6 +574,80 @@ export default function BillingTab() {
           </AnimatePresence>
         </div>
       )}
+
+      {/* ── Plan switch warning modal ── */}
+      <AnimatePresence>
+        {switchWarning && (
+          <motion.div
+            key="switch-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 280, damping: 22 }}
+              className={`${isDark ? 'bg-neutral-900 border border-neutral-700' : 'bg-white border border-neutral-200'} rounded-2xl p-7 w-full max-w-sm`}
+            >
+              {/* Icon */}
+              <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center mb-4">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+              </div>
+
+              <p className={`text-base font-bold font-[Poltawski_Nowy,serif] mb-2 ${text}`}>
+                You still have time left on your current plan
+              </p>
+
+              <p className={`text-sm leading-relaxed mb-4 ${muted}`}>
+                Your <strong className={text}>{switchWarning.currentPlanName} ({switchWarning.currentCycle})</strong> plan
+                has <strong className={text}>{switchWarning.daysLeft} day{switchWarning.daysLeft !== 1 ? 's' : ''}</strong> remaining.
+                Switching now will end it immediately - the unused time <strong className={text}>will not be refunded</strong>.
+              </p>
+
+              {/* What carries over */}
+              <div className={`rounded-xl p-3 mb-5 text-xs ${isDark ? 'bg-neutral-800' : 'bg-neutral-50'}`}>
+                <p className={`font-bold mb-1.5 ${text}`}>What happens when you switch:</p>
+                <ul className={`flex flex-col gap-1 ${muted}`}>
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-emerald-500 mt-px">✓</span>
+                    {switchWarning.unusedCredits === null
+                      ? 'Your unlimited credits carry over'
+                      : `Your ${switchWarning.unusedCredits} unused QR credit${switchWarning.unusedCredits !== 1 ? 's' : ''} carry over`}
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-emerald-500 mt-px">✓</span>
+                    New plan features activate immediately
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-red-400 mt-px">✕</span>
+                    Remaining {switchWarning.daysLeft} days are forfeited, no refund
+                  </li>
+                </ul>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setSwitchWarning(null)}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-colors ${isDark ? 'border-neutral-700 text-neutral-300 hover:bg-neutral-800' : 'border-neutral-200 text-neutral-600 hover:bg-neutral-50'}`}
+                >
+                  Keep current plan
+                </button>
+                <button
+                  onClick={() => { const id = switchWarning.planId; setSwitchWarning(null); proceedWithPayment(id); }}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-amber-500 text-white hover:bg-amber-600 transition-colors"
+                >
+                  Switch anyway
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Cancel confirm modal ── */}
       <AnimatePresence>

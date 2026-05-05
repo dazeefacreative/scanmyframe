@@ -1539,6 +1539,30 @@ function SCard({ isDark, title, eyebrow, children, footer }) {
   );
 }
 
+function LockedAnalyticsTab({ isDark, onUpgrade }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <SCard isDark={isDark} title="Analytics" eyebrow="Pro & Business only">
+        <div style={{ textAlign: 'center', padding: '24px 0' }}>
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', margin: '0 auto 14px' }}>
+            <rect x="3" y="11" width="18" height="11" rx="2" />
+            <path d="M7 11V7a5 5 0 0110 0v4" />
+          </svg>
+          <p style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 700, color: t.textPrimary(isDark), fontFamily: 'Poltawski Nowy, serif' }}>
+            Upgrade to unlock analytics
+          </p>
+          <p style={{ margin: '0 0 20px', fontSize: 13, color: t.textSub(isDark), lineHeight: 1.6 }}>
+            Detailed scan analytics, location, browser and device reports are available on Pro & Business plans.
+          </p>
+          <button onClick={onUpgrade} style={{ background: '#D4AF37', color: '#0F4C3A', fontWeight: 700, padding: '10px 24px', borderRadius: 12, fontSize: 13, border: 'none', cursor: 'pointer' }}>
+            View upgrade plans
+          </button>
+        </div>
+      </SCard>
+    </div>
+  );
+}
+
 function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccount, onProfileUpdated, notificationData, onMarkNotificationRead, onDeleteNotification, onClearAllNotifications, section = 'profile', planId = 'free' }) {
 
   // Profile state
@@ -2135,7 +2159,12 @@ export default function Dashboard() {
   };
 
   const navTo = (tab) => {
-    if (tab === 'analytics' && !canViewAnalytics) { setActiveTab('billing'); setSidebarOpen(false); return; }
+    if (tab === 'analytics' && !canViewAnalytics) {
+      if (tab !== 'create') setEditingFrame(null);
+      setActiveTab('analytics');
+      setSidebarOpen(false);
+      return;
+    }
     if (tab !== 'create') setEditingFrame(null);
     setActiveTab(tab);
     setSidebarOpen(false);
@@ -2209,7 +2238,7 @@ export default function Dashboard() {
 
       {/* Nav */}
       <nav style={{ flex: 1, padding: '0 10px' }}>
-        {NAV.filter(item => item.id !== 'analytics' || canViewAnalytics).map(item => {
+        {NAV.map(item => {
           const active = activeTab === item.id;
           const isSettings = item.id === 'settings';
 
@@ -2256,6 +2285,12 @@ export default function Dashboard() {
               style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, marginBottom: 2, fontSize: 13, fontWeight: 500, border: 'none', cursor: 'pointer', background: active ? '#0F4C3A' : 'transparent', color: active ? '#FAF5DD' : t.textSub(isDark), transition: 'all 0.15s' }}>
               <Icon path={icons[item.icon]} size={15} />
               {item.label}
+              {item.id === 'analytics' && !canViewAnalytics && (
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 'auto', opacity: 0.55 }}>
+                  <rect x="3" y="11" width="18" height="11" rx="2" />
+                  <path d="M7 11V7a5 5 0 0110 0v4" />
+                </svg>
+              )}
               {item.id === 'create' && (
                 <span style={{ marginLeft: 'auto', width: 18, height: 18, borderRadius: 9, background: '#D4AF37', color: '#0F4C3A', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</span>
               )}
@@ -2471,7 +2506,11 @@ export default function Dashboard() {
                     {activeTab === 'overview'  && <OverviewTab stats={stats} frames={frames} isDark={isDark} onNavigate={navTo} canViewAnalytics={canViewAnalytics} notificationData={notificationData} />}
                     {activeTab === 'frames'    && <FramesTab frames={frames} isDark={isDark} onCreateFrame={() => navTo('create')} onEdit={handleEditFrame} onDelete={handleDeleteFrame} />}
                     {activeTab === 'create'    && <CreateTab editingFrame={editingFrame} onSaved={handleFrameSaved} isDark={isDark} onNavigateToBilling={() => navTo('billing')} planId={currentPlanId} />}
-                    {activeTab === 'analytics' && canViewAnalytics && <AnalyticsTab frames={frames} isDark={isDark} planId={currentPlanId} notificationData={notificationData} />}
+                    {activeTab === 'analytics' && (
+                      canViewAnalytics
+                        ? <AnalyticsTab frames={frames} isDark={isDark} planId={currentPlanId} notificationData={notificationData} />
+                        : <LockedAnalyticsTab isDark={isDark} onUpgrade={() => navTo('billing')} />
+                    )}
                     {activeTab === 'billing'   && null}
                     {activeTab === 'settings'  && <SettingsTab user={user} userProfile={userProfile} isDark={isDark} onResetPassword={handleResetPassword} onDeleteAccount={handleDeleteAccount} onProfileUpdated={setUserProfile} notificationData={notificationData} onMarkNotificationRead={handleMarkNotificationRead} onDeleteNotification={handleDeleteNotification} onClearAllNotifications={handleClearAllNotifications} section={settingsSection} planId={currentPlanId} />}
                   </>

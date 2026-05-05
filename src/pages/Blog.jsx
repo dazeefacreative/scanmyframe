@@ -165,7 +165,7 @@ export default function Blog() {
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Search posts by title, tag or author…"
-              className={`w-full pl-11 pr-4 py-3 rounded-xl text-sm border focus:outline-none focus:ring-2 focus:ring-[#0F4C3A]/30 transition-colors
+              className={`w-full pl-11 pr-4 py-3 rounded-xl text-[16px] sm:text-sm border focus:outline-none focus:ring-2 focus:ring-[#0F4C3A]/30 transition-colors
                 ${isDark
                   ? 'bg-white/5 border-white/10 text-white placeholder:text-white/30'
                   : 'bg-white border-[#0F4C3A]/15 text-[#0F4C3A] placeholder:text-[#0F4C3A]/30'

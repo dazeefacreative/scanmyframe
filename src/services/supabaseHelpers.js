@@ -570,6 +570,101 @@ export const verifyAndActivatePayment = async (reference) => {
 };
 
 // ============================================
+// FEATURED LOGOS HELPERS
+// ============================================
+
+/** Get all featured logos for the homepage marquee */
+export const getFeaturedLogos = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('featured_logos')
+      .select('logo_url, name')
+      .order('name', { ascending: true });
+    if (error) throw error;
+    return { logos: data || [], error: null };
+  } catch (error) {
+    return { logos: [], error: error.message };
+  }
+};
+
+/** Admin: manually adjust a user's qr_allocated by a signed amount (+/-) */
+export const adminAdjustQRCredits = async (userId, amount) => {
+  try {
+    const { data: sub, error: fetchErr } = await supabase
+      .from('subscriptions')
+      .select('id, qr_allocated')
+      .eq('user_id', userId)
+      .single();
+    if (fetchErr) throw fetchErr;
+    if (sub.qr_allocated === -1) return { error: null }; // unlimited — nothing to adjust
+    const newAllocated = Math.max(0, sub.qr_allocated + amount);
+    const { error } = await supabase
+      .from('subscriptions')
+      .update({ qr_allocated: newAllocated, updated_at: new Date().toISOString() })
+      .eq('user_id', userId);
+    if (error) throw error;
+    return { error: null };
+  } catch (error) {
+    return { error: error.message };
+  }
+};
+
+/** Admin: get all featured logos with id */
+export const adminGetFeaturedLogos = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('featured_logos')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return { logos: data || [], error: null };
+  } catch (error) {
+    return { logos: [], error: error.message };
+  }
+};
+
+/** Admin: upload a logo file to storage and insert a row into featured_logos */
+export const adminUploadFeaturedLogo = async (file, name) => {
+  try {
+    const ext = file.name.split('.').pop();
+    const path = `${Date.now()}-${name.replace(/\s+/g, '-').toLowerCase()}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('logos')
+      .upload(path, file, { upsert: false });
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage.from('logos').getPublicUrl(path);
+
+    const { error: insertError } = await supabase
+      .from('featured_logos')
+      .insert({ logo_url: publicUrl, name });
+    if (insertError) throw insertError;
+
+    return { error: null };
+  } catch (error) {
+    return { error: error.message };
+  }
+};
+
+/** Admin: delete a featured logo row and its storage file */
+export const adminDeleteFeaturedLogo = async (id, logoUrl) => {
+  try {
+    const { error } = await supabase.from('featured_logos').delete().eq('id', id);
+    if (error) throw error;
+
+    if (logoUrl) {
+      const parts = logoUrl.split('/logos/');
+      if (parts[1]) await supabase.storage.from('logos').remove([parts[1]]);
+    }
+
+    return { error: null };
+  } catch (error) {
+    return { error: error.message };
+  }
+};
+
+// ============================================
 // BLOG HELPERS
 // ============================================
 

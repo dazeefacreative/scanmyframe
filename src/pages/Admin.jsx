@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import {
   adminGetAllPosts, adminCreatePost, adminUpdatePost, adminDeletePost,
   adminGetAllUsers, adminGetNewsletter, uploadBlogImage, adminPushNotification,
+  adminGetFeaturedLogos, adminUploadFeaturedLogo, adminDeleteFeaturedLogo,
+  adminAdjustQRCredits,
 } from '../services/supabaseHelpers';
 import scanMyFrameLogo from '../assets/images/Scanframe alt.png';
 
@@ -161,6 +163,7 @@ function BlockEditor({ blocks, onChange }) {
   const [uploading, setUploading] = useState({});
   const [dragOver, setDragOver] = useState(null);
   const dragSrc = useRef(null);
+  const touchDragOver = useRef(null);
 
   function addBlock(type) {
     const defaults = {
@@ -192,11 +195,41 @@ function BlockEditor({ blocks, onChange }) {
     if (url) updateBlock(i, { url }); else alert('Upload failed: ' + error);
   }
 
+  function handleTouchStart(i) {
+    dragSrc.current = i;
+    touchDragOver.current = i;
+  }
+
+  function handleTouchMove(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (!el) return;
+    const blockEl = el.closest('[data-block-idx]');
+    if (!blockEl) return;
+    const idx = parseInt(blockEl.getAttribute('data-block-idx'));
+    if (!isNaN(idx)) { touchDragOver.current = idx; setDragOver(idx); }
+  }
+
+  function handleTouchEnd() {
+    const src = dragSrc.current;
+    const dest = touchDragOver.current;
+    dragSrc.current = null;
+    touchDragOver.current = null;
+    setDragOver(null);
+    if (src === null || dest === null || src === dest) return;
+    const next = [...blocks];
+    const [moved] = next.splice(src, 1);
+    next.splice(dest, 0, moved);
+    onChange(next);
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {blocks.map((block, i) => (
         <div
           key={i}
+          data-block-idx={i}
           draggable
           onDragStart={() => { dragSrc.current = i; }}
           onDragOver={e => { e.preventDefault(); setDragOver(i); }}
@@ -215,7 +248,13 @@ function BlockEditor({ blocks, onChange }) {
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ cursor: 'grab', color: 'var(--fg-muted)', lineHeight: 1, flexShrink: 0 }} title="Drag to reorder">
+              <span
+                style={{ cursor: 'grab', color: 'var(--fg-muted)', lineHeight: 1, flexShrink: 0, touchAction: 'none' }}
+                title="Drag to reorder"
+                onTouchStart={() => handleTouchStart(i)}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+              >
                 <svg width="10" height="16" viewBox="0 0 10 20" fill="currentColor">
                   <circle cx="3" cy="4" r="1.5"/><circle cx="7" cy="4" r="1.5"/>
                   <circle cx="3" cy="10" r="1.5"/><circle cx="7" cy="10" r="1.5"/>
@@ -226,7 +265,13 @@ function BlockEditor({ blocks, onChange }) {
                 {block.type === 'h2' ? 'Heading 2' : block.type === 'h3' ? 'Heading 3' : block.type}
               </span>
             </div>
-            <button type="button" onClick={() => removeBlock(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: 4 }}>✕</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <button type="button" onClick={() => moveBlock(i, -1)} disabled={i === 0} title="Move up"
+                style={{ background: 'none', border: 'none', cursor: i === 0 ? 'default' : 'pointer', color: 'var(--fg-muted)', padding: '2px 5px', lineHeight: 1, opacity: i === 0 ? 0.25 : 0.6, fontSize: 11 }}>▲</button>
+              <button type="button" onClick={() => moveBlock(i, 1)} disabled={i === blocks.length - 1} title="Move down"
+                style={{ background: 'none', border: 'none', cursor: i === blocks.length - 1 ? 'default' : 'pointer', color: 'var(--fg-muted)', padding: '2px 5px', lineHeight: 1, opacity: i === blocks.length - 1 ? 0.25 : 0.6, fontSize: 11 }}>▼</button>
+              <button type="button" onClick={() => removeBlock(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: 4 }}>✕</button>
+            </div>
           </div>
 
           {(block.type === 'paragraph') && <textarea rows={4} className="sf-input sf-textarea" placeholder="Paragraph…" value={block.content} onChange={e => updateBlock(i, { content: e.target.value })} />}
@@ -929,10 +974,344 @@ function NotificationsTab() {
   );
 }
 
+// ─── Tab: Subscriptions ───────────────────────────────────────────────────────
+const PLAN_COLOR  = { basic: '#6366f1', pro: '#D4AF37', business: '#0F4C3A', trial: '#3b82f6', free: '#9aaea9' };
+const MONTHLY_KOBO        = { basic: 300000,  pro: 1500000,  business: 3000000 };
+const YEARLY_MONTHLY_KOBO = { basic: 270000,  pro: 1275000,  business: 2400000 };
+
+function SubscriptionsTab() {
+  const [users,        setUsers]        = useState([]);
+  const [loading,      setLoad]         = useState(true);
+  const [filter,       setFilter]       = useState('all');
+  const [search,       setSearch]       = useState('');
+  const [creditModal,  setCreditModal]  = useState(null);
+  const [creditAmt,    setCreditAmt]    = useState('');
+  const [adjusting,    setAdjusting]    = useState(false);
+
+  async function load() {
+    setLoad(true);
+    const { users: data } = await adminGetAllUsers();
+    setUsers(data); setLoad(false);
+  }
+  useEffect(() => { load(); }, []);
+
+  const now   = new Date();
+  const in5   = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000);
+
+  const rows = users.map(u => ({
+    u,
+    sub: (Array.isArray(u.subscriptions) ? u.subscriptions[0] : u.subscriptions) || {},
+  }));
+
+  const active       = rows.filter(({ sub }) => sub.status === 'active' && sub.current_period_end && new Date(sub.current_period_end) > now);
+  const mrr          = active.reduce((t, { sub }) => t + ((sub.billing_cycle === 'yearly' ? YEARLY_MONTHLY_KOBO[sub.plan_id] : MONTHLY_KOBO[sub.plan_id]) || 0), 0);
+  const expiringSoon = active.filter(({ sub }) => new Date(sub.current_period_end) <= in5).length;
+
+  const FILTERS = [['all','All'],['active','Active'],['expiring','Expiring soon'],['yearly','Yearly'],['monthly','Monthly'],['basic','Basic'],['pro','Pro'],['business','Business']];
+
+  const filtered = rows.filter(({ u, sub }) => {
+    const q = search.trim().toLowerCase();
+    const matchSearch = !q || [u.full_name, u.business_name, u.email].some(v => v?.toLowerCase().includes(q));
+    const periodOk    = sub.current_period_end && new Date(sub.current_period_end) > now;
+    const matchFilter =
+      filter === 'all'      ? true :
+      filter === 'active'   ? sub.status === 'active' && periodOk :
+      filter === 'expiring' ? sub.status === 'active' && periodOk && new Date(sub.current_period_end) <= in5 :
+      filter === 'yearly'   ? sub.billing_cycle === 'yearly' :
+      filter === 'monthly'  ? sub.billing_cycle === 'monthly' :
+      sub.plan_id === filter;
+    return matchSearch && matchFilter;
+  });
+
+  async function handleAdjust() {
+    const amount = parseInt(creditAmt);
+    if (!creditModal || isNaN(amount) || amount === 0) return;
+    setAdjusting(true);
+    const { error } = await adminAdjustQRCredits(creditModal.u.id, amount);
+    setAdjusting(false);
+    if (error) { alert('Failed: ' + error); return; }
+    setCreditModal(null); setCreditAmt(''); load();
+  }
+
+  function fmtN(n) { return `₦${(n / 100).toLocaleString('en-NG')}`; }
+
+  return (
+    <>
+      <AdminHeader
+        title="Subscriptions"
+        eyebrow="Revenue"
+        kpis={[
+          { label: 'Active',   value: active.length,              sub: 'paying now' },
+          { label: 'MRR',      value: fmtN(mrr),                  sub: 'monthly recurring' },
+          { label: 'ARR',      value: fmtN(mrr * 12),             sub: 'annual recurring' },
+          { label: 'Expiring', value: expiringSoon,               sub: 'within 5 days' },
+        ]}
+        action={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 10, background: 'var(--surface)', border: '1px solid var(--border)', minWidth: 220 }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--fg-muted)', flexShrink: 0 }}><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search subscribers…" style={{ background: 'transparent', border: 'none', outline: 'none', fontSize: 12, flex: 1, color: 'var(--fg-body)' }} />
+          </div>
+        }
+      />
+
+      <div className="sf-admin-content">
+        {/* Filter pills */}
+        <div style={{ display: 'flex', gap: 4, padding: 4, background: 'var(--bg-subtle)', borderRadius: 99, marginBottom: 16, flexWrap: 'wrap' }}>
+          {FILTERS.map(([id, label]) => (
+            <button key={id} onClick={() => setFilter(id)} style={{ padding: '5px 14px', borderRadius: 99, border: 'none', background: filter === id ? 'var(--surface)' : 'transparent', color: filter === id ? 'var(--sf-primary)' : 'var(--fg-muted)', fontWeight: 600, fontSize: 11, cursor: 'pointer', boxShadow: filter === id ? '0 1px 4px rgba(0,0,0,0.08)' : 'none' }}>{label}</button>
+          ))}
+        </div>
+
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
+            <div style={{ width: 28, height: 28, border: '2.5px solid var(--sf-primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+          </div>
+        ) : (
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden' }}>
+
+            {/* ── Desktop table ── */}
+            <table style={{ width: '100%', borderCollapse: 'collapse' }} className="sf-admin-table">
+              <thead>
+                <tr style={{ background: 'var(--bg-subtle)' }}>
+                  {['Vendor', 'Plan', 'QR usage', 'Status', 'Period end', ''].map(h => (
+                    <th key={h} style={{ textAlign: 'left', padding: '12px 20px', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-muted)' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.length === 0 ? (
+                  <tr><td colSpan={6} style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--fg-muted)', fontSize: 13 }}>No subscribers found.</td></tr>
+                ) : filtered.map(({ u, sub }, i) => {
+                  const name          = u.business_name || u.full_name || '—';
+                  const pColor        = PLAN_COLOR[sub.plan_id] || '#9aaea9';
+                  const pct           = sub.qr_allocated > 0 && sub.qr_allocated !== -1 ? (sub.qr_used / sub.qr_allocated) * 100 : 0;
+                  const periodExpired = sub.current_period_end && new Date(sub.current_period_end) < now;
+                  const nearExpiry    = !periodExpired && sub.current_period_end && new Date(sub.current_period_end) <= in5;
+                  return (
+                    <tr key={u.id} style={{ borderTop: i > 0 ? '1px solid var(--border)' : 'none', background: nearExpiry ? 'rgba(202,138,4,0.03)' : 'var(--surface)' }}>
+                      <td style={{ padding: '14px 20px' }}>
+                        <p style={{ margin: 0, fontWeight: 600, fontSize: 13, color: 'var(--sf-primary)' }}>{name}</p>
+                        <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--fg-muted)' }}>{u.email}</p>
+                      </td>
+                      <td style={{ padding: '14px 20px' }}>
+                        {sub.plan_id
+                          ? <><span style={{ fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 99, textTransform: 'uppercase', letterSpacing: '0.06em', color: pColor, border: `1px solid ${pColor}`, background: `${pColor}18` }}>{sub.plan_id}</span>
+                              {sub.billing_cycle && <p style={{ margin: '4px 0 0', fontSize: 11, color: 'var(--fg-muted)', textTransform: 'capitalize' }}>{sub.billing_cycle}</p>}</>
+                          : <span style={{ color: 'var(--fg-muted)', fontSize: 12 }}>—</span>}
+                      </td>
+                      <td style={{ padding: '14px 20px', minWidth: 130 }}>
+                        {sub.qr_used != null ? (
+                          <>
+                            <p style={{ margin: '0 0 5px', fontSize: 12, color: 'var(--fg-body)', fontFamily: 'var(--font-mono)' }}>{sub.qr_used} / {sub.qr_allocated === -1 ? '∞' : sub.qr_allocated}</p>
+                            {sub.qr_allocated !== -1 && (
+                              <div style={{ height: 4, background: 'var(--bg-subtle)', borderRadius: 99, overflow: 'hidden', width: 100 }}>
+                                <div style={{ width: `${Math.min(100, pct)}%`, height: '100%', background: pct >= 80 ? 'var(--sf-gold)' : 'var(--sf-primary)', borderRadius: 99 }} />
+                              </div>
+                            )}
+                          </>
+                        ) : <span style={{ color: 'var(--fg-muted)', fontSize: 12 }}>—</span>}
+                      </td>
+                      <td style={{ padding: '14px 20px' }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 99, textTransform: 'uppercase',
+                          background: periodExpired ? 'rgba(239,68,68,0.10)' : sub.status === 'active' ? 'rgba(34,197,94,0.12)' : 'rgba(202,138,4,0.12)',
+                          color:      periodExpired ? 'var(--danger)'         : sub.status === 'active' ? '#16a34a'                : '#ca8a04',
+                          border:     `1px solid ${periodExpired ? 'rgba(239,68,68,0.25)' : sub.status === 'active' ? 'rgba(34,197,94,0.25)' : 'rgba(202,138,4,0.25)'}` }}>
+                          {periodExpired ? 'expired' : sub.status === 'past_due' ? 'past due' : sub.status || '—'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '14px 20px', fontSize: 12, fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap', color: nearExpiry ? '#ca8a04' : 'var(--fg-sub)', fontWeight: nearExpiry ? 700 : 400 }}>
+                        {sub.current_period_end ? new Date(sub.current_period_end).toISOString().split('T')[0] : '—'}
+                        {nearExpiry && <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 99, background: 'rgba(202,138,4,0.12)', color: '#ca8a04' }}>SOON</span>}
+                      </td>
+                      <td style={{ padding: '14px 20px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        <button onClick={() => { setCreditModal({ u, sub }); setCreditAmt(''); }}
+                          style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', color: 'var(--sf-primary)', fontWeight: 600, fontSize: 11, padding: '5px 12px', fontFamily: 'inherit' }}>
+                          + Credits
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+
+            {/* ── Mobile cards ── */}
+            <div className="sf-admin-cards">
+              {filtered.length === 0
+                ? <p style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--fg-muted)', fontSize: 13 }}>No subscribers found.</p>
+                : filtered.map(({ u, sub }, i) => {
+                  const name = u.business_name || u.full_name || '—';
+                  const pColor = PLAN_COLOR[sub.plan_id] || '#9aaea9';
+                  const periodExpired = sub.current_period_end && new Date(sub.current_period_end) < now;
+                  const nearExpiry    = !periodExpired && sub.current_period_end && new Date(sub.current_period_end) <= in5;
+                  return (
+                    <div key={u.id} style={{ padding: '16px 20px', borderTop: i > 0 ? '1px solid var(--border)' : 'none' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ margin: '0 0 2px', fontWeight: 600, fontSize: 13, color: 'var(--sf-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</p>
+                          <p style={{ margin: 0, fontSize: 11, color: 'var(--fg-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</p>
+                        </div>
+                        {sub.plan_id && <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 99, textTransform: 'uppercase', color: pColor, border: `1px solid ${pColor}`, background: `${pColor}18`, flexShrink: 0, marginLeft: 8 }}>{sub.plan_id}</span>}
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 12px', fontSize: 11, marginBottom: 10 }}>
+                        <div><span style={{ color: 'var(--fg-muted)' }}>Cycle: </span><span style={{ fontWeight: 600, textTransform: 'capitalize' }}>{sub.billing_cycle || '—'}</span></div>
+                        <div><span style={{ color: 'var(--fg-muted)' }}>QR: </span><span style={{ fontFamily: 'var(--font-mono)' }}>{sub.qr_used != null ? `${sub.qr_used} / ${sub.qr_allocated === -1 ? '∞' : sub.qr_allocated}` : '—'}</span></div>
+                        <div><span style={{ color: 'var(--fg-muted)' }}>Status: </span><span style={{ fontWeight: 700, color: periodExpired ? 'var(--danger)' : sub.status === 'active' ? '#16a34a' : '#ca8a04' }}>{periodExpired ? 'expired' : sub.status || '—'}</span></div>
+                        <div><span style={{ color: 'var(--fg-muted)' }}>Ends: </span><span style={{ fontFamily: 'var(--font-mono)', color: nearExpiry ? '#ca8a04' : 'inherit', fontWeight: nearExpiry ? 700 : 400 }}>{sub.current_period_end ? new Date(sub.current_period_end).toISOString().split('T')[0] : '—'}</span></div>
+                      </div>
+                      <button onClick={() => { setCreditModal({ u, sub }); setCreditAmt(''); }}
+                        style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', color: 'var(--sf-primary)', fontWeight: 600, fontSize: 11, padding: '7px 14px', fontFamily: 'inherit', width: '100%' }}>
+                        + Add / Remove Credits
+                      </button>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Credit adjustment modal ── */}
+      {creditModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(10,46,34,0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px 12px' }}>
+          <div style={{ width: '100%', maxWidth: 400, background: 'var(--bg)', borderRadius: 20, padding: '32px 28px', border: '1px solid var(--border)', boxShadow: '0 24px 60px rgba(0,0,0,0.15)' }}>
+            <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-muted)' }}>Adjust QR credits</p>
+            <h2 style={{ margin: '0 0 6px', fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, color: 'var(--sf-primary)' }}>
+              {creditModal.u.business_name || creditModal.u.full_name}
+            </h2>
+            <p style={{ margin: '0 0 24px', fontSize: 12, color: 'var(--fg-muted)', lineHeight: 1.6 }}>
+              Allocation: <strong style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-body)' }}>{creditModal.sub.qr_allocated === -1 ? '∞ unlimited' : creditModal.sub.qr_allocated}</strong>
+              &nbsp;·&nbsp; Used: <strong style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-body)' }}>{creditModal.sub.qr_used ?? 0}</strong>
+              &nbsp;·&nbsp; Remaining: <strong style={{ fontFamily: 'var(--font-mono)', color: 'var(--sf-primary)' }}>
+                {creditModal.sub.qr_allocated === -1 ? '∞' : Math.max(0, (creditModal.sub.qr_allocated ?? 0) - (creditModal.sub.qr_used ?? 0))}
+              </strong>
+            </p>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--fg-sub)', marginBottom: 8 }}>
+              Amount — use − to remove credits
+            </label>
+            <input className="sf-input" type="number" placeholder="e.g. +20 or -5" value={creditAmt} onChange={e => setCreditAmt(e.target.value)} autoFocus />
+            {creditAmt && !isNaN(parseInt(creditAmt)) && creditModal.sub.qr_allocated !== -1 && (
+              <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--fg-muted)' }}>
+                New allocation: <strong style={{ color: 'var(--sf-primary)', fontFamily: 'var(--font-mono)' }}>
+                  {Math.max(0, (creditModal.sub.qr_allocated ?? 0) + parseInt(creditAmt))}
+                </strong>
+              </p>
+            )}
+            <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+              <button onClick={() => { setCreditModal(null); setCreditAmt(''); }} style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', fontSize: 13, fontWeight: 600, color: 'var(--fg-sub)', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={handleAdjust} disabled={adjusting || !creditAmt || isNaN(parseInt(creditAmt)) || parseInt(creditAmt) === 0} className="sf-btn-primary" style={{ flex: 1 }}>
+                {adjusting ? 'Saving…' : 'Apply'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ─── Tab: Featured Logos ─────────────────────────────────────────────────────
+function FeaturedLogosTab() {
+  const [logos, setLogos]     = useState([]);
+  const [loading, setLoad]    = useState(true);
+  const [name, setName]       = useState('');
+  const [file, setFile]       = useState(null);
+  const [uploading, setUpl]   = useState(false);
+  const [deleting, setDel]    = useState(null);
+  const fileRef               = useRef(null);
+
+  async function load() {
+    setLoad(true);
+    const { logos: data } = await adminGetFeaturedLogos();
+    setLogos(data); setLoad(false);
+  }
+
+  useEffect(() => { load(); }, []);
+
+  async function handleUpload(e) {
+    e.preventDefault();
+    if (!file || !name.trim()) return;
+    setUpl(true);
+    const { error } = await adminUploadFeaturedLogo(file, name.trim());
+    setUpl(false);
+    if (error) { alert('Upload failed: ' + error); return; }
+    setName(''); setFile(null);
+    if (fileRef.current) fileRef.current.value = '';
+    load();
+  }
+
+  async function handleDelete(logo) {
+    if (!confirm(`Delete "${logo.name}"?`)) return;
+    setDel(logo.id);
+    await adminDeleteFeaturedLogo(logo.id, logo.logo_url);
+    setDel(null); load();
+  }
+
+  const lbl = { display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--fg-sub)', marginBottom: 6 };
+
+  return (
+    <>
+      <AdminHeader
+        title="Featured logos"
+        eyebrow="Homepage marquee"
+        kpis={[{ label: 'Total', value: logos.length, sub: 'logos in marquee' }]}
+      />
+
+      <div className="sf-admin-content">
+        {/* Upload form */}
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, marginBottom: 20 }}>
+          <p style={{ margin: '0 0 18px', fontSize: 13, fontWeight: 700, color: 'var(--sf-primary)', fontFamily: 'var(--font-display)' }}>Add a logo</p>
+          <form onSubmit={handleUpload} style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end' }}>
+            <div style={{ flex: '1 1 180px' }}>
+              <label style={lbl}>Vendor name</label>
+              <input className="sf-input" placeholder="e.g. Punch Nigeria" value={name} onChange={e => setName(e.target.value)} required />
+            </div>
+            <div style={{ flex: '1 1 220px' }}>
+              <label style={lbl}>File (PNG or SVG)</label>
+              <input ref={fileRef} type="file" accept="image/png,image/svg+xml" className="sf-input" style={{ padding: '7px 14px' }}
+                onChange={e => setFile(e.target.files[0])} required />
+            </div>
+            <button type="submit" disabled={uploading || !name.trim() || !file} className="sf-btn-primary" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+              {uploading
+                ? <><span style={{ width: 12, height: 12, border: '2px solid var(--sf-secondary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite', display: 'inline-block' }} /> Uploading…</>
+                : '↑ Upload'}
+            </button>
+          </form>
+        </div>
+
+        {/* Logo grid */}
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
+            <div style={{ width: 28, height: 28, border: '2.5px solid var(--sf-primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+          </div>
+        ) : logos.length === 0 ? (
+          <p style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--fg-muted)', fontSize: 13 }}>No logos yet. Upload one above.</p>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 12 }}>
+            {logos.map(logo => (
+              <div key={logo.id} style={{ background: 'var(--sf-primary)', borderRadius: 14, padding: '20px 16px 14px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, position: 'relative' }}>
+                <img src={logo.logo_url} alt={logo.name} style={{ height: 40, width: 'auto', maxWidth: '100%', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+                <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: 'var(--sf-secondary)', textAlign: 'center', lineHeight: 1.3 }}>{logo.name}</p>
+                <button
+                  onClick={() => handleDelete(logo)}
+                  disabled={deleting === logo.id}
+                  style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(239,68,68,0.2)', border: 'none', borderRadius: 6, cursor: 'pointer', color: '#fca5a5', fontSize: 10, padding: '3px 7px', fontWeight: 700, lineHeight: 1 }}>
+                  {deleting === logo.id ? '…' : '✕'}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
 // ─── Main Admin ───────────────────────────────────────────────────────────────
 export default function Admin() {
-  const [authed, setAuthed] = useState(() => sessionStorage.getItem('sf_admin') === '1');
-  const [tab, setTab]       = useState('posts');
+  const [authed, setAuthed]               = useState(() => sessionStorage.getItem('sf_admin') === '1');
+  const [tab, setTab]                     = useState('posts');
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   function signOut() { sessionStorage.removeItem('sf_admin'); setAuthed(false); }
 
@@ -940,7 +1319,9 @@ export default function Admin() {
     { id: 'posts',         label: 'Blog Posts',        icon: 'M4 4h16v4H4zM4 12h16v8H4z' },
     { id: 'users',         label: 'Users',             icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0' },
     { id: 'newsletter',    label: 'Newsletter',        icon: 'M3 7l9 6 9-6M3 7v10h18V7M3 7l9-4 9 4' },
-    { id: 'notifications', label: 'Push Notifications',icon: 'M18 16v-5a6 6 0 10-12 0v5l-2 3h16l-2-3zM10 22a2 2 0 004 0' },
+    { id: 'notifications',  label: 'Push Notifications', icon: 'M18 16v-5a6 6 0 10-12 0v5l-2 3h16l-2-3zM10 22a2 2 0 004 0' },
+    { id: 'subscriptions',  label: 'Subscriptions',      icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z' },
+    { id: 'logos',          label: 'Featured Logos',     icon: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' },
   ];
 
   if (!authed) return (
@@ -980,16 +1361,39 @@ export default function Admin() {
       {/* Content column: mobile nav stacked above main */}
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
 
-        {/* Mobile top nav — inside content column so it sits above, not beside, main */}
-        <div className="sf-admin-mobile-nav" style={{ background: 'var(--sf-primary-deep)', padding: '10px 12px', alignItems: 'center', gap: 6, position: 'sticky', top: 0, zIndex: 10, overflowX: 'auto' }}>
-          <img src={scanMyFrameLogo} alt="" style={{ height: 18, filter: 'brightness(0) invert(1)', opacity: 0.85, flexShrink: 0, marginRight: 4 }} />
-          {tabs.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 10px', borderRadius: 8, background: tab === t.id ? 'rgba(212,175,55,0.15)' : 'transparent', color: tab === t.id ? 'var(--sf-gold)' : 'rgba(250,245,221,0.65)', border: tab === t.id ? '1px solid rgba(212,175,55,0.3)' : '1px solid transparent', cursor: 'pointer', fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap', fontFamily: 'inherit', flexShrink: 0 }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={t.icon}/></svg>
-              {t.label}
+        {/* Mobile top nav — dropdown menu */}
+        <div className="sf-admin-mobile-nav" style={{ background: 'var(--sf-primary-deep)', position: 'sticky', top: 0, zIndex: 10, flexDirection: 'column' }}>
+          {/* Header row */}
+          <div style={{ display: 'flex', alignItems: 'center', padding: '10px 16px', gap: 10 }}>
+            <img src={scanMyFrameLogo} alt="" style={{ height: 18, filter: 'brightness(0) invert(1)', opacity: 0.85, flexShrink: 0 }} />
+            <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: 'var(--sf-gold)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {tabs.find(t => t.id === tab)?.label}
+            </span>
+            <button onClick={() => setMobileNavOpen(o => !o)} aria-label="Toggle menu"
+              style={{ background: 'none', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, cursor: 'pointer', padding: '6px 8px', color: 'rgba(250,245,221,0.8)', display: 'flex', alignItems: 'center', lineHeight: 1, flexShrink: 0 }}>
+              {mobileNavOpen
+                ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+              }
             </button>
-          ))}
-          <button onClick={signOut} style={{ marginLeft: 'auto', padding: '6px 10px', borderRadius: 8, background: 'transparent', color: 'rgba(250,245,221,0.5)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontSize: 11, fontFamily: 'inherit', whiteSpace: 'nowrap', flexShrink: 0 }}>Out</button>
+          </div>
+          {/* Dropdown */}
+          {mobileNavOpen && (
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', padding: '8px 12px 12px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {tabs.map(t => (
+                <button key={t.id} onClick={() => { setTab(t.id); setMobileNavOpen(false); }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, background: tab === t.id ? 'rgba(212,175,55,0.15)' : 'transparent', color: tab === t.id ? 'var(--sf-gold)' : 'rgba(250,245,221,0.65)', border: tab === t.id ? '1px solid rgba(212,175,55,0.3)' : '1px solid transparent', cursor: 'pointer', fontSize: 13, fontWeight: 600, textAlign: 'left', fontFamily: 'inherit' }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={t.icon}/></svg>
+                  {t.label}
+                </button>
+              ))}
+              <button onClick={() => { signOut(); setMobileNavOpen(false); }}
+                style={{ marginTop: 4, padding: '10px 12px', borderRadius: 10, background: 'transparent', color: 'rgba(250,245,221,0.5)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontSize: 12, fontWeight: 500, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'inherit' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                Sign out
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Main content */}
@@ -997,7 +1401,9 @@ export default function Admin() {
           {tab === 'posts'         && <PostsTab />}
           {tab === 'users'         && <UsersTab />}
           {tab === 'newsletter'    && <NewsletterTab />}
-          {tab === 'notifications' && <NotificationsTab />}
+          {tab === 'notifications'  && <NotificationsTab />}
+          {tab === 'subscriptions'  && <SubscriptionsTab />}
+          {tab === 'logos'          && <FeaturedLogosTab />}
         </main>
 
       </div>

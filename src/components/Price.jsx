@@ -3,25 +3,22 @@ import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { initializePayment } from '../services/paystackService';
 
 export default function Price() {
   const { isDark }  = useTheme();
   const { user }    = useAuth();
   const navigate    = useNavigate();
   const [billingCycle, setBillingCycle] = useState('monthly');
-  const [payLoading,   setPayLoading]   = useState('');
-  const [payError,     setPayError]     = useState('');
 
   const plans = [
     {
       id: 'basic',
       name: 'Basic',
+      qr_allocation: 10,
       price: { monthly: '₦3,000', yearly: '₦2,700' },
       discount: 'Save 10%',
       description: 'Perfect for getting started',
       features: [
-        'Up to 10 QR credits',
         '2MB max image upload',
         '1 extra image per frame',
         '20MB max video upload',
@@ -38,11 +35,11 @@ export default function Price() {
     {
       id: 'pro',
       name: 'Pro',
+      qr_allocation: 30,
       price: { monthly: '₦15,000', yearly: '₦12,750' },
       discount: 'Save 15%',
       description: 'Best for growing vendors',
       features: [
-        'Up to 30 QR credits',
         '5MB max image upload',
         '4 extra images per frame',
         '30MB max video upload',
@@ -63,6 +60,7 @@ export default function Price() {
     {
       id: 'business',
       name: 'Business',
+      qr_allocation: -1,
       price: { monthly: '₦30,000', yearly: '₦24,000' },
       discount: 'Save 20%',
       description: 'For large-scale operations',
@@ -85,30 +83,12 @@ export default function Price() {
     },
   ];
 
-  async function handleCTA(plan) {
-    setPayError('');
-
-    // Not logged in → go sign in first
+  function handleCTA() {
     if (!user) {
       navigate('/signin');
-      return;
+    } else {
+      navigate('/dashboard', { state: { tab: 'billing' } });
     }
-
-    setPayLoading(plan.id);
-
-    await initializePayment({
-      userId:       user.id,
-      email:        user.email,
-      planId:       plan.id,
-      billingCycle,
-      onSuccess: () => {
-        setPayLoading('');
-        // Redirect to dashboard/billing tab after success
-        navigate('/dashboard', { state: { tab: 'billing' } });
-      },
-      onCancel: () => { setPayLoading(''); },
-      onError:  (msg) => { setPayError(msg); setPayLoading(''); },
-    });
   }
 
   return (
@@ -146,8 +126,13 @@ export default function Price() {
         </span>
       </div>
 
-      {payError && (
-        <p className="text-xs text-red-500 text-center mb-4">⚠ {payError}</p>
+      {user && (
+        <p className={`text-center text-xs mb-6 ${isDark ? 'text-neutral-400' : 'text-neutral-500'}`}>
+          Plans are activated from your{' '}
+          <button onClick={() => navigate('/dashboard', { state: { tab: 'billing' } })} className="underline underline-offset-2 font-semibold hover:opacity-70 transition-opacity">
+            dashboard billing tab
+          </button>
+        </p>
       )}
 
       <div className="grid md:grid-cols-3 gap-4">
@@ -193,9 +178,8 @@ export default function Price() {
             </div>
 
             <button
-              onClick={() => handleCTA(plan)}
-              disabled={payLoading === plan.id}
-              className={`w-full py-2 px-4 rounded-full text-sm font-bold mb-5 transition-all flex items-center justify-center gap-2 disabled:opacity-70 ${
+              onClick={handleCTA}
+              className={`w-full py-2 px-4 rounded-full text-sm font-bold mb-5 transition-all flex items-center justify-center gap-2 ${
                 plan.highlighted
                   ? 'bg-[#D4AF37] text-[#0F4C3A] hover:opacity-90'
                   : isDark
@@ -203,19 +187,32 @@ export default function Price() {
                     : 'bg-[#0F4C3A] text-white hover:opacity-80'
               }`}
             >
-              {payLoading === plan.id ? (
-                <>
-                  <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  Opening…
-                </>
-              ) : plan.cta}
+              {user ? 'Activate in Dashboard' : plan.cta}
             </button>
 
             <ul className={`space-y-2.5 ${plan.highlighted ? 'text-white' : isDark ? 'text-neutral-400' : 'text-neutral-700'}`}>
+              {/* Dynamic QR credit line */}
+              {plan.qr_allocation !== -1 && (
+                <li className="flex items-center gap-2.5 text-xs">
+                  <span className="text-[#D4AF37]">✓</span>
+                  <span className={`font-bold ${plan.highlighted ? 'text-white' : isDark ? 'text-white' : 'text-[#0F4C3A]'}`}>
+                    {billingCycle === 'yearly'
+                      ? `${plan.qr_allocation * 12} QR credits`
+                      : `${plan.qr_allocation} QR credits / month`}
+                  </span>
+                  {billingCycle === 'yearly' && (
+                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${plan.highlighted ? 'bg-[#D4AF37]/20 text-[#D4AF37]' : 'bg-emerald-100 text-emerald-600'}`}>
+                      upfront
+                    </span>
+                  )}
+                </li>
+              )}
               {plan.features.map((feature) => (
                 <li key={feature} className="flex items-center gap-2.5 text-xs">
                   <span className="text-[#D4AF37]">✓</span>
-                  {feature}
+                  <span className={plan.id === 'business' && (feature === 'Everything in Pro +' || feature === 'Unlimited QR credits') ? 'font-bold' : ''}>
+                    {feature}
+                  </span>
                 </li>
               ))}
             </ul>

@@ -15,12 +15,7 @@ import ctaSlide2 from '../assets/images/scanframe-image-step-2.jpg';
 import ctaSlide3 from '../assets/images/scanframe-image-step-3.jpg';
 import marketPlace from '../assets/images/marketplace.png';
 
-import me from '../assets/images/icons/me.png';
-import onSocial from '../assets/images/icons/on social.png';
-import coment from '../assets/images/icons/coment.png';
-import protippa from '../assets/images/icons/protippa.png';
-import punch from '../assets/images/icons/punch.png';
-import rons from '../assets/images/icons/rons.png';
+import { getFeaturedLogos } from '../services/supabaseHelpers';
 
 import chatBot from '../assets/images/1x/chat bot.png';
 import analytics from '../assets/images/1x/analytics.png';
@@ -120,16 +115,6 @@ const testimonials = [
   },
 ];
 
-// ── Logos ─────────────────────────────────────────────────────────────────────
-const logos = [
-  { src: me, alt: 'Me' },
-  { src: onSocial, alt: 'On Social' },
-  { src: coment, alt: 'Coment' },
-  { src: protippa, alt: 'Protippa' },
-  { src: punch, alt: 'Punch' },
-  { src: rons, alt: 'Rons' },
-];
-
 // ── FAQ ───────────────────────────────────────────────────────────────────────
 const faq = [
   {
@@ -181,6 +166,7 @@ export default function Home() {
   const [waitlistOpen, setWaitlistOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [ctaIndex, setCtaIndex] = useState(0);
+  const [logos, setLogos] = useState([]);
   const scrollRef = useRef(null);
   const logoRef   = useRef(null);
 
@@ -197,6 +183,13 @@ export default function Home() {
   const handleToggle = (i) => setActiveIndex(activeIndex === i ? null : i);
 
   useEffect(() => { document.title = 'ScanMyFrame | Smart QR Frames'; }, []);
+
+  useEffect(() => {
+    getFeaturedLogos().then(({ logos: data, error }) => {
+      if (error) throw error;
+      setLogos(data);
+    });
+  }, []);
 
   useEffect(() => {
     const t = setInterval(() => setCtaIndex(prev => (prev + 1) % 3), 3000);
@@ -219,6 +212,21 @@ export default function Home() {
       />
       <OrganizationSchema />
       <BackToTop isDark={isDark} />
+
+      {/* SVG filter definition — must live outside any overflow:hidden container */}
+      <svg style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }} aria-hidden="true">
+        <defs>
+          <filter id="logo-cream">
+            <feColorMatrix
+              type="matrix"
+              values="0 0 0 0 0.980
+                      0 0 0 0 0.961
+                      0 0 0 0 0.867
+                      0 0 0 1 0"
+            />
+          </filter>
+        </defs>
+      </svg>
 
       {/* ── 1. HERO ───────────────────────────────────────────────────────── */}
       
@@ -274,11 +282,23 @@ export default function Home() {
         <p className="text-center text-[10px] font-bold tracking-[0.2em] uppercase text-white/40 mb-4">
           Featured vendors
         </p>
-        <div ref={logoRef} className="w-full overflow-hidden px-4">
+        <div
+          ref={logoRef}
+          className="w-full overflow-hidden"
+          style={{
+            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)',
+            maskImage: 'linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)',
+          }}
+        >
           <div className="logo-track">
-            {/* Duplicated for seamless infinite loop */}
-            {[...logos, ...logos, ...logos, ...logos].map((logo, idx) => (
-              <img key={idx} src={logo.src} alt={logo.alt} className="h-10 w-auto flex-shrink-0" />
+            {logos.length > 0 && [...logos, ...logos, ...logos, ...logos].map((logo, idx) => (
+              <img
+                key={idx}
+                src={logo.logo_url}
+                title={logo.name}
+                className="h-10 w-auto flex-shrink-0"
+                style={{ filter: 'url(#logo-cream)' }}
+              />
             ))}
           </div>
         </div>
