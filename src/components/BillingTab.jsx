@@ -249,7 +249,7 @@ function Skeleton({ isDark, className }) {
 }
 
 // ─── Main BillingTab ──────────────────────────────────────────────────────────
-export default function BillingTab() {
+export default function BillingTab({ refreshTrigger = 0 }) {
   const { user }   = useAuth();
   const { isDark } = useTheme();
 
@@ -265,6 +265,7 @@ export default function BillingTab() {
   const [switchWarning, setSwitchWarning] = useState(null); // { planId, daysLeft, unusedCredits, currentPlanName, currentCycle }
 
   useEffect(() => { if (user?.id) loadData(); }, [user?.id]);
+  useEffect(() => { if (user?.id && refreshTrigger > 0) loadData(); }, [refreshTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadData() {
     setLoading(true);

@@ -596,7 +596,7 @@ export const adminAdjustQRCredits = async (userId, amount) => {
       .eq('user_id', userId)
       .single();
     if (fetchErr) throw fetchErr;
-    if (sub.qr_allocated === -1) return { error: null }; // unlimited — nothing to adjust
+    if (sub.qr_allocated === -1) return { error: null }; // unlimited - nothing to adjust
     const newAllocated = Math.max(0, sub.qr_allocated + amount);
     const { error } = await supabase
       .from('subscriptions')
@@ -704,7 +704,7 @@ export const getBlogPosts = async () => {
 export const getRelatedPosts = async (currentId, tags = [], limit = 3) => {
   try {
     if (!tags.length) {
-      // No tags — fall back to latest posts
+      // No tags - fall back to latest posts
       const { data, error } = await supabase
         .from('blog_posts')
         .select('id, title, slug, excerpt, cover_image, tags, author, published_at, created_at')
@@ -753,7 +753,7 @@ export const getBlogPostBySlug = async (slug) => {
   }
 };
 
-// Admin password — must match Admin.jsx and the edge function
+// Admin password - must match Admin.jsx and the edge function
 const ADMIN_PASS = 'Scanframe@2025';
 
 /** Upload blog image to storage (routes through admin edge function to bypass storage RLS) */
@@ -903,14 +903,14 @@ export const adminGetNewsletter = async () => {
 
 /**
  * Send the branded QR code PNG to the authenticated user's email via Resend.
- * Fire-and-forget safe — never throws, always returns { sent, skipped, error }.
+ * Fire-and-forget safe - never throws, always returns { sent, skipped, error }.
  */
 export const sendQREmail = async ({ frameTitle, frameUrl, qrDataUrl, frameOwner, framePassword }) => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return { error: 'Not authenticated' };
 
-    // Strip the data URI prefix — Resend expects raw base64
+    // Strip the data URI prefix - Resend expects raw base64
     const qrBase64 = qrDataUrl.replace(/^data:image\/\w+;base64,/, '');
 
     const res = await fetch(
@@ -982,7 +982,7 @@ export const adminPushNotification = async ({ audience, user_id, type, message, 
 
 /**
  * Send a trial upgrade nudge (in-app notification + email) when a trial user
- * reaches 8 of their 10 free QR codes. Fire-and-forget safe — never throws.
+ * reaches 8 of their 10 free QR codes. Fire-and-forget safe - never throws.
  */
 export const sendTrialUpgradeNudge = async ({ userId, toEmail, userName }) => {
   const displayName = userName || 'there';
@@ -993,7 +993,7 @@ export const sendTrialUpgradeNudge = async ({ userId, toEmail, userName }) => {
       user_id:          userId,
       type:             'alert',
       message:          "You've used 8 of your 10 free QR codes.",
-      full_description: `You have 2 QR codes left on your free trial. Upgrade to a paid plan to keep creating frames without interruption — your existing frames and QR codes will remain active.`,
+      full_description: `You have 2 QR codes left on your free trial. Upgrade to a paid plan to keep creating frames without interruption - your existing frames and QR codes will remain active.`,
       is_read:          false,
     });
   } catch (_) {}
@@ -1010,9 +1010,9 @@ export const sendTrialUpgradeNudge = async ({ userId, toEmail, userName }) => {
 
 /**
  * Send a login-alert email via Resend (uses admin-data edge function).
- * Fire-and-forget safe — never throws.
+ * Fire-and-forget safe - never throws.
  */
-export const sendLoginAlertEmail = async ({ toEmail, userName, deviceInfo, ip }) => {
+export const sendLoginAlertEmail = async ({ toEmail, userName, deviceInfo, loginAt, ip }) => {
   try {
     await adminDataFetch({
       resource:    'send_alert_email',
@@ -1020,16 +1020,31 @@ export const sendLoginAlertEmail = async ({ toEmail, userName, deviceInfo, ip })
       subject:     'New login detected on your ScanMyFrame account',
       name:        userName,
       device_info: deviceInfo,
+      login_at:    loginAt,
       ip,
     });
   } catch (_) {
-    // Silently ignore — email is best-effort
+    // Silently ignore - email is best-effort
   }
 };
 
 /**
+ * Send account-deletion confirmation email. Fire-and-forget safe - never throws.
+ */
+export const sendDeletionRequestEmail = async ({ toEmail, userName, deletionDate }) => {
+  try {
+    await adminDataFetch({
+      resource:      'send_deletion_request_email',
+      to_email:      toEmail,
+      name:          userName,
+      deletion_date: deletionDate,
+    });
+  } catch (_) {}
+};
+
+/**
  * Send a welcome email + insert an in-app notification after onboarding completes.
- * Fire-and-forget safe — never throws.
+ * Fire-and-forget safe - never throws.
  */
 export const sendWelcomeNotification = async ({ userId, toEmail, userName }) => {
   const displayName = userName || 'there';
@@ -1053,7 +1068,7 @@ export const sendWelcomeNotification = async ({ userId, toEmail, userName }) => 
       name:      displayName,
     });
   } catch (_) {
-    // Silently ignore — email is best-effort
+    // Silently ignore - email is best-effort
   }
 };
 

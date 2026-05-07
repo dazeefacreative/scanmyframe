@@ -10,11 +10,12 @@ import QRCodeGenerator from '../components/QRCodeGenerator';
 import FrameEditor from '../components/FrameEditor';
 import BillingTab from '../components/BillingTab';
 import AIChatWidget from '../components/AIChatWidget';
+import FrameGuide, { GuideChip } from '../components/FrameGuide';
 
 import scanFrameLogo from '../assets/images/Scanframe.png';
 import scanFrameLogoAlt from '../assets/images/Scanframe alt.png';
 import NotificationDropdown from '../components/NotificationDropDown';
-import { sendLoginAlertEmail, checkAndUpdateKnownDevices, buildDeviceInfo } from '../services/supabaseHelpers';
+import { sendLoginAlertEmail, checkAndUpdateKnownDevices, buildDeviceInfo, sendDeletionRequestEmail } from '../services/supabaseHelpers';
 
 // ─── Icon primitive ───────────────────────────────────────────────────────────
 const Icon = ({ path, size = 20, className = '', style }) => (
@@ -372,7 +373,7 @@ function OverviewTab({ stats, frames, isDark, onNavigate, canViewAnalytics, noti
   // Fetch scan_logs whenever frames or period changes
   const frameIdsKey = frames.map(f => f.id).join(',');
 
-  // All-time total from scan_logs — filter nulls so it matches the chart's .gte() behaviour
+  // All-time total from scan_logs -filter nulls so it matches the chart's .gte() behaviour
   useEffect(() => {
     if (!frames.length) { setScanLogsTotal(0); return; }
     const ids = frames.map(f => f.id);
@@ -409,7 +410,7 @@ function OverviewTab({ stats, frames, isDark, onNavigate, canViewAnalytics, noti
       .then(({ data, error }) => {
         if (error || !data) { setChartLoading(false); return; }
 
-        // Build empty day buckets for the current period — d <= days so today is always included
+        // Build empty day buckets for the current period -d <= days so today is always included
         const bucket = {};
         for (let d = 0; d <= days; d++) {
           const day = new Date(periodStart);
@@ -446,7 +447,7 @@ function OverviewTab({ stats, frames, isDark, onNavigate, canViewAnalytics, noti
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [frameIdsKey, scanPeriod]);
 
-  // Fetch recent activity — comments + inactive + milestones (no individual scans)
+  // Fetch recent activity -comments + inactive + milestones (no individual scans)
   useEffect(() => {
     if (!frames.length) { setRecentActivity([]); setActivityLoading(false); return; }
     const frameMap   = Object.fromEntries(frames.map(f => [f.id, f]));
@@ -780,7 +781,7 @@ function FramesTab({ frames, isDark, onCreateFrame, onEdit, onDelete }) {
 }
 
 // ─── Create / Edit tab ────────────────────────────────────────────────────────
-function CreateTab({ editingFrame, onSaved, isDark, onNavigateToBilling, planId }) {
+function CreateTab({ editingFrame, onSaved, onCreated, isDark, onNavigateToBilling, planId }) {
   const isEdit = !!editingFrame;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -790,14 +791,14 @@ function CreateTab({ editingFrame, onSaved, isDark, onNavigateToBilling, planId 
         </h2>
         <p style={{ fontSize: 13, color: t.textSub(isDark), marginTop: 4, wordBreak: 'break-word' }}>
           {isEdit
-            ? `Editing "${editingFrame.title}" — the QR code URL will not change.`
+            ? `Editing "${editingFrame.title}" -the QR code URL will not change.`
             : 'Fill in the details and generate a QR code.'}
         </p>
       </div>
       <div className="db-card" style={{ background: t.cardBg(isDark), border: `1px solid ${t.border(isDark)}`, borderRadius: 16 }}>
         {isEdit
           ? <FrameEditor editingFrame={editingFrame} onSaved={onSaved} />
-          : <QRCodeGenerator onSaved={onSaved} onNavigateToBilling={onNavigateToBilling} planId={planId} />
+          : <QRCodeGenerator onSaved={onCreated} onNavigateToBilling={onNavigateToBilling} planId={planId} />
         }
       </div>
     </div>
@@ -820,7 +821,7 @@ function AnalyticsTab({ frames, isDark, planId, notificationData }) {
 
   const frameIdsKey = frames.map(f => f.id).join(',');
 
-  // Fetch recent activity — comments + inactive + milestones (no individual scans)
+  // Fetch recent activity -comments + inactive + milestones (no individual scans)
   useEffect(() => {
     if (!frames.length) { setActivity([]); setActivityLoading(false); return; }
     const ids        = frames.map(f => f.id);
@@ -1563,7 +1564,7 @@ function LockedAnalyticsTab({ isDark, onUpgrade }) {
   );
 }
 
-function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccount, onProfileUpdated, notificationData, onMarkNotificationRead, onDeleteNotification, onClearAllNotifications, section = 'profile', planId = 'free' }) {
+function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccount, onCancelDeletion, onProfileUpdated, notificationData, onMarkNotificationRead, onDeleteNotification, onClearAllNotifications, section = 'profile', planId = 'free' }) {
 
   // Profile state
   const [name,         setName]         = useState(userProfile?.full_name      || '');
@@ -1911,7 +1912,7 @@ function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccou
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'6px 0' }}>
                   <div style={{ flex:1, paddingRight:20 }}>
                     <p style={{ margin:'0 0 2px', fontSize:13, fontWeight:600, color:t.textPrimary(isDark) }}>Email QR code on creation</p>
-                    <p style={{ margin:0, fontSize:12, color:t.textSub(isDark), lineHeight:1.5 }}>{emailQR ? "QR codes will be sent to your inbox after each generation. Check spam if missing." : "Currently off — QR codes won't be emailed."}</p>
+                    <p style={{ margin:0, fontSize:12, color:t.textSub(isDark), lineHeight:1.5 }}>{emailQR ? "QR codes will be sent to your inbox after each generation. Check spam if missing." : "Currently off -QR codes won't be emailed."}</p>
                   </div>
                   <Tog isDark={isDark} on={emailQR} fn={() => handleQRToggle()} dis={qrToggling} />
                 </div>
@@ -1964,14 +1965,34 @@ function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccou
           {section === 'danger' && (
             <div style={{ background:t.cardBg(isDark), border:'1px solid rgba(239,68,68,0.25)', borderRadius:16, overflow:'hidden' }}>
               <div style={{ padding:'20px 22px 0' }}>
-                <p style={{ margin:'0 0 3px', fontSize:10, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'#ef4444' }}>Irreversible</p>
-                <p style={{ margin:0, fontSize:15, fontWeight:700, color:'#ef4444', fontFamily:'Poltawski Nowy, serif' }}>Danger zone</p>
+                <p style={{ margin:'0 0 3px', fontSize:10, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'#ef4444' }}>Danger zone</p>
+                <p style={{ margin:0, fontSize:15, fontWeight:700, color:'#ef4444', fontFamily:'Poltawski Nowy, serif' }}>Delete your account</p>
               </div>
-              <div style={{ padding:'14px 22px' }}>
-                <p style={{ fontSize:12, color:t.textSub(isDark), marginBottom:14 }}>These actions are permanent and cannot be undone.</p>
-                <button onClick={onDeleteAccount} style={{ display:'flex', alignItems:'center', gap:6, padding:'9px 18px', borderRadius:10, border:'1px solid rgba(239,68,68,0.35)', background:'transparent', color:'#ef4444', fontSize:13, fontWeight:600, cursor:'pointer' }}>
-                  <Icon path={icons.signout} size={13} style={{ color:'#ef4444' }} /> Delete account
-                </button>
+              <div style={{ padding:'14px 22px 20px' }}>
+                {userProfile?.deletion_requested_at ? (
+                  <div>
+                    <p style={{ fontSize:12, color:t.textSub(isDark), marginBottom:12, lineHeight:1.6 }}>
+                      Your account is scheduled for deletion on{' '}
+                      <strong style={{ color:'#ef4444' }}>
+                        {new Date(new Date(userProfile.deletion_requested_at).getTime() + 30*24*60*60*1000)
+                          .toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' })}
+                      </strong>.
+                      Your clients' QR codes will keep working after deletion.
+                    </p>
+                    <button onClick={onCancelDeletion} style={{ display:'flex', alignItems:'center', gap:6, padding:'9px 18px', borderRadius:10, border:'1px solid rgba(15,76,58,0.4)', background:'transparent', color:'#0F4C3A', fontSize:13, fontWeight:600, cursor:'pointer' }}>
+                      Cancel scheduled deletion
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <p style={{ fontSize:12, color:t.textSub(isDark), marginBottom:14, lineHeight:1.6 }}>
+                      Your account will be permanently deleted after a 30-day grace period. You can cancel at any time before then. Your clients' QR codes will keep working - only your personal data is removed.
+                    </p>
+                    <button onClick={onDeleteAccount} style={{ display:'flex', alignItems:'center', gap:6, padding:'9px 18px', borderRadius:10, border:'1px solid rgba(239,68,68,0.35)', background:'transparent', color:'#ef4444', fontSize:13, fontWeight:600, cursor:'pointer' }}>
+                      <Icon path={icons.trash} size={13} style={{ color:'#ef4444' }} /> Request account deletion
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -2020,8 +2041,11 @@ export default function Dashboard() {
   const [notificationData, setNotificationData] = useState([])
   const [activeTab,      setActiveTab]      = useState('overview');
   const [settingsSection, setSettingsSection] = useState('profile');
-  const loginAlertSent  = useRef(false);
+  const loginAlertSent    = useRef(false);
   const notifContainerRef = useRef(null);
+  const [guideActive,  setGuideActive]  = useState(false);
+  const [guideSkipped, setGuideSkipped] = useState(false);
+  const [guideStep,    setGuideStep]    = useState(0);
 
   // Close notification dropdown on outside click
   useEffect(() => {
@@ -2064,6 +2088,13 @@ export default function Dashboard() {
       if (profileRes.data) {
         setUserProfile(profileRes.data);
 
+        // ── Frame creation guide for new users ────────────────────────────
+        const guideDone      = !!profileRes.data.frame_guide_done;
+        const guideSavedStep = parseInt(localStorage.getItem('sf_frame_guide_step') || '0', 10);
+        const guideResuming  = !guideDone && guideSavedStep > 0;
+        const guideNewUser   = !guideDone && !framesRes.data?.length;
+        if (guideNewUser || guideResuming) setGuideActive(true);
+
         // ── Login-from-new-device alert ────────────────────────────────────
         if (!loginAlertSent.current) {
           loginAlertSent.current = true;
@@ -2098,11 +2129,17 @@ export default function Dashboard() {
               const isFirstEverLogin = accountAgeMin < 10;
 
               if (!isFirstEverLogin) {
+                const loginAt = new Date().toLocaleString('en-GB', {
+                  day: 'numeric', month: 'long', year: 'numeric',
+                  hour: '2-digit', minute: '2-digit',
+                  timeZone: 'UTC', timeZoneName: 'short',
+                });
+
                 const { data: newNotif } = await supabase.from('notification').insert({
                   user_id:          user.id,
                   type:             'alert',
-                  message:          'We noticed a login to your ScanMyFrame account from a new device or location.',
-                  full_description: `From ${deviceInfo}.\n\nIf this was you, no action is needed. If you don't recognise this activity, reset your password immediately — go to Settings and click "Request password reset".`,
+                  message:          `We noticed a login to your ScanMyFrame account from a new device or location on ${loginAt}.`,
+                  full_description: `From ${deviceInfo} on ${loginAt}.\n\nIf this was you, no action is needed. If you don't recognise this activity, reset your password immediately -go to Settings and click "Request password reset".`,
                   is_read:          false,
                 }).select().single();
 
@@ -2112,6 +2149,7 @@ export default function Dashboard() {
                   toEmail:    user.email,
                   userName:   profileRes.data.full_name || profileRes.data.business_name || 'there',
                   deviceInfo,
+                  loginAt,
                   ip,
                 });
               }
@@ -2132,8 +2170,18 @@ export default function Dashboard() {
     })();
   }, [user?.id]);
 
+  // Refetch frames when visiting Frames or Analytics tab -guarantees fresh data
+  useEffect(() => {
+    if ((activeTab === 'frames' || activeTab === 'analytics') && user && !loadingData) refetchFrames();
+  }, [activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const [billingRefreshTrigger, setBillingRefreshTrigger] = useState(0);
+  useEffect(() => {
+    if (activeTab === 'billing' && !loadingData) setBillingRefreshTrigger(n => n + 1);
+  }, [activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const rawPlanId    = sub?.subscription?.plan_id || 'free';
-  // Period has ended if current_period_end is in the past — regardless of status field
+  // Period has ended if current_period_end is in the past -regardless of status field
   const periodEnded  = rawPlanId !== 'free' && rawPlanId !== 'trial' &&
     sub?.subscription?.current_period_end &&
     new Date(sub.subscription.current_period_end) < new Date();
@@ -2180,13 +2228,38 @@ export default function Dashboard() {
     setDeleting(true);
     setDeleteError('');
     try {
-      const { error } = await supabase.rpc('delete_current_user');
+      const { error } = await supabase.rpc('request_account_deletion');
       if (error) throw new Error(error.message);
-      signOut();
-      navigate('/');
+
+      // Refetch profile to get deletion_requested_at
+      const { data: updated } = await supabase.from('users').select('*').eq('id', user.id).single();
+      if (updated) setUserProfile(updated);
+
+      setShowDeleteModal(false);
+
+      // Send confirmation email (fire-and-forget)
+      const deletionDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        .toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+      sendDeletionRequestEmail({
+        toEmail:      user.email,
+        userName:     userProfile?.full_name || userProfile?.business_name || 'there',
+        deletionDate,
+      });
     } catch (err) {
       setDeleteError(err.message || 'Something went wrong. Please try again.');
+    } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleCancelDeletion = async () => {
+    try {
+      const { error } = await supabase.rpc('cancel_account_deletion');
+      if (error) throw new Error(error.message);
+      const { data: updated } = await supabase.from('users').select('*').eq('id', user.id).single();
+      if (updated) setUserProfile(updated);
+    } catch (err) {
+      console.error('[cancelDeletion]', err.message);
     }
   };
 
@@ -2215,16 +2288,24 @@ export default function Dashboard() {
 
   const handleDeleteFrame = (frameId) => setFrames(prev => prev.filter(f => f.id !== frameId));
 
-  const handleFrameSaved = async () => {
-    setEditingFrame(null);
+  const refetchFrames = async () => {
     const { data } = await supabase.from('frames').select('*, analytics(total_scans), media(media_url)').eq('user_id', user.id).order('created_at', { ascending: false });
-    if (data) setFrames(data.map(f => ({ 
+    if (data) setFrames(data.map(f => ({
       ...f,
       total_scans: (f.analytics || []).reduce((s, r) => s + (r.total_scans || 0), 0),
       media_url: f.media?.[0]?.media_url || null,
       width: f.size?.width || 0,
-      height: f.size?.height || 0
+      height: f.size?.height || 0,
     })));
+  };
+
+  // Called by QRCodeGenerator after QR is generated -re-fetch only, stay on Create tab
+  const handleFrameCreated = () => { refetchFrames(); };
+
+  // Called by FrameEditor after an edit is saved -re-fetch and navigate back to frames
+  const handleFrameSaved = async () => {
+    setEditingFrame(null);
+    await refetchFrames();
     setActiveTab('frames');
   };
 
@@ -2282,6 +2363,9 @@ export default function Dashboard() {
 
           return (
             <button key={item.id} onClick={() => navTo(item.id)}
+              {...(item.id === 'create'    ? { 'data-guide': 'nav-create'    } : {})}
+              {...(item.id === 'frames'    ? { 'data-guide': 'nav-frames'    } : {})}
+              {...(item.id === 'analytics' ? { 'data-guide': 'nav-analytics' } : {})}
               style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, marginBottom: 2, fontSize: 13, fontWeight: 500, border: 'none', cursor: 'pointer', background: active ? '#0F4C3A' : 'transparent', color: active ? '#FAF5DD' : t.textSub(isDark), transition: 'all 0.15s' }}>
               <Icon path={icons[item.icon]} size={15} />
               {item.label}
@@ -2459,6 +2543,13 @@ export default function Dashboard() {
             </h1>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {/* Guide resume chip -shown when guide is active but skipped */}
+            {guideActive && guideSkipped && (
+              <GuideChip
+                stepIdx={guideStep}
+                onResume={() => setGuideSkipped(false)}
+              />
+            )}
             <div ref={notifContainerRef} style={{ position: 'relative' }}>
               <NotificationDropdown notification={notification} notificationData={notificationData} setNotificationData={setNotificationData} isDark={isDark} user={user}/>
               <button onClick={handleNotification} style={{ padding: 8, borderRadius: 10, border: 'none', background: 'transparent', color: t.textSub(isDark), cursor: 'pointer', position: 'relative' }}>
@@ -2467,7 +2558,7 @@ export default function Dashboard() {
                 <span style={{ position: 'absolute', top: 8, right: 8, width: 6, height: 6, borderRadius: 3, background: '#D4AF37' }} />}
               </button>
             </div>
-            {/* Upgrade button — hidden on Business plan */}
+            {/* Upgrade button -hidden on Business plan */}
             {currentPlanId !== 'business' && (
               <button onClick={() => navTo('billing')}
                 style={{ background: 'rgba(212,175,55,0.12)', color: '#D4AF37', fontWeight: 700, padding: '7px 14px', borderRadius: 10, fontSize: 12, border: '1px solid rgba(212,175,55,0.35)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}
@@ -2485,8 +2576,36 @@ export default function Dashboard() {
           </div>
         </header>
 
-        {/* AI Chat Widget — trial, pro, business only */}
+        {/* AI Chat Widget -trial, pro, business only */}
         {['trial', 'pro', 'business'].includes(currentPlanId) && <AIChatWidget userId={user?.id} />}
+
+        {/* Deletion scheduled banner */}
+        {userProfile?.deletion_requested_at && (
+          <div style={{
+            background: 'rgba(239,68,68,0.08)', borderBottom: '1px solid rgba(239,68,68,0.2)',
+            padding: '10px 20px', display: 'flex', alignItems: 'center',
+            justifyContent: 'center', gap: 12, flexWrap: 'wrap',
+          }}>
+            <span style={{ fontSize: 13, color: '#ef4444', lineHeight: 1.5 }}>
+              ⚠️ Your account is scheduled for deletion on{' '}
+              <strong>
+                {new Date(new Date(userProfile.deletion_requested_at).getTime() + 30 * 24 * 60 * 60 * 1000)
+                  .toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </strong>.
+              Your clients' QR codes will keep working.
+            </span>
+            <button
+              onClick={handleCancelDeletion}
+              style={{
+                padding: '5px 14px', borderRadius: 8, border: '1px solid #ef4444',
+                background: 'transparent', color: '#ef4444',
+                fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+              }}
+            >
+              Cancel deletion
+            </button>
+          </div>
+        )}
 
         {/* Page content */}
         <main className="db-main" style={{ flex: 1, maxWidth: 900, margin: '0 auto', width: '100%' }}>
@@ -2505,133 +2624,107 @@ export default function Dashboard() {
                 : <>
                     {activeTab === 'overview'  && <OverviewTab stats={stats} frames={frames} isDark={isDark} onNavigate={navTo} canViewAnalytics={canViewAnalytics} notificationData={notificationData} />}
                     {activeTab === 'frames'    && <FramesTab frames={frames} isDark={isDark} onCreateFrame={() => navTo('create')} onEdit={handleEditFrame} onDelete={handleDeleteFrame} />}
-                    {activeTab === 'create'    && <CreateTab editingFrame={editingFrame} onSaved={handleFrameSaved} isDark={isDark} onNavigateToBilling={() => navTo('billing')} planId={currentPlanId} />}
+                    {activeTab === 'create'    && <CreateTab editingFrame={editingFrame} onSaved={handleFrameSaved} onCreated={handleFrameCreated} isDark={isDark} onNavigateToBilling={() => navTo('billing')} planId={currentPlanId} />}
                     {activeTab === 'analytics' && (
                       canViewAnalytics
                         ? <AnalyticsTab frames={frames} isDark={isDark} planId={currentPlanId} notificationData={notificationData} />
                         : <LockedAnalyticsTab isDark={isDark} onUpgrade={() => navTo('billing')} />
                     )}
                     {activeTab === 'billing'   && null}
-                    {activeTab === 'settings'  && <SettingsTab user={user} userProfile={userProfile} isDark={isDark} onResetPassword={handleResetPassword} onDeleteAccount={handleDeleteAccount} onProfileUpdated={setUserProfile} notificationData={notificationData} onMarkNotificationRead={handleMarkNotificationRead} onDeleteNotification={handleDeleteNotification} onClearAllNotifications={handleClearAllNotifications} section={settingsSection} planId={currentPlanId} />}
+                    {activeTab === 'settings'  && <SettingsTab user={user} userProfile={userProfile} isDark={isDark} onResetPassword={handleResetPassword} onDeleteAccount={handleDeleteAccount} onCancelDeletion={handleCancelDeletion} onProfileUpdated={setUserProfile} notificationData={notificationData} onMarkNotificationRead={handleMarkNotificationRead} onDeleteNotification={handleDeleteNotification} onClearAllNotifications={handleClearAllNotifications} section={settingsSection} planId={currentPlanId} />}
                   </>
               }
             </motion.div>
           </AnimatePresence>
 
-          {/* BillingTab kept mounted to avoid refetch on every tab switch */}
+          {/* BillingTab kept mounted to avoid losing local state on tab switch */}
           <div style={{ display: activeTab === 'billing' ? 'block' : 'none' }}>
-            <BillingTab />
+            <BillingTab refreshTrigger={billingRefreshTrigger} />
           </div>
         </main>
       </div>
 
-      {/* ── Delete Account Confirmation Modal ───────────────────────────────── */}
+      {/* ── Request Account Deletion Modal ──────────────────────────────────── */}
       <AnimatePresence>
         {showDeleteModal && (
           <>
-            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               transition={{ duration: 0.18 }}
               onClick={() => !deleting && setShowDeleteModal(false)}
-              style={{
-                position: 'fixed', inset: 0, zIndex: 2000,
-                background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(3px)',
-              }}
+              style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(3px)' }}
             />
-
-            {/* Modal centering wrapper */}
-            <div style={{
-              position: 'fixed', inset: 0, zIndex: 2001,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              pointerEvents: 'none',
-            }}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.94, y: 16 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.94, y: 16 }}
-              transition={{ type: 'spring', stiffness: 340, damping: 28 }}
-              style={{
-                pointerEvents: 'all',
-                width: 'min(420px, 90vw)',
-                background: isDark ? '#111' : '#fff',
-                border: `1px solid ${isDark ? '#2a2a2a' : '#e8e8e4'}`,
-                borderRadius: 20,
-                padding: 28,
-                boxShadow: '0 24px 72px rgba(0,0,0,0.28)',
-              }}
-            >
-              {/* Icon */}
-              <div style={{
-                width: 48, height: 48, borderRadius: 24,
-                background: 'rgba(239,68,68,0.1)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                marginBottom: 16,
-              }}>
-                <Icon path={icons.trash} size={22} style={{ color: '#ef4444' }} />
-              </div>
-
-              <p style={{ fontSize: 17, fontWeight: 700, color: isDark ? '#fff' : '#0F4C3A', margin: '0 0 8px' }}>
-                Delete your account?
-              </p>
-              <p style={{ fontSize: 13, color: isDark ? '#aaa' : '#666', lineHeight: 1.6, margin: '0 0 6px' }}>
-                This action is <strong style={{ color: '#ef4444' }}>permanent and cannot be undone.</strong>
-              </p>
-              <p style={{ fontSize: 13, color: isDark ? '#aaa' : '#666', lineHeight: 1.6, margin: '0 0 6px' }}>
-                Your account, current plan, and any remaining QR credits will be permanently erased.
-              </p>
-              <p style={{ fontSize: 13, color: isDark ? '#aaa' : '#666', lineHeight: 1.6, margin: '0 0 22px' }}>
-                Your frame pages will remain publicly accessible via their QR codes but will no longer be associated with this account.
-              </p>
-
-              {deleteError && (
-                <div style={{
-                  padding: '10px 14px', borderRadius: 10, marginBottom: 16,
-                  background: 'rgba(239,68,68,0.08)',
-                  border: '1px solid rgba(239,68,68,0.25)',
-                  fontSize: 12, color: '#ef4444',
-                }}>
-                  {deleteError}
+            <div style={{ position: 'fixed', inset: 0, zIndex: 2001, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.94, y: 16 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.94, y: 16 }}
+                transition={{ type: 'spring', stiffness: 340, damping: 28 }}
+                style={{ pointerEvents: 'all', width: 'min(440px, 92vw)', background: isDark ? '#111' : '#fff', border: `1px solid ${isDark ? '#2a2a2a' : '#e8e8e4'}`, borderRadius: 20, padding: 28, boxShadow: '0 24px 72px rgba(0,0,0,0.28)' }}
+              >
+                <div style={{ width: 48, height: 48, borderRadius: 24, background: 'rgba(239,68,68,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                  <Icon path={icons.trash} size={22} style={{ color: '#ef4444' }} />
                 </div>
-              )}
 
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button
-                  onClick={() => setShowDeleteModal(false)}
-                  disabled={deleting}
-                  style={{
-                    flex: 1, padding: '10px 0', borderRadius: 10,
-                    border: `1px solid ${isDark ? '#333' : '#e0e0e0'}`,
-                    background: 'transparent',
-                    color: isDark ? '#ccc' : '#555',
-                    fontSize: 13, fontWeight: 600, cursor: deleting ? 'not-allowed' : 'pointer',
-                    opacity: deleting ? 0.5 : 1,
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmDeleteAccount}
-                  disabled={deleting}
-                  style={{
-                    flex: 1, padding: '10px 0', borderRadius: 10,
-                    border: 'none',
-                    background: '#ef4444',
-                    color: '#fff',
-                    fontSize: 13, fontWeight: 700,
-                    cursor: deleting ? 'not-allowed' : 'pointer',
-                    opacity: deleting ? 0.7 : 1,
-                    transition: 'opacity 0.15s',
-                  }}
-                >
-                  {deleting ? 'Deleting…' : 'Yes, delete my account'}
-                </button>
-              </div>
-            </motion.div>
+                <p style={{ fontSize: 17, fontWeight: 700, color: isDark ? '#fff' : '#0F4C3A', margin: '0 0 10px', fontFamily: 'Poltawski Nowy, serif' }}>
+                  Request account deletion
+                </p>
+
+                {/* Grace period callout */}
+                <div style={{ background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 12, padding: '12px 14px', marginBottom: 14 }}>
+                  <p style={{ margin: 0, fontSize: 12, color: isDark ? '#D4AF37' : '#a8862a', fontWeight: 700, marginBottom: 4 }}>30-day grace period</p>
+                  <p style={{ margin: 0, fontSize: 12, color: isDark ? '#bbb' : '#666', lineHeight: 1.6 }}>
+                    Your account won't be deleted immediately. You have 30 days to change your mind - cancel any time from this settings page.
+                  </p>
+                </div>
+
+                <p style={{ fontSize: 13, color: isDark ? '#aaa' : '#666', lineHeight: 1.6, margin: '0 0 6px' }}>
+                  After 30 days, your personal details, subscription, and login access will be permanently erased.
+                </p>
+                <p style={{ fontSize: 13, color: isDark ? '#aaa' : '#666', lineHeight: 1.6, margin: '0 0 20px' }}>
+                  <strong style={{ color: isDark ? '#fff' : '#0F4C3A' }}>Your clients' QR codes keep working.</strong> Every frame you've created stays accessible - only your account information is removed.
+                </p>
+
+                {deleteError && (
+                  <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 14, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', fontSize: 12, color: '#ef4444' }}>
+                    {deleteError}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button onClick={() => setShowDeleteModal(false)} disabled={deleting}
+                    style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: `1px solid ${isDark ? '#333' : '#e0e0e0'}`, background: 'transparent', color: isDark ? '#ccc' : '#555', fontSize: 13, fontWeight: 600, cursor: deleting ? 'not-allowed' : 'pointer', opacity: deleting ? 0.5 : 1 }}>
+                    Cancel
+                  </button>
+                  <button onClick={confirmDeleteAccount} disabled={deleting}
+                    style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: 'none', background: '#ef4444', color: '#fff', fontSize: 13, fontWeight: 700, cursor: deleting ? 'not-allowed' : 'pointer', opacity: deleting ? 0.7 : 1, transition: 'opacity 0.15s' }}>
+                    {deleting ? 'Scheduling…' : 'Schedule deletion'}
+                  </button>
+                </div>
+              </motion.div>
             </div>
           </>
         )}
       </AnimatePresence>
+
+      {/* ── First-frame creation guide ──────────────────────────────────────── */}
+      {guideActive && (
+        <FrameGuide
+          onNavToCreate={() => { navTo('create'); setEditingFrame(null); }}
+          onNavToFrames={() => navTo('frames')}
+          onNavToAnalytics={() => navTo('analytics')}
+          frameCount={frames.length}
+          onComplete={() => {
+            setGuideActive(false);
+            setGuideSkipped(false);
+            localStorage.removeItem('sf_frame_guide_step');
+            if (user) supabase.from('users').update({ frame_guide_done: true }).eq('id', user.id);
+          }}
+          skippedExternal={guideSkipped}
+          onSkippedChange={(s) => { setGuideSkipped(s); }}
+          onStepChange={(idx) => setGuideStep(idx)}
+        />
+      )}
     </main>
   );
 }

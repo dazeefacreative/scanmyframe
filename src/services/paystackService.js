@@ -1,14 +1,14 @@
 /**
  * paystackService.js
- * All Paystack interactions live here — nothing payment-related touches components directly.
+ * All Paystack interactions live here - nothing payment-related touches components directly.
  *
  * Paystack public key goes in .env:
  *   VITE_PAYSTACK_PUBLIC_KEY=pk_live_xxxx
  *
  * Flow:
- *  1. initializePayment()  — opens Paystack inline popup
- *  2. On success callback  — verifyAndActivate() is called
- *  3. verifyAndActivate()  — creates payment record + upgrades subscription in Supabase
+ *  1. initializePayment()  - opens Paystack inline popup
+ *  2. On success callback  - verifyAndActivate() is called
+ *  3. verifyAndActivate()  - creates payment record + upgrades subscription in Supabase
  */
 
 import { supabase } from './supabaseClient';
@@ -156,7 +156,7 @@ async function activateSubscription(userId, planId, billingCycle, paystackRef, p
   let subErr;
 
   if (existingSub) {
-    // Row exists — update it, reset qr_used (carry-over is baked into allocation)
+    // Row exists - update it, reset qr_used (carry-over is baked into allocation)
     const { error } = await supabase
       .from('subscriptions')
       .update({
@@ -175,7 +175,7 @@ async function activateSubscription(userId, planId, billingCycle, paystackRef, p
       .eq('user_id', userId);
     subErr = error;
   } else {
-    // No row yet — insert one
+    // No row yet - insert one
     const { error } = await supabase
       .from('subscriptions')
       .insert({
@@ -250,7 +250,7 @@ export async function initializePayment({ userId, email, planId, billingCycle, o
       // Paystack requires callback to be a plain (non-async) function.
       // We fire-and-forget the async work inside it.
       // Paystack v1 inline fires callback with { reference, trxref }.
-      // response.transaction is undefined — use response.reference instead.
+      // response.transaction is undefined - use response.reference instead.
       callback: function (response) {
         var ref = response.reference || response.trxref || null;
         activateSubscription(userId, planId, billingCycle, ref, payment ? payment.id : null)

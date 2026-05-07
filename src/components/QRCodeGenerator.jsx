@@ -448,6 +448,7 @@ export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }
       setFrameSlug(slug);
       localStorage.removeItem(DRAFT_KEY);
       localStorage.removeItem(DRAFT_PENDING);
+      onSaved?.(); // notify Dashboard to silently re-fetch frames
 
       setEmailStatus('sending');
       sendQREmail({
@@ -616,8 +617,8 @@ export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }
         </motion.div>
 
         <div className="flex flex-col gap-3">
-          <div className="flex flex-col sm:flex-row gap-2">
-            <button onClick={handleDownload}
+          <div data-guide="download-area" className="flex flex-col sm:flex-row gap-2">
+            <button data-guide="download-btn" onClick={handleDownload}
               className="flex-1 bg-[#0F4C3A] text-white rounded-xl px-5 py-2.5 text-sm font-bold hover:opacity-90 transition-opacity">
               Download PNG
             </button>
@@ -676,6 +677,7 @@ export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }
             <Field label={<>Art title <span className="text-red-400">*</span></>} error={errors.title}>
               <div className="relative">
                 <input
+                  data-guide="title"
                   name="title"
                   placeholder="e.g. Sunset in Lagos, The Golden Bride"
                   value={form.title}
@@ -690,16 +692,18 @@ export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }
             </Field>
 
             <Field label={<>Story <span className="text-red-400">*</span></>} error={errors.story}>
-              <StoryEditor
-                value={form.story}
-                onChange={val => setForm(f => ({ ...f, story: val }))}
-                error={errors.story}
-                rows={7}
-              />
+              <div data-guide="story-wrap" data-filled={form.story.trim().length > 0 ? 'true' : 'false'}>
+                <StoryEditor
+                  value={form.story}
+                  onChange={val => setForm(f => ({ ...f, story: val }))}
+                  error={errors.story}
+                  rows={7}
+                />
+              </div>
             </Field>
 
             <Field label={<>Frame owner <span className="text-red-400">*</span></>} error={errors.frameOwner}>
-              <input name="frameOwner" placeholder="Frame Owner (e.g Mr Scan)" value={form.frameOwner} onChange={handleChange} className={inputCls(errors.frameOwner)} />
+              <input data-guide="owner" name="frameOwner" placeholder="Frame Owner (e.g Mr Scan)" value={form.frameOwner} onChange={handleChange} className={inputCls(errors.frameOwner)} />
             </Field>
 
             <div className="border border-neutral-300 rounded-xl p-4">
@@ -720,7 +724,7 @@ export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }
         {/* ── Step 1: Media ── */}
         {step === 1 && (
           <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
-            <div className="border border-neutral-300 rounded-xl p-4 mb-3">
+            <div data-guide="artwork-wrap" data-filled={artworkFile ? 'true' : 'false'} className="border border-neutral-300 rounded-xl p-4 mb-3">
               <p className="text-xs font-bold uppercase tracking-widest text-neutral-400 mb-1">Artwork <span className="text-red-400">*</span></p>
               <p className="text-xs text-neutral-500 mb-3">Upload the actual photo of the frame artwork. This is the main image shown on the frame page.</p>
               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -898,13 +902,13 @@ export default function QRCodeGenerator({ onNavigateToBilling, planId = 'free' }
         ) : <div />}
 
         {step < STEPS.length - 1 ? (
-          <button onClick={handleNext}
+          <button data-guide="next-btn" onClick={handleNext}
             className="flex items-center gap-1.5 bg-[#0F4C3A] text-white rounded-xl px-6 py-2.5 text-sm font-bold hover:opacity-90 transition-opacity">
             Next
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
           </button>
         ) : (
-          <button onClick={handleSubmit} disabled={loading}
+          <button data-guide="submit-btn" onClick={handleSubmit} disabled={loading}
             className="bg-[#0F4C3A] text-white rounded-xl px-6 py-2.5 text-sm font-bold disabled:opacity-50 hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
             {loading ? (<><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Generating…</>) : 'Generate Code'}
           </button>

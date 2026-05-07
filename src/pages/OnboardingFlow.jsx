@@ -61,7 +61,7 @@ const plans = [
   {
     id: 'business',
     name: 'Business',
-    price: { monthly: '₦50,000', yearly: '₦40,000' },
+    price: { monthly: '₦30,000', yearly: '₦24,000' },
     discount: 'Save 20%',
     description: 'For large scale operations',
     features: [
@@ -105,7 +105,7 @@ function StepBar({ current, isDark }) {
         const done = i < current;
         const active = i === current;
         return (
-          <div key={i} className="flex items-center gap-2">
+          <div key={i} className="flex items-center gap-1 sm:gap-2">
             <div className={`
               w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0
               ${done
@@ -116,7 +116,7 @@ function StepBar({ current, isDark }) {
             `}>
               {done ? '✓' : i + 1}
             </div>
-            <span className={`text-xs whitespace-nowrap font-poltawski ${
+            <span className={`text-[11px] sm:text-xs whitespace-nowrap font-poltawski ${
               active
                 ? isDark ? 'text-gold font-semibold' : 'text-primary font-semibold'
                 : done
@@ -126,7 +126,7 @@ function StepBar({ current, isDark }) {
               {label}
             </span>
             {i < steps.length - 1 && (
-              <div className={`w-10 h-0.5 mx-2 ${done ? isDark ? 'bg-gold' : 'bg-primary' : isDark ? 'bg-white/10' : 'bg-gray-200'}`} />
+              <div className={`w-2 sm:w-10 h-0.5 mx-0.5 sm:mx-2 shrink-0 ${done ? isDark ? 'bg-gold' : 'bg-primary' : isDark ? 'bg-white/10' : 'bg-gray-200'}`} />
             )}
           </div>
         );
@@ -301,7 +301,7 @@ function StepPlan({ data, onChange, onNext, onBack, onSkip, loading, error, isDa
         Start free. Scale when you're ready. Cancel anytime. You get 10 Free QR codes to try out all features. No credit card required.
       </p>
 
-      {/* Billing toggle — discount badge sits right beside the Yearly button */}
+      {/* Billing toggle - discount badge sits right beside the Yearly button */}
       <div className="flex items-center justify-center gap-3 mb-8">
         <div className={`flex items-center font-poltawski gap-1 border ${isDark ? 'border-secondary' : 'border-primary'} p-0.5 rounded-lg transition-colors duration-200`}>
           <button
@@ -325,7 +325,7 @@ function StepPlan({ data, onChange, onNext, onBack, onSkip, loading, error, isDa
             Yearly
           </button>
         </div>
-        {/* Discount badge — always visible, draws attention to yearly saving */}
+        {/* Discount badge - always visible, draws attention to yearly saving */}
         <span className={`text-xs font-bold px-3 py-1.5 rounded-full transition-all ${
           billing === 'yearly'
             ? 'bg-gold text-primary'
@@ -335,7 +335,7 @@ function StepPlan({ data, onChange, onNext, onBack, onSkip, loading, error, isDa
         </span>
       </div>
 
-      {/* Plan cards — full width stacked, no shrinking */}
+      {/* Plan cards - full width stacked, no shrinking */}
       <div className="flex flex-col gap-4 mb-8">
         {plans.map(plan => {
           const selected = data.plan === plan.id;
@@ -357,7 +357,7 @@ function StepPlan({ data, onChange, onNext, onBack, onSkip, loading, error, isDa
                 ${selected && plan.highlighted ? 'ring-2 ring-gold ring-offset-2 ring-offset-black' : ''}
               `}
             >
-              {/* Card layout: two columns — info left, price + CTA right */}
+              {/* Card layout: two columns - info left, price + CTA right */}
               <div className="flex items-start justify-between gap-4">
 
                 {/* Left: badge + name + features */}
@@ -602,7 +602,7 @@ export default function OnboardingFlow() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Helper: mark onboarding done on users table (no plan columns — moved to subscriptions)
+      // Helper: mark onboarding done on users table (no plan columns - moved to subscriptions)
       const markDone = async () => {
         const { error } = await supabase
           .from('users')

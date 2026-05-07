@@ -30,7 +30,7 @@ function ImageGallery({ images, title, cardRing, isDark }) {
   function goTo(next) {
     if (next === current) return;
     setFading(true);
-    // Brief dim, then swap src — the img element stays alive so height is preserved
+    // Brief dim, then swap src - the img element stays alive so height is preserved
     setTimeout(() => {
       setCurrent(next);
       setFading(false);
@@ -64,7 +64,7 @@ function ImageGallery({ images, title, cardRing, isDark }) {
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-        {/* No key={current} — keep the same DOM element so height never collapses */}
+        {/* No key={current} - keep the same DOM element so height never collapses */}
         <img
           ref={imgRef}
           src={images[current].media_url}
@@ -190,7 +190,7 @@ function StoryRenderer({ text, textPrim, textSub, isDark }) {
         <hr key={key++} className={`border-none h-px my-2 ${isDark ? 'bg-white/10' : 'bg-[#0F4C3A]/10'}`} />
       );
     }
-    // Blank line — skip (acts as paragraph separator)
+    // Blank line - skip (acts as paragraph separator)
     else if (line.trim() === '') {
       flushBullets();
     }
@@ -406,7 +406,7 @@ function CommentNode({ node, depth, reactions, replyingTo, replyTarget,
         />
       )}
 
-      {/* Children — collapsed by default, toggled per node */}
+      {/* Children - collapsed by default, toggled per node */}
       {showReplies && childCount > 0 && (
         <div className="mt-2 flex flex-col gap-2">
           {node.children.map(child => (
@@ -608,7 +608,7 @@ function CommentsSection({ frameId, isDark, border, cardBg, textPrim, textSub })
     setReplySubmitting(false);
   }
 
-  // Build nested tree from flat list — each node gets a .children array
+  // Build nested tree from flat list - each node gets a .children array
   function buildTree(flat) {
     const map = {};
     flat.forEach(c => { map[c.id] = { ...c, children: [] }; });
@@ -633,7 +633,7 @@ function CommentsSection({ frameId, isDark, border, cardBg, textPrim, textSub })
 
       {/* New comment form */}
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        {/* Name row — locked to vendor identity when signed in */}
+        {/* Name row - locked to vendor identity when signed in */}
         {user ? (
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center bg-[#0F4C3A]">
@@ -661,7 +661,7 @@ function CommentsSection({ frameId, isDark, border, cardBg, textPrim, textSub })
         </button>
       </form>
 
-      {/* Comments list — recursive tree */}
+      {/* Comments list - recursive tree */}
       {roots.length === 0 ? (
         <p className={`text-sm ${textSub} italic`}>Be the first to leave a comment.</p>
       ) : (
@@ -819,7 +819,7 @@ export default function FramePage() {
   const [loading,        setLoading]    = useState(true);
   const [notFound,       setNotFound]   = useState(false);
   const [unlocked,       setUnlocked]   = useState(false);
-  const [vendorPlanId,   setVendorPlanId] = useState('trial');
+  const [vendorPlanId,   setVendorPlanId] = useState('free');
 
   useEffect(() => {
     let cancelled = false;
@@ -838,17 +838,12 @@ export default function FramePage() {
           setUnlocked(true);
           recordQRScan(data.id, getVisitorId());
         }
-        // Fetch vendor's subscription plan (non-blocking)
+        // Fetch vendor's subscription plan via RPC (bypasses RLS, works for all visitors)
         if (data.user_id) {
           supabase
-            .from('subscriptions')
-            .select('plan_id')
-            .eq('user_id', data.user_id)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single()
-            .then(({ data: sub }) => {
-              if (!cancelled && sub?.plan_id) setVendorPlanId(sub.plan_id);
+            .rpc('get_vendor_plan', { target_user_id: data.user_id })
+            .then(({ data: planId }) => {
+              if (!cancelled && planId) setVendorPlanId(planId);
             });
         }
       }
@@ -879,7 +874,7 @@ export default function FramePage() {
     );
   }
 
-  // Password gate — shown when frame is loaded but not yet unlocked
+  // Password gate - shown when frame is loaded but not yet unlocked
   if (frame && !unlocked) {
     return (
       <PasswordGate
@@ -1001,7 +996,7 @@ export default function FramePage() {
           </div>
         </div>
 
-        {/* Vendor card — Pro & Business plans only */}
+        {/* Vendor card - Pro & Business plans only */}
         {showVendorCard && creatorName && (
           <div className={`rounded-2xl border ${border} overflow-hidden`}>
             {/* Card header bar */}
@@ -1082,7 +1077,7 @@ export default function FramePage() {
           </div>
         )}
 
-        {/* Comments — only rendered when vendor has enabled them */}
+        {/* Comments - only rendered when vendor has enabled them */}
         {frame.comments_enabled !== false && (
           <div className={`pt-4 border-t ${border}`}>
             <CommentsSection
@@ -1098,7 +1093,7 @@ export default function FramePage() {
 
         {/* Footer */}
         <div className={`flex items-center pt-4 border-t ${border} ${isBusinessOrTrial || isPro ? 'justify-between' : 'justify-center'}`}>
-          {/* Powered by ScanMyFrame — hidden on Business & Trial */}
+          {/* Powered by ScanMyFrame - hidden on Business & Trial */}
           {!isBusinessOrTrial && (
             <Link to="/" className={`flex items-center gap-1.5 text-xs ${textSub} hover:opacity-80 transition-opacity`}>
               <span>Powered by</span>
@@ -1106,7 +1101,7 @@ export default function FramePage() {
             </Link>
           )}
 
-          {/* Frame by vendor — Business, Trial, Pro */}
+          {/* Frame by vendor - Business, Trial, Pro */}
           {(isBusinessOrTrial || isPro) && creatorName && (
             <div className="flex items-center gap-1.5">
               {businessLogo && (

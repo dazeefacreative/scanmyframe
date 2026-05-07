@@ -30,8 +30,8 @@ export default function OnboardingGuard() {
     let mounted = true;
     let resolved = false; // prevent double-resolution races
 
-    async function checkUser(userId) {
-      const { data: user, error } = await supabase
+    async function checkUser(userId, authCreatedAt) {
+      const { data: profile, error } = await supabase
         .from('users')
         .select('onboarding_completed')
         .eq('id', userId)
@@ -39,13 +39,26 @@ export default function OnboardingGuard() {
 
       if (!mounted) return;
 
-      // PGRST116 = no row yet (new user whose trigger hasn't run) → onboarding
-      if (error && error.code !== 'PGRST116') {
-        setStatus('unauthenticated');
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No public.users row. Two possible causes:
+          // 1. Brand new signup — DB trigger hasn't created the row yet (account < 3 min old)
+          // 2. Deleted user — account was wiped while the JWT was still live
+          // Use account age to tell them apart reliably.
+          const ageMs = Date.now() - new Date(authCreatedAt).getTime();
+          if (ageMs < 3 * 60 * 1000) {
+            setStatus('needs_onboarding');
+          } else {
+            await supabase.auth.signOut({ scope: 'local' });
+            setStatus('unauthenticated');
+          }
+        } else {
+          setStatus('unauthenticated');
+        }
         return;
       }
 
-      if (!user || !user.onboarding_completed) {
+      if (!profile.onboarding_completed) {
         setStatus('needs_onboarding');
       } else {
         setStatus('ready');
@@ -53,18 +66,18 @@ export default function OnboardingGuard() {
     }
 
     async function check() {
-      // getUser() validates the JWT with Supabase servers — no stale cache issues
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error } = await supabase.auth.getUser();
 
       if (!mounted) return;
 
-      if (!user) {
+      if (error || !user) {
+        await supabase.auth.signOut({ scope: 'local' });
         if (!resolved) { resolved = true; setStatus('unauthenticated'); }
         return;
       }
 
       resolved = true;
-      await checkUser(user.id);
+      await checkUser(user.id, user.created_at);
     }
 
     // Run immediately
@@ -73,12 +86,12 @@ export default function OnboardingGuard() {
     // Also re-run on any auth state change (sign-in, token refresh, sign-out)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted) return;
-      resolved = false; // allow re-resolution on auth change
+      resolved = false;
       if (!session) {
         setStatus('unauthenticated');
         return;
       }
-      checkUser(session.user.id);
+      checkUser(session.user.id, session.user.created_at);
     });
 
     return () => {

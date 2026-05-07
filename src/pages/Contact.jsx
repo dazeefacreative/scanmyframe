@@ -68,7 +68,7 @@ const FAQS = [
   },
   {
     q: 'Can I change what the QR code links to after printing it?',
-    a: 'Yes. The QR code always points to the same permanent URL — but you can update the content on that page (artwork story, images, video, description) at any time from your dashboard without reprinting the code.',
+    a: 'Yes. The QR code always points to the same permanent URL - but you can update the content on that page (artwork story, images, video, description) at any time from your dashboard without reprinting the code.',
   },
   {
     q: 'My QR code is not scanning. What should I do?',
@@ -76,7 +76,7 @@ const FAQS = [
   },
   {
     q: 'What happens to my frames if I cancel my subscription?',
-    a: 'You retain access until the end of your current billing period. After that, your subscription is cancelled and unused QR credits are cleared. Your frame pages may become inaccessible — we recommend downloading all QR codes before cancelling.',
+    a: 'You retain access until the end of your current billing period. After that, your subscription is cancelled and unused QR credits are cleared. Your frame pages may become inaccessible - we recommend downloading all QR codes before cancelling.',
   },
   {
     q: 'How do I upgrade or change my plan?',
@@ -84,7 +84,7 @@ const FAQS = [
   },
   {
     q: 'Can I password-protect a frame?',
-    a: 'Yes — password protection is available on Pro and Business plans. When creating or editing a frame, enable the password option and set a password. Clients will need to enter it before viewing the frame page.',
+    a: 'Yes - password protection is available on Pro and Business plans. When creating or editing a frame, enable the password option and set a password. Clients will need to enter it before viewing the frame page.',
   },
   {
     q: 'How does the vendor contact card work?',
@@ -158,7 +158,7 @@ export default function Contact() {
             How can we help?
           </motion.h1>
           <motion.p {...fadeUp(0.2)} className={`text-base max-w-xl mx-auto ${textS}`}>
-            We're a small team based in Lagos, Nigeria. Reach the right person directly — no ticket system, no bots.
+            We're a small team based in Lagos, Nigeria. Reach the right person directly - no ticket system, no bots.
           </motion.p>
         </div>
       </section>

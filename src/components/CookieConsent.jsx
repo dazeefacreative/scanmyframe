@@ -33,7 +33,7 @@ const CATEGORIES = [
     required: true,
     icon: '🔒',
     description:
-      'These cookies are strictly necessary for the website to function and cannot be switched off. They are set in response to actions you take — such as logging in, saving your preferences, or completing a purchase. Without these, core features like your dashboard and QR frame management would not work.',
+      'These cookies are strictly necessary for the website to function and cannot be switched off. They are set in response to actions you take - such as logging in, saving your preferences, or completing a purchase. Without these, core features like your dashboard and QR frame management would not work.',
     examples: 'Session token, authentication state, CSRF protection.',
   },
   {
@@ -42,7 +42,7 @@ const CATEGORIES = [
     required: false,
     icon: '📊',
     description:
-      'Analytics cookies help us understand how visitors interact with ScanMyFrame — which pages are popular, where users drop off, and how they navigate the platform. This data is aggregated and anonymous. Enabling this helps us improve the product for everyone.',
+      'Analytics cookies help us understand how visitors interact with ScanMyFrame - which pages are popular, where users drop off, and how they navigate the platform. This data is aggregated and anonymous. Enabling this helps us improve the product for everyone.',
     examples: 'Page views, session duration, traffic sources.',
   },
   {
@@ -51,7 +51,7 @@ const CATEGORIES = [
     required: false,
     icon: '📣',
     description:
-      'Marketing cookies allow us (and our partners) to show you relevant ads and content based on your interests, both on ScanMyFrame and on other sites. They also help us measure the effectiveness of our campaigns. Disabling these will not stop ads — you may just see less relevant ones.',
+      'Marketing cookies allow us (and our partners) to show you relevant ads and content based on your interests, both on ScanMyFrame and on other sites. They also help us measure the effectiveness of our campaigns. Disabling these will not stop ads - you may just see less relevant ones.',
     examples: 'Ad targeting, retargeting pixels, campaign attribution.',
   },
 ];
@@ -67,11 +67,11 @@ export default function CookieConsent() {
   useEffect(() => {
     const existing = loadConsent();
     if (!existing) {
-      // No choice made yet — show banner on every load
+      // No choice made yet - show banner on every load
       const t = setTimeout(() => setVisible(true), 800);
       return () => clearTimeout(t);
     }
-    // User has already made a choice — load saved prefs, keep banner hidden
+    // User has already made a choice - load saved prefs, keep banner hidden
     setHasConsented(true);
     setPrefs({
       essential: true,
@@ -123,7 +123,7 @@ export default function CookieConsent() {
     setShowPanel(false);
   }
 
-  // Close panel without saving — if user hasn't consented yet, fall back to banner
+  // Close panel without saving - if user hasn't consented yet, fall back to banner
   function closePanel() {
     setShowPanel(false);
     if (!hasConsented) {
@@ -283,7 +283,7 @@ export default function CookieConsent() {
                         <button
                           onClick={() => toggle(cat.id)}
                           disabled={cat.required}
-                          title={cat.required ? 'Required — cannot be disabled' : undefined}
+                          title={cat.required ? 'Required - cannot be disabled' : undefined}
                           style={{
                             width: 44, height: 24, borderRadius: 12,
                             background: isOn ? '#0F4C3A' : (isDark ? '#333' : '#ccc'),

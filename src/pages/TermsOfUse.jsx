@@ -87,7 +87,7 @@ const SECTIONS = [
     content: [
       'Certain features of the Service require a paid subscription. All prices are displayed in Nigerian Naira (NGN) unless otherwise stated, and are inclusive of applicable taxes.',
       'Subscriptions renew automatically at the end of each billing period (monthly or annually) unless you cancel before the renewal date.',
-      'You may cancel your subscription at any time from your dashboard. Cancellation takes effect at the end of the current billing period — you retain access until then.',
+      'You may cancel your subscription at any time from your dashboard. Cancellation takes effect at the end of the current billing period - you retain access until then.',
       'We do not offer refunds for partial billing periods. If you believe a charge was made in error, contact us within 14 days at ' + CONTACT_EMAIL + '.',
       'We reserve the right to change our pricing at any time. We will give you at least 30 days notice before any price increase takes effect on your account.',
       'Free-plan allocations (e.g., free QR codes) are provided at our discretion and may be modified or discontinued with reasonable notice.',
@@ -205,7 +205,7 @@ export default function TermsOfUse() {
     <main className={`${bg} min-h-screen transition-colors duration-200`}>
       <SEO
         title="Terms of Use | ScanMyFrame"
-        description="Read ScanMyFrame's Terms of Use — the rules and guidelines governing your use of the platform, QR frame tools, and subscription services."
+        description="Read ScanMyFrame's Terms of Use - the rules and guidelines governing your use of the platform, QR frame tools, and subscription services."
         url="/terms"
       />
       <Header />

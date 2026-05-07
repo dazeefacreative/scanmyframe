@@ -46,7 +46,7 @@ const features = [
     desc: "Your contact on every frame scan",
     summary: "Every time a customer scans one of your frames, your contact card appears alongside the content. Your name, business details, and how to reach you. You are always visible, your contact card always attached to your work. No more anonymous frames.",
     explanation: [
-      "When a customer scans a frame QR code, they don't just see the artwork story — they see you. Your vendor card appears on the frame page, showing your name, business details, and how to get in touch.",
+      "When a customer scans a frame QR code, they don't just see the artwork story - they see you. Your vendor card appears on the frame page, showing your name, business details, and how to get in touch.",
       "This turns every frame you sell into a quiet referral. A customer who loves the piece already has your contact in front of them, with no extra step required on your part.",
       "It is a simple but powerful way to stay connected to your work after it leaves your hands. Every scan is a touchpoint, and your card makes sure customers always know who to come back to."
     ] },
@@ -213,7 +213,7 @@ export default function Home() {
       <OrganizationSchema />
       <BackToTop isDark={isDark} />
 
-      {/* SVG filter definition — must live outside any overflow:hidden container */}
+      {/* SVG filter definition - must live outside any overflow:hidden container */}
       <svg style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }} aria-hidden="true">
         <defs>
           <filter id="logo-cream">
@@ -382,7 +382,7 @@ export default function Home() {
             {/* Desktop: image left, list right */}
             <div className="hidden md:grid grid-cols-[1fr_1.2fr] gap-12 items-center">
 
-              {/* Left — image panel */}
+              {/* Left - image panel */}
               <AnimatePresence mode="wait">
                 <motion.div
                   key={index}
@@ -400,7 +400,7 @@ export default function Home() {
                 </motion.div>
               </AnimatePresence>
 
-              {/* Right — feature list */}
+              {/* Right - feature list */}
               <div className="flex flex-col gap-0.5">
                 {features.map((f, i) => (
                   <button

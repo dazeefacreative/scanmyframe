@@ -16,12 +16,22 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Check active session
+    // Use getUser() not getSession() — getSession reads localStorage without
+    // server validation, so deleted accounts still appear signed in.
+    // getUser() confirms with Supabase servers and catches deleted accounts.
     const checkSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        setUser(session?.user || null);
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error || !user) {
+          // Stale JWT in localStorage — wipe it so the app clears cleanly
+          await supabase.auth.signOut({ scope: 'local' });
+          setSession(null);
+          setUser(null);
+        } else {
+          const { data: { session } } = await supabase.auth.getSession();
+          setSession(session);
+          setUser(user);
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -34,8 +44,13 @@ export const AuthProvider = ({ children }) => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        setSession(session);
-        setUser(session?.user || null);
+        if (event === 'USER_DELETED' || event === 'SIGNED_OUT') {
+          setSession(null);
+          setUser(null);
+        } else {
+          setSession(session);
+          setUser(session?.user || null);
+        }
         setLoading(false);
       }
     );

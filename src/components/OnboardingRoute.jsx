@@ -2,9 +2,9 @@
  * OnboardingRoute.jsx
  *
  * Guards the /onboarding page.
- * - Not logged in                   → allow (they can view onboarding info / get redirected inside the flow)
+ * - Not logged in                   → /signin
  * - Logged in, onboarding NOT done  → allow
- * - Logged in, onboarding DONE      → redirect to /dashboard
+ * - Logged in, onboarding DONE      → /dashboard
  */
 
 import { useEffect, useState } from 'react';
@@ -12,12 +12,12 @@ import { Navigate } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
 
 export default function OnboardingRoute({ children }) {
-  const [status, setStatus] = useState('loading'); // 'loading' | 'ok' | 'done'
+  const [status, setStatus] = useState('loading'); // 'loading' | 'ok' | 'done' | 'unauthenticated'
 
   useEffect(() => {
     async function check() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setStatus('ok'); return; }
+      if (!user) { setStatus('unauthenticated'); return; }
 
       const { data } = await supabase
         .from('users')
@@ -48,7 +48,8 @@ export default function OnboardingRoute({ children }) {
     );
   }
 
-  if (status === 'done') return <Navigate to="/dashboard" replace />;
+  if (status === 'unauthenticated') return <Navigate to="/signin" replace />;
+  if (status === 'done')           return <Navigate to="/dashboard" replace />;
 
   return children;
 }

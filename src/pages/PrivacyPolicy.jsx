@@ -35,7 +35,7 @@ const SECTIONS = [
           'Full name, business name, email address, and phone number.',
           'Profile photo or business logo (if uploaded).',
           'Country and business type (e.g., photographer, gallery, artist).',
-          'Account credentials (password stored as a secure hash — we never see it).',
+          'Account credentials (password stored as a secure hash - we never see it).',
         ],
       },
       {
@@ -50,7 +50,7 @@ const SECTIONS = [
         label: 'Payment Data',
         items: [
           'Subscription plan, billing cycle, and payment status.',
-          'We do not store card numbers or bank details — payments are processed by our third-party payment provider. We only store a transaction reference and the outcome.',
+          'We do not store card numbers or bank details - payments are processed by our third-party payment provider. We only store a transaction reference and the outcome.',
         ],
       },
       {
@@ -65,7 +65,7 @@ const SECTIONS = [
         label: 'Communications',
         items: [
           'Emails you send to us (support, feedback).',
-          'Newsletter subscription if you opted in explicitly — we will never add you without consent.',
+          'Newsletter subscription if you opted in explicitly - we will never add you without consent.',
         ],
       },
     ],
@@ -115,7 +115,7 @@ const SECTIONS = [
     title: '6. Data Retention',
     content: [
       'We keep your personal data for as long as your account is active or as needed to provide the Service.',
-      'If you delete your account, we will delete or anonymise your personal data within 30 days, except where we are required by law to retain it longer (e.g., financial records for tax purposes — typically 6 years).',
+      'If you delete your account, we will delete or anonymise your personal data within 30 days, except where we are required by law to retain it longer (e.g., financial records for tax purposes - typically 6 years).',
       'QR scan logs associated with your frames are anonymised after 90 days.',
     ],
   },
