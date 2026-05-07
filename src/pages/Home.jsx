@@ -213,20 +213,6 @@ export default function Home() {
       <OrganizationSchema />
       <BackToTop isDark={isDark} />
 
-      {/* SVG filter definition - must live outside any overflow:hidden container */}
-      <svg style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }} aria-hidden="true">
-        <defs>
-          <filter id="logo-cream">
-            <feColorMatrix
-              type="matrix"
-              values="0 0 0 0 0.980
-                      0 0 0 0 0.961
-                      0 0 0 0 0.867
-                      0 0 0 1 0"
-            />
-          </filter>
-        </defs>
-      </svg>
 
       {/* ── 1. HERO ───────────────────────────────────────────────────────── */}
       
@@ -271,12 +257,20 @@ export default function Home() {
             0%   { transform: translateX(0); }
             100% { transform: translateX(-25%); }
           }
+          @-webkit-keyframes marquee {
+            0%   { -webkit-transform: translateX(0); }
+            100% { -webkit-transform: translateX(-25%); }
+          }
           .logo-track {
             display: flex;
             gap: 48px;
             align-items: center;
             width: max-content;
             animation: marquee 24s linear infinite;
+            -webkit-animation: marquee 24s linear infinite;
+            will-change: transform;
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
           }
         `}</style>
         <p className="text-center text-[10px] font-bold tracking-[0.2em] uppercase text-white/40 mb-4">
@@ -288,6 +282,8 @@ export default function Home() {
           style={{
             WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)',
             maskImage: 'linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)',
+            WebkitTransform: 'translateZ(0)',
+            transform: 'translateZ(0)',
           }}
         >
           <div className="logo-track">
@@ -297,7 +293,11 @@ export default function Home() {
                 src={logo.logo_url}
                 title={logo.name}
                 className="h-10 w-auto flex-shrink-0"
-                style={{ filter: 'url(#logo-cream)' }}
+                style={{
+                  // Pure CSS filter avoids SVG filter reference which breaks
+                  // GPU compositing on iOS Safari and freezes the animation
+                  filter: 'brightness(0) invert(1) sepia(1) saturate(0.15) hue-rotate(10deg) opacity(0.85)',
+                }}
               />
             ))}
           </div>

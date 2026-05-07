@@ -249,6 +249,111 @@ function IntroCard({ onStart, onSkip }) {
   );
 }
 
+// ─── Mobile: highlight ring only (no backdrop so the user can scroll/type) ───
+function MobileHighlight({ rect }) {
+  if (!rect) return null;
+  const PAD = 6;
+  return (
+    <div style={{
+      position: 'fixed',
+      top:    rect.top    - PAD,
+      left:   rect.left   - PAD,
+      width:  rect.width  + PAD * 2,
+      height: rect.height + PAD * 2,
+      border: '2px solid #D4AF37',
+      borderRadius: 10,
+      boxShadow: '0 0 0 3000px rgba(0,0,0,0.45)',
+      pointerEvents: 'none',
+      zIndex: 9001,
+      transition: 'all 0.25s ease',
+    }} />
+  );
+}
+
+// ─── Mobile: sticky bottom bar ────────────────────────────────────────────────
+function MobileBottomBar({ step, stepNum, ready, onNext, onSkip }) {
+  const [barBottom, setBarBottom] = useState(0);
+
+  // Track visual viewport so the bar rises above the keyboard when it opens
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const update = () => {
+      const offsetFromBottom = window.innerHeight - (vv.offsetTop + vv.height);
+      setBarBottom(Math.max(0, offsetFromBottom));
+    };
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    update();
+    return () => {
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', update);
+    };
+  }, []);
+
+  const isInfo    = step.type === 'info';
+  const isConfirm = step.type === 'confirm' || isInfo;
+  const isAction  = step.type === 'auto';
+
+  return (
+    <div style={{
+      position: 'fixed',
+      bottom: barBottom,
+      left: 0, right: 0,
+      background: '#0F4C3A',
+      color: '#FAF5DD',
+      padding: '12px 16px',
+      paddingBottom: barBottom > 0 ? 12 : 'max(12px, env(safe-area-inset-bottom, 12px))',
+      zIndex: 9010,
+      boxShadow: '0 -4px 24px rgba(0,0,0,0.35)',
+      transition: 'bottom 0.15s ease',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 10, opacity: 0.5, marginBottom: 3, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            Step {stepNum} of {REAL_STEPS}
+          </div>
+          <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4, fontFamily: 'Poltawski Nowy, serif' }}>
+            {step.title}
+          </div>
+          {step.message && (
+            <div style={{ fontSize: 11, opacity: 0.8, lineHeight: 1.45 }}>{step.message}</div>
+          )}
+          {isInfo && (
+            <div style={{ fontSize: 11, opacity: 0.8, lineHeight: 1.45, marginTop: 2 }}>
+              Want to know how to attach it?{' '}
+              <a href={BLOG_URL} target="_blank" rel="noopener noreferrer"
+                style={{ color: '#D4AF37', fontWeight: 700, textDecoration: 'underline' }}>
+                Here are 4 ways
+              </a>
+            </div>
+          )}
+          {isAction && (
+            <div style={{ fontSize: 11, opacity: 0.55, marginTop: 3 }}>Tap the highlighted element above</div>
+          )}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8, flexShrink: 0 }}>
+          <button onClick={onSkip} style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontSize: 10, color: 'rgba(250,245,221,0.4)', padding: 0,
+          }}>Skip</button>
+          {isConfirm && (
+            <button onClick={ready ? onNext : undefined} style={{
+              padding: '8px 14px', borderRadius: 8,
+              background: ready ? '#D4AF37' : 'rgba(212,175,55,0.2)',
+              color: ready ? '#0F4C3A' : 'rgba(212,175,55,0.45)',
+              fontWeight: 700, fontSize: 12, border: 'none',
+              cursor: ready ? 'pointer' : 'default', whiteSpace: 'nowrap',
+            }}>
+              {ready ? 'Next' : 'Fill field'}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Backdrop ─────────────────────────────────────────────────────────────────
 function Backdrop({ rect }) {
   const PAD = 8;
@@ -477,16 +582,26 @@ export default function FrameGuide({ onNavToCreate, onNavToFrames, onNavToAnalyt
     return () => clearInterval(id);
   }, [stepIdx, skipped]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Recalc rect on scroll / resize ───────────────────────────────────────
+  // ── Recalc rect on scroll / resize / keyboard ────────────────────────────
   useEffect(() => {
     if (!step || step.type === 'intro' || !step.selector || skipped) return;
     const recalc = () => {
       const el = document.querySelector(step.selector);
       if (el) setTargetRect(el.getBoundingClientRect());
     };
+    // visualViewport fires on keyboard open/close on iOS - more reliable than resize
+    const vv = window.visualViewport;
+    if (vv) {
+      vv.addEventListener('resize', recalc);
+      vv.addEventListener('scroll', recalc);
+    }
     document.addEventListener('scroll', recalc, true);
     window.addEventListener('resize', recalc);
     return () => {
+      if (vv) {
+        vv.removeEventListener('resize', recalc);
+        vv.removeEventListener('scroll', recalc);
+      }
       document.removeEventListener('scroll', recalc, true);
       window.removeEventListener('resize', recalc);
     };
@@ -537,26 +652,55 @@ export default function FrameGuide({ onNavToCreate, onNavToFrames, onNavToAnalyt
   if (step.type === 'intro') {
     return (
       <>
-        <style>{`@keyframes gd-tap{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}`}</style>
+        <style>{`
+  @keyframes gd-tap{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+  @media(max-width:1023px){
+    input,textarea,select{font-size:max(16px,1em)!important}
+  }
+`}</style>
         <IntroCard onStart={handleIntroStart} onSkip={handleSkip} />
       </>
     );
   }
 
   const stepNum = stepIdx; // 1-indexed since intro is 0
+  const isMobile = window.innerWidth < MOBILE_BP;
 
   return (
     <>
-      <style>{`@keyframes gd-tap{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}`}</style>
-      <Backdrop rect={targetRect} />
-      <Tooltip
-        step={step}
-        stepNum={stepNum}
-        rect={targetRect}
-        ready={ready}
-        onNext={advance}
-        onSkip={handleSkip}
-      />
+      <style>{`
+  @keyframes gd-tap{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+  @media(max-width:1023px){
+    input,textarea,select{font-size:max(16px,1em)!important}
+  }
+`}</style>
+
+      {isMobile ? (
+        // Mobile: just a highlight ring + bottom bar - no backdrop blocking interaction
+        <>
+          <MobileHighlight rect={targetRect} />
+          <MobileBottomBar
+            step={step}
+            stepNum={stepNum}
+            ready={ready}
+            onNext={advance}
+            onSkip={handleSkip}
+          />
+        </>
+      ) : (
+        // Desktop: full spotlight + floating tooltip
+        <>
+          <Backdrop rect={targetRect} />
+          <Tooltip
+            step={step}
+            stepNum={stepNum}
+            rect={targetRect}
+            ready={ready}
+            onNext={advance}
+            onSkip={handleSkip}
+          />
+        </>
+      )}
     </>
   );
 }
