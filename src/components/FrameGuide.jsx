@@ -495,6 +495,8 @@ function Tooltip({ step, stepNum, rect, ready, onNext, onSkip }) {
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 export default function FrameGuide({ onNavToCreate, onNavToFrames, onNavToAnalytics, frameCount, onComplete, onSkippedChange, skippedExternal, onStepChange }) {
+  // Guide is desktop-only — remove on mobile until a native mobile experience is built
+  if (typeof window !== 'undefined' && window.innerWidth < MOBILE_BP) return null;
   const [stepIdx,    setStepIdx]    = useState(() => {
     const saved = parseInt(localStorage.getItem(GUIDE_STEP_KEY) || '0', 10);
     return isNaN(saved) ? 0 : saved;
@@ -652,12 +654,7 @@ export default function FrameGuide({ onNavToCreate, onNavToFrames, onNavToAnalyt
   if (step.type === 'intro') {
     return (
       <>
-        <style>{`
-  @keyframes gd-tap{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
-  @media(max-width:1023px){
-    input,textarea,select{font-size:max(16px,1em)!important}
-  }
-`}</style>
+        <style>{`@keyframes gd-tap{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}`}</style>
         <IntroCard onStart={handleIntroStart} onSkip={handleSkip} />
       </>
     );
@@ -668,12 +665,7 @@ export default function FrameGuide({ onNavToCreate, onNavToFrames, onNavToAnalyt
 
   return (
     <>
-      <style>{`
-  @keyframes gd-tap{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
-  @media(max-width:1023px){
-    input,textarea,select{font-size:max(16px,1em)!important}
-  }
-`}</style>
+      <style>{`@keyframes gd-tap{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}`}</style>
 
       {isMobile ? (
         // Mobile: just a highlight ring + bottom bar - no backdrop blocking interaction
