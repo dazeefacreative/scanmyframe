@@ -1109,6 +1109,7 @@ export async function checkAndUpdateKnownDevices(userId, currentIp, userAgent) {
   if (fetchErr) throw fetchErr;
 
   const knownDevices = Array.isArray(user?.known_devices) ? user.known_devices : [];
+  const isFirstDevice = knownDevices.length === 0; // no devices recorded yet = very first login
   const existingDeviceIndex = knownDevices.findIndex(d => d.browser === browser && d.device === device);
   const isNewDevice = existingDeviceIndex === -1;
 
@@ -1147,5 +1148,5 @@ export async function checkAndUpdateKnownDevices(userId, currentIp, userAgent) {
     }
   }
 
-  return { isNewDevice, browser, device };
+  return { isNewDevice, isFirstDevice, browser, device };
 }

@@ -489,6 +489,7 @@ function CommentsSection({ frameId, isDark, border, cardBg, textPrim, textSub })
   const [submitting,      setSubmitting]      = useState(false);
   const [submitted,       setSubmitted]       = useState(false);
   const [error,           setError]           = useState('');
+  const [honeypot,        setHoneypot]        = useState(''); // filled only by bots
 
   const sid = getSessionId();
 
@@ -548,6 +549,8 @@ function CommentsSection({ frameId, isDark, border, cardBg, textPrim, textSub })
 
   async function handleSubmit(e) {
     e.preventDefault();
+    // Honeypot: bots fill hidden fields, humans don't
+    if (honeypot) { setName(''); setComment(''); return; }
     const displayName = user ? vendorName : name.trim();
     if (!displayName || !comment.trim()) return;
     setSubmitting(true); setError('');
@@ -633,6 +636,12 @@ function CommentsSection({ frameId, isDark, border, cardBg, textPrim, textSub })
 
       {/* New comment form */}
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        {/* Honeypot - visually hidden, only bots fill this */}
+        <input
+          type="text" name="website" value={honeypot} onChange={e => setHoneypot(e.target.value)}
+          tabIndex={-1} autoComplete="off" aria-hidden="true"
+          style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }}
+        />
         {/* Name row - locked to vendor identity when signed in */}
         {user ? (
           <div className="flex items-center gap-2.5">
@@ -711,6 +720,8 @@ function PasswordGate({ frameId, frameTitle, isDark, onUnlocked }) {
   const [showPw,    setShowPw]    = useState(false);
   const [checking,  setChecking]  = useState(false);
   const [error,     setError]     = useState('');
+  const [attempts,  setAttempts]  = useState(0);
+  const [shake,     setShake]     = useState(false);
 
   const pageBg   = isDark ? 'bg-primary'   : 'bg-white';
   const textPrim = isDark ? 'text-white'   : 'text-[#0F4C3A]';
@@ -735,7 +746,14 @@ function PasswordGate({ frameId, frameTitle, isDark, onUnlocked }) {
         sessionStorage.setItem(`sf_unlocked_${frameId}`, '1');
         onUnlocked();
       } else {
-        setError('Incorrect password. Please try again.');
+        const newAttempts = attempts + 1;
+        setAttempts(newAttempts);
+        setPassword('');
+        setError(newAttempts >= 3
+          ? 'Incorrect password. Contact your vendor for the correct password.'
+          : 'Incorrect password. Please try again.');
+        setShake(true);
+        setTimeout(() => setShake(false), 600);
       }
     } catch {
       setError('Something went wrong. Please try again.');
@@ -765,14 +783,15 @@ function PasswordGate({ frameId, frameTitle, isDark, onUnlocked }) {
           This frame is password protected. Enter the password your vendor shared with you to view its contents.
         </p>
 
+        <style>{`@keyframes pw-shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}`}</style>
         <form onSubmit={handleUnlock} className="flex flex-col gap-3 text-left">
-          <div className="relative">
+          <div className="relative" style={shake ? { animation: 'pw-shake 0.5s ease' } : {}}>
             <input
               type={showPw ? 'text' : 'password'}
               value={password}
               onChange={e => { setPassword(e.target.value); setError(''); }}
               placeholder="Enter frame password…"
-              className={`${inputCls} pr-11`}
+              className={`${inputCls} pr-11 ${error ? 'border-red-400 focus:ring-red-400/30' : ''}`}
               autoFocus
             />
             <button type="button" onClick={() => setShowPw(v => !v)}

@@ -2105,9 +2105,10 @@ export default function Dashboard() {
               const { ip } = await ipRes.json();
               if (!ip) return;
 
-              const { isNewDevice, browser, device } = await checkAndUpdateKnownDevices(user.id, ip, navigator.userAgent);
+              const { isNewDevice, isFirstDevice, browser, device } = await checkAndUpdateKnownDevices(user.id, ip, navigator.userAgent);
 
-              if (!isNewDevice) return;
+              // Skip if same device as before, or if this is their very first login
+              if (!isNewDevice || isFirstDevice) return;
 
               let locationStr = '';
               try {
@@ -2125,10 +2126,7 @@ export default function Dashboard() {
                 ? `${deviceTitle}, ${browserTitle} in ${locationStr}`
                 : `${deviceTitle}, ${browserTitle}`;
 
-              const accountAgeMin = (Date.now() - new Date(profileRes.data.created_at).getTime()) / 60000;
-              const isFirstEverLogin = accountAgeMin < 10;
-
-              if (!isFirstEverLogin) {
+              {
                 const loginAt = new Date().toLocaleString('en-GB', {
                   day: 'numeric', month: 'long', year: 'numeric',
                   hour: '2-digit', minute: '2-digit',
