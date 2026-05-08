@@ -317,7 +317,7 @@ function StepPlan({ data, onChange, onNext, onBack, onSkip, loading, error, isDa
                     {plan.features.map(feature => (
                       <li key={feature} className={`flex items-center gap-1.5 text-xs ${plan.highlighted ? 'text-white opacity-80' : isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                         <span className="font-bold text-gold">✓</span>
-                        {feature}
+                        <span className={plan.boldFeatures?.includes(feature) ? 'font-bold' : ''}>{feature}</span>
                       </li>
                     ))}
                   </ul>

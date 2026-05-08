@@ -136,7 +136,7 @@ export default function Price() {
               {plan.features.map((feature) => (
                 <li key={feature} className="flex items-center gap-2.5 text-xs">
                   <span className="text-[#D4AF37]">✓</span>
-                  <span className={plan.id === 'business' && (feature === 'Everything in Pro +' || feature === 'Unlimited QR credits') ? 'font-bold' : ''}>
+                  <span className={plan.boldFeatures?.includes(feature) ? 'font-bold' : ''}>
                     {feature}
                   </span>
                 </li>

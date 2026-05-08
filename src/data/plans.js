@@ -66,6 +66,7 @@ export const PLANS = [
     description:   'For large-scale operations',
     cta:           'Subscribe Now',
     highlighted:   false,
+    boldFeatures: ['Everything in Pro +', 'Unlimited QR credits'],
     features: [
       'Everything in Pro +',
       'Unlimited QR credits',

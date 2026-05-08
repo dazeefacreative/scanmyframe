@@ -183,7 +183,7 @@ function PlanCard({ plan, currentPlanId, billingCycle, onSelect, payLoading, isD
           {meta.features?.map(f => (
             <li key={f} className={`flex items-start gap-2 text-xs ${textSub}`}>
               <span className={`mt-px text-sm leading-none ${checkClr}`}>✓</span>
-              <span className={!isPro && (f === 'Everything in Pro +' || f === 'Unlimited QR credits') ? 'font-bold' : ''}>
+              <span className={meta.boldFeatures?.includes(f) ? 'font-bold' : ''}>
                 {f}
               </span>
             </li>
