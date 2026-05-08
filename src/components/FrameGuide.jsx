@@ -44,7 +44,7 @@ const STEPS = [
     id: 'story',
     selector: '[data-guide="story-wrap"]',
     title: 'Tell the story',
-    message: 'Describe the artwork -the artist, the occasion, what makes it special',
+    message: 'Describe the artwork - the artist, the occasion, what makes it special',
     type: 'confirm',
     isReady: () => document.querySelector('[data-guide="story-wrap"]')?.dataset.filled === 'true',
   },
@@ -122,7 +122,7 @@ const STEPS = [
   {
     id: 'my-frames',
     selector: '[data-guide="nav-frames"]',
-    title: 'My Frames -your control centre',
+    title: 'My Frames - your control centre',
     message: 'This is where all your created frames live. View, edit, share and manage them any time from here.',
     type: 'confirm',
     isReady: () => true,
@@ -133,7 +133,7 @@ const STEPS = [
   {
     id: 'analytics',
     selector: '[data-guide="nav-analytics"]',
-    title: 'Analytics -track your impact',
+    title: 'Analytics - track your impact',
     message: 'See how many times each QR code has been scanned, when, and from where. Know when your artwork gets attention.',
     type: 'confirm',
     isReady: () => true,

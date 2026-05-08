@@ -25,8 +25,8 @@ export const PLANS = [
     ],
     notes: ['Good for starter', 'Upgrade anytime to unlock more'],
     motion: {
-      initial:     { opacity: 0, y: 30 },
-      whileInView: { opacity: 1, y: 0 },
+      initial:     { opacity: 0, x: 30, zIndex: 1 },
+      whileInView: { opacity: 1, x: 0, zIndex: 1 },
       transition:  { delay: 0.1, type: 'spring', stiffness: 100, damping: 14 },
     },
   },
@@ -52,8 +52,8 @@ export const PLANS = [
     ],
     notes: ['Everything in Basic', 'Unlock branding & advanced exports'],
     motion: {
-      initial:     { opacity: 0, y: 30 },
-      whileInView: { opacity: 1, y: 0 },
+      initial:     { opacity: 0, zIndex: 10},
+      whileInView: { opacity: 1, zIndex: 10},
       transition:  { delay: 0.2, type: 'spring', stiffness: 100, damping: 14 },
     },
   },
@@ -79,8 +79,8 @@ export const PLANS = [
     ],
     notes: ['Everything in Pro', 'Built for high-volume vendors'],
     motion: {
-      initial:     { opacity: 0, y: 30 },
-      whileInView: { opacity: 1, y: 0 },
+      initial:     { opacity: 0, x: -30, zIndex: 1},
+      whileInView: { opacity: 1, x: 0, zIndex: 1 },
       transition:  { delay: 0.3, type: 'spring', stiffness: 100, damping: 14 },
     },
   },

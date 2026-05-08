@@ -69,7 +69,6 @@ export default function Price() {
             initial={plan.motion.initial}
             whileInView={plan.motion.whileInView}
             transition={plan.motion.transition}
-            viewport={{ once: true }}
             key={plan.name}
             className={`rounded-2xl p-5 transition-all ${
               plan.highlighted
