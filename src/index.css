@@ -15,13 +15,14 @@ h1, h2, h3, h4, h5, h6 {
   @apply font-poltawski;
 }
 
-/* Prevent iOS Safari from zooming into the page when an input is focused.
-   The browser only zooms when the input font-size is below 16px.
-   This rule forces 16px on mobile while leaving desktop untouched. */
-@media (max-width: 768px) {
-  input,
+/* Prevent iOS Safari viewport zoom on input focus.
+   iOS zooms when font-size < 16px. Using the touch-device media query
+   (hover:none + pointer:coarse) catches all touch screens regardless of
+   orientation or viewport width — more reliable than a px breakpoint. */
+@media (hover: none) and (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
   textarea,
   select {
-    font-size: 16px !important;
+    font-size: max(16px, 1em) !important;
   }
 }
