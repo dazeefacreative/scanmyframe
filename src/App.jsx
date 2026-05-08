@@ -26,6 +26,7 @@ import SigninFooter from "./components/SigninFooter";
 import Pricing from "./pages/Pricing";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
+import Investor from "./pages/Investor";
 import CookieConsent from "./components/CookieConsent";
 
 function App() {
@@ -59,8 +60,9 @@ function App() {
           <Route path="/contact" element={<Contact />} />
 
           {/* Legal */}
-          <Route path="/privacy" element={<PrivacyPolicy />} />
-          <Route path="/terms"   element={<TermsOfUse />} />
+          <Route path="/privacy"   element={<PrivacyPolicy />} />
+          <Route path="/terms"     element={<TermsOfUse />} />
+          <Route path="/investor"  element={<Investor />} />
 
           {/* Admin (self-protected with username/password) */}
           <Route path="/admin" element={<Admin />} />

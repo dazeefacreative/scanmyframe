@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { getBlogPosts } from '../services/supabaseHelpers';
 import { useTheme } from '../context/ThemeContext';
 import Header from '../components/Header';
@@ -29,11 +29,9 @@ function TagPill({ tag, isDark }) {
 }
 
 function PostCard({ post, isDark }) {
-  const navigate = useNavigate();
-
   return (
-    <article
-      onClick={() => navigate(`/blog/${post.slug}`)}
+    <Link
+      to={`/blog/${post.slug}`}
       className={`group cursor-pointer rounded-2xl overflow-hidden border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col
         ${isDark
           ? 'bg-[#111] border-white/10 hover:border-white/20'
@@ -88,7 +86,7 @@ function PostCard({ post, isDark }) {
           <span>{formatDate(post.published_at || post.created_at)}</span>
         </div>
       </div>
-    </article>
+    </Link>
   );
 }
 

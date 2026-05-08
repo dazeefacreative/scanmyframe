@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>ScanMyFrame &mdash; Investor &amp; UX Specification</title>
+<style>
+  :root {
+    --primary: #0F4C3A;
+    --gold:    #D4AF37;
+    --ink:     #1a1a1a;
+    --muted:   #5b5b5b;
+    --line:    #e2e2dc;
+    --cream:   #f7f5ee;
+  }
+  html, body { background: #ececea; }
+  body {
+    margin: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  .page {
+    width: 8.5in;
+    min-height: 11in;
+    margin: 24px auto;
+    background: #ffffff;
+    padding: 0.85in 0.95in;
+    box-sizing: border-box;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.08);
+    page-break-after: always;
+  }
+  .page:last-child { page-break-after: auto; }
+
+  /* Cover */
+  .cover {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: linear-gradient(180deg, var(--primary) 0%, #0a3a2c 100%);
+    color: #f7f5ee;
+    padding: 1.1in 0.95in;
+  }
+  .cover .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 600;
+  }
+  .cover h1 {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 56px;
+    line-height: 1.05;
+    margin: 28px 0 18px;
+    color: #fff;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .cover .lede {
+    font-size: 18px;
+    line-height: 1.5;
+    color: rgba(255,255,255,0.78);
+    max-width: 5.5in;
+    font-weight: 300;
+  }
+  .cover .meta {
+    border-top: 1px solid rgba(255,255,255,0.18);
+    padding-top: 22px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 18px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+  }
+  .cover .meta div span {
+    display: block;
+    color: var(--gold);
+    font-size: 10px;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .cover .meta div strong {
+    color: #fff;
+    font-size: 13px;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 500;
+  }
+  .cover .markwrap {
+    display: flex;
+    align-items: center;
+    margin-bottom: auto;
+  }
+
+  /* Section heads */
+  h2.section-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 700;
+    margin: 0 0 8px;
+  }
+  h2.section-title {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 30px;
+    line-height: 1.15;
+    color: var(--primary);
+    font-weight: 600;
+    margin: 0 0 22px;
+    letter-spacing: -0.01em;
+  }
+  h3 {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 18px;
+    color: var(--primary);
+    margin: 28px 0 10px;
+    font-weight: 600;
+  }
+  h4 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--primary);
+    margin: 22px 0 8px;
+    font-weight: 700;
+  }
+  p { font-size: 13px; line-height: 1.65; color: var(--ink); margin: 0 0 12px; text-wrap: pretty; }
+  p.lead { font-size: 14.5px; line-height: 1.6; color: var(--muted); }
+  ul, ol { font-size: 13px; line-height: 1.65; padding-left: 18px; margin: 0 0 12px; }
+  li { margin-bottom: 5px; }
+  strong { color: var(--ink); }
+  .small { font-size: 11px; color: var(--muted); }
+  .rule { border-top: 1px solid var(--line); margin: 22px 0; }
+  .quote {
+    border-left: 3px solid var(--gold);
+    padding: 4px 0 4px 16px;
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    color: var(--primary);
+    font-size: 14.5px;
+    margin: 18px 0;
+  }
+
+  /* Two-col grids */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .four-col { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
+
+  .card {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 18px;
+    background: #fcfbf6;
+  }
+  .card h4 { margin-top: 0; }
+  .card p { font-size: 12.5px; margin-bottom: 0; }
+
+  .stat {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 14px;
+    text-align: center;
+    background: #fff;
+  }
+  .stat .n {
+    font-family: 'Georgia', serif;
+    font-size: 26px;
+    color: var(--primary);
+    font-weight: 700;
+    line-height: 1;
+  }
+  .stat .l {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  /* Table */
+  table.spec {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin: 12px 0 18px;
+  }
+  table.spec th {
+    background: var(--primary);
+    color: #fff;
+    text-align: left;
+    padding: 10px 12px;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  table.spec td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+    line-height: 1.55;
+  }
+  table.spec tr:nth-child(even) td { background: #faf8f2; }
+  table.spec td.k { font-weight: 600; color: var(--primary); width: 28%; }
+
+  /* Pricing */
+  .plan {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px;
+  }
+  .plan.hi { border: 2px solid var(--gold); background: #fffbe9; position: relative; }
+  .plan.hi::before {
+    content: "RECOMMENDED";
+    position: absolute; top: -10px; right: 14px;
+    background: var(--gold); color: var(--primary);
+    font-size: 9px; letter-spacing: 0.18em;
+    padding: 4px 8px; border-radius: 4px; font-weight: 700;
+  }
+  .plan h4 { margin: 0 0 4px; color: var(--primary); }
+  .plan .price {
+    font-family: 'Georgia', serif;
+    font-size: 24px; color: var(--primary); font-weight: 700;
+    margin: 6px 0 4px;
+  }
+  .plan .per { font-size: 11px; color: var(--muted); }
+  .plan ul { margin-top: 10px; padding-left: 16px; }
+  .plan li { font-size: 11.5px; }
+
+  /* Persona */
+  .persona {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 18px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+  }
+  .persona .who {
+    background: var(--cream);
+    border-radius: 8px;
+    padding: 12px;
+  }
+  .persona .who .name { font-weight: 700; color: var(--primary); font-size: 14px; }
+  .persona .who .role { color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .persona ul { margin-top: 4px; }
+  .persona h5 {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.16em;
+    color: var(--gold); margin: 12px 0 4px; font-weight: 700;
+  }
+
+  /* Flow */
+  .flow {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin: 16px 0;
+  }
+  .flow .step {
+    background: var(--cream);
+    border: 1px solid var(--line);
+    padding: 12px 10px;
+    border-radius: 8px;
+    text-align: center;
+    position: relative;
+  }
+  .flow .step .n {
+    font-family: 'Georgia', serif;
+    font-size: 22px; font-weight: 700; color: var(--gold); line-height: 1;
+  }
+  .flow .step .l {
+    font-size: 10.5px; color: var(--primary); font-weight: 600; margin-top: 6px;
+    line-height: 1.35;
+  }
+  .flow .step:not(:last-child)::after {
+    content: "\2192";
+    position: absolute; right: -10px; top: 50%; transform: translateY(-50%);
+    color: var(--gold); font-weight: bold; z-index: 1;
+  }
+
+  /* Token swatches */
+  .tokens { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+  .tok { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .tok .swatch { height: 44px; }
+  .tok .info { padding: 6px 8px; font-size: 9.5px; }
+  .tok .info .nm { font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.1em; }
+  .tok .info .hex { color: var(--muted); font-family: 'Menlo', monospace; }
+
+  .toc {
+    columns: 2;
+    column-gap: 32px;
+    font-size: 12.5px;
+    line-height: 1.9;
+  }
+  .toc a { color: var(--ink); text-decoration: none; display: flex; justify-content: space-between; }
+  .toc a .pg { color: var(--gold); font-variant-numeric: tabular-nums; }
+  .toc a:hover { color: var(--primary); }
+
+  .footer {
+    margin-top: 36px; padding-top: 14px;
+    border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between;
+    font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .pill {
+    display: inline-block;
+    background: var(--cream);
+    color: var(--primary);
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 600;
+    margin-right: 4px;
+  }
+  .pill.gold { background: #fffbe9; border-color: var(--gold); color: #8c6a00; }
+
+  /* Wireframe sketch */
+  .wire {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px;
+    background: #fafaf6;
+    font-family: 'Menlo', 'Courier New', monospace;
+    font-size: 10px;
+    color: var(--primary);
+    line-height: 1.5;
+    white-space: pre;
+    overflow-x: auto;
+  }
+
+  @media print {
+    html, body { background: #fff; }
+    .page {
+      margin: 0; box-shadow: none;
+      width: 100%; min-height: auto;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1 — COVER -->
+<section class="page cover">
+  <div class="markwrap">
+    <img src="/Scanframe.png" alt="ScanMyFrame" style="height:44px;width:auto;filter:brightness(0) invert(1);opacity:0.92;" />
+  </div>
+
+  <div>
+    <div class="eyebrow">Investor &amp; UX Specification</div>
+    <h1>Turn every frame you sell into a digital experience.</h1>
+    <p class="lede">A B2B SaaS platform for frame vendors, photographers, galleries and creators across West Africa &mdash; connecting physical frames to rich digital content via branded QR codes, with real&#8209;time analytics and zero technical setup.</p>
+  </div>
+
+  <div class="meta">
+    <div><span>Document</span><strong>v1.0 &mdash; Draft</strong></div>
+    <div><span>Prepared</span><strong>May 2026</strong></div>
+    <div><span>Stage</span><strong>Pre&#8209;Seed</strong></div>
+    <div><span>Confidential</span><strong>Investors &amp; Advisors</strong></div>
+  </div>
+</section>
+
+<!-- PAGE 2 — TOC -->
+<section class="page">
+  <h2 class="section-eyebrow">Contents</h2>
+  <h2 class="section-title">What's inside</h2>
+  <p class="lead">This document is split into two halves. Pages 3&ndash;11 cover the investor narrative &mdash; the business, market, model and ask. Pages 12&ndash;22 cover the UX specification &mdash; personas, flows, screen specs and the design system that ships the product.</p>
+
+  <div class="rule"></div>
+
+  <h4>Part I &middot; Investor Brief</h4>
+  <div class="toc">
+    <a><span>1. Executive Summary</span><span class="pg">03</span></a>
+    <a><span>2. The Problem</span><span class="pg">04</span></a>
+    <a><span>3. The Solution</span><span class="pg">05</span></a>
+    <a><span>4. Market Opportunity</span><span class="pg">06</span></a>
+    <a><span>5. Business Model &amp; Pricing</span><span class="pg">07</span></a>
+    <a><span>6. Go&#8209;to&#8209;Market</span><span class="pg">08</span></a>
+    <a><span>7. Competitive Landscape</span><span class="pg">09</span></a>
+    <a><span>8. Traction &amp; Roadmap</span><span class="pg">10</span></a>
+    <a><span>9. The Ask</span><span class="pg">11</span></a>
+  </div>
+
+  <h4 style="margin-top:28px;">Part II &middot; UX Specification</h4>
+  <div class="toc">
+    <a><span>10. Product Principles</span><span class="pg">12</span></a>
+    <a><span>11. Personas</span><span class="pg">13</span></a>
+    <a><span>12. Information Architecture</span><span class="pg">14</span></a>
+    <a><span>13. Core User Flows</span><span class="pg">15</span></a>
+    <a><span>14. Page Specifications</span><span class="pg">16</span></a>
+    <a><span>15. Design System</span><span class="pg">19</span></a>
+    <a><span>16. Accessibility &amp; Performance</span><span class="pg">21</span></a>
+    <a><span>17. Telemetry &amp; Success Metrics</span><span class="pg">22</span></a>
+  </div>
+
+  <div class="footer"><span>ScanMyFrame &middot; Investor &amp; UX Specification</span><span>Contents</span></div>
+</section>
+
+<!-- PAGE 3 — EXECUTIVE SUMMARY -->
+<section class="page">
+  <h2 class="section-eyebrow">01 &middot; Executive Summary</h2>
+  <h2 class="section-title">A wall of frames is a wall of dead ends. We turn each one into a doorway.</h2>
+
+  <p class="lead">ScanMyFrame is a subscription platform that lets frame vendors, photographers, galleries and event creators attach a living digital layer &mdash; photos, videos, stories, vendor cards and analytics &mdash; to any physical frame they sell, via a branded QR code generated in under 60 seconds.</p>
+
+  <div class="four-col" style="margin: 20px 0;">
+    <div class="stat"><div class="n">2,000+</div><div class="l">Vendors on waitlist</div></div>
+    <div class="stat"><div class="n">3</div><div class="l">Paid plan tiers</div></div>
+    <div class="stat"><div class="n">&lt;60s</div><div class="l">Frame to QR</div></div>
+    <div class="stat"><div class="n">0</div><div class="l">Apps to download</div></div>
+  </div>
+
+  <h3>What we do, in one paragraph</h3>
+  <p>A vendor uploads an image (or images), writes the story behind the piece &mdash; optionally with our built&#8209;in AI assistant &mdash; and hits publish. ScanMyFrame returns a unique, branded QR code that the vendor prints onto the back of the physical frame. When the buyer, or anyone they show the frame to, scans the code with a phone camera, they land on a beautifully formatted frame page with the full media, the story, and the vendor's contact card. Every scan is recorded against the vendor's dashboard in real time.</p>
+
+  <h3>Why now</h3>
+  <ul>
+    <li><strong>Smartphone QR adoption is universal.</strong> Native camera scanning on iOS and Android removed the install friction that killed earlier QR products.</li>
+    <li><strong>African creative commerce is going digital.</strong> Frame vendors, wedding photographers and galleries across Lagos, Abuja and Accra need a way to stay attached to their work after sale.</li>
+    <li><strong>SaaS infrastructure is now cheap.</strong> Supabase, Paystack and CDN&#8209;edge media let us run gross margins north of 80% on a &#8358;3,000 monthly entry plan.</li>
+  </ul>
+
+  <h3>Why us</h3>
+  <p>We have shipped the platform end&#8209;to&#8209;end &mdash; public site, onboarding, dashboard, frame editor, QR generator, public scan page, AI story assistant, billing, admin console &mdash; and validated demand with a 2,000+ vendor waitlist. We are now raising to convert that waitlist, harden the marketplace pre&#8209;launch, and expand into Ghana and Kenya.</p>
+
+  <div class="footer"><span>ScanMyFrame &middot; Investor Brief</span><span>03</span></div>
+</section>
+
+<!-- PAGE 4 — PROBLEM -->
+<section class="page">
+  <h2 class="section-eyebrow">02 &middot; The Problem</h2>
+  <h2 class="section-title">Frames are sold once. The relationship ends at the door.</h2>
+
+  <p class="lead">A frame is the most personal object a vendor can sell &mdash; a wedding portrait, a family memory, a piece of original art. Yet once it leaves the workshop, the vendor disappears. There is no way to be remembered, no way to follow up, no way to know whether the piece was loved.</p>
+
+  <h3>What frame vendors told us</h3>
+  <div class="two-col">
+    <div class="card">
+      <h4>"I have no idea who owns my work."</h4>
+      <p>Frames are hung in homes, offices and galleries the vendor never sees. Word&#8209;of&#8209;mouth referrals depend on the buyer remembering the vendor's name months later &mdash; most don't.</p>
+    </div>
+    <div class="card">
+      <h4>"There's no way to keep telling the story."</h4>
+      <p>Every frame has a story &mdash; the photoshoot, the commission, the artist's intent. That context lives in the vendor's head, never in the buyer's hands.</p>
+    </div>
+    <div class="card">
+      <h4>"My marketing is invisible."</h4>
+      <p>Without scan data, vendors cannot tell which pieces resonate, which neighbourhoods drive interest, or which seasons sell. They market in the dark.</p>
+    </div>
+    <div class="card">
+      <h4>"Existing tools don't fit."</h4>
+      <p>Generic QR generators give a raw URL with no analytics, no branding, no card and no story. Custom websites cost millions of naira per vendor and never get built.</p>
+    </div>
+  </div>
+
+  <h3>The market gap</h3>
+  <p>There is no purpose&#8209;built platform for the African frame economy. Vendors string together free QR generators, Google Drive links, WhatsApp Business and a notebook of phone numbers &mdash; a stack that breaks every time a link expires, a folder is renamed, or a phone is replaced.</p>
+
+  <div class="quote">"I linked QR codes to eight frames I sold last month and two customers came back within a week to order more. Seeing where my frames are being scanned changed how I approach marketing completely."<br/><span class="small" style="font-style: normal;">&mdash; Adaeze N., Frame vendor, Lagos (early access)</span></div>
+
+  <div class="footer"><span>ScanMyFrame &middot; Investor Brief</span><span>04</span></div>
+</section>
+
+<!-- PAGE 5 — SOLUTION -->
+<section class="page">
+  <h2 class="section-eyebrow">03 &middot; The Solution</h2>
+  <h2 class="section-title">One dashboard. One QR per frame. Every scan is a touchpoint.</h2>
+
+  <p class="lead">ScanMyFrame is a single web product covering four jobs: create the frame, generate the QR, host the public scan page, and analyse what happened.</p>
+
+  <h3>Product surface</h3>
+  <table class="spec">
+    <thead><tr><th style="width:24%;">Module</th><th>What it does</th><th style="width:22%;">Status</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Frame Editor</td><td>Upload images and a video, write the story, attach a vendor card, set privacy.</td><td><span class="pill">Shipped</span></td></tr>
+      <tr><td class="k">AI Story Assistant</td><td>Drafts client&#8209;ready artwork narratives from a few notes. Lives in&#8209;dashboard.</td><td><span class="pill">Shipped</span></td></tr>
+      <tr><td class="k">QR Generator</td><td>PNG / SVG / print&#8209;ready PDF export, with brand customisation on Business.</td><td><span class="pill">Shipped</span></td></tr>
+      <tr><td class="k">Public Frame Page</td><td>Mobile&#8209;first scan target. Image gallery, video, story, vendor card.</td><td><span class="pill">Shipped</span></td></tr>
+      <tr><td class="k">Analytics</td><td>Real&#8209;time scans, unique visitors, geography, time&#8209;of&#8209;day, top frames.</td><td><span class="pill">Shipped</span></td></tr>
+      <tr><td class="k">Vendor Card</td><td>Always&#8209;attached contact card. Every scan is a quiet referral.</td><td><span class="pill">Shipped</span></td></tr>
+      <tr><td class="k">Privacy Layer</td><td>Public, password&#8209;protected, or private&#8209;link sharing per frame.</td><td><span class="pill">Shipped</span></td></tr>
+      <tr><td class="k">Marketplace</td><td>Buyer&#8209;facing catalogue of vendor frames for direct order.</td><td><span class="pill gold">Q3 2026</span></td></tr>
+      <tr><td class="k">Print Network</td><td>One&#8209;click order of pre&#8209;printed adhesive QR labels delivered nationally.</td><td><span class="pill gold">Q4 2026</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Why this wins</h3>
+  <ol>
+    <li><strong>No app required.</strong> Native phone cameras scan our codes &mdash; zero buyer friction.</li>
+    <li><strong>No technical skill required.</strong> The vendor never sees a URL, a CMS, or hosting. Upload, type, publish.</li>
+    <li><strong>Persistent vendor identity.</strong> Every scan opens the page with the vendor's logo, card and contact details. The frame becomes a referral engine.</li>
+    <li><strong>Data the vendor can act on.</strong> Real&#8209;time analytics show which frames are loved, which markets respond, and which contents convert.</li>
+  </ol>
+
+  <div class="footer"><span>ScanMyFrame &middot; Investor Brief</span><span>05</span></div>
+</section>
+
+<!-- PAGE 6 — MARKET -->
+<section class="page">
+  <h2 class="section-eyebrow">04 &middot; Market Opportunity</h2>
+  <h2 class="section-title">Africa first. Then the world.</h2>
+
+  <p class="lead">We start with Nigeria, where the frame, photography and gallery economy is large, fragmented and almost entirely offline. We expand on the rails of West African creative commerce.</p>
+
+  <h3>Sizing</h3>
+  <table class="spec">
+    <thead><tr><th>Layer</th><th>Definition</th><th style="width:22%;">Estimate</th></tr></thead>
+    <tbody>
+      <tr><td class="k">TAM &mdash; Global</td><td>Frame vendors, wedding photographers, galleries, memorial &amp; event creators worldwide who sell physical, framed deliverables.</td><td>~14M businesses</td></tr>
+      <tr><td class="k">SAM &mdash; Africa</td><td>Same segments across Nigeria, Ghana, Kenya, South Africa, with a smartphone &amp; payment rail capable of running ScanMyFrame.</td><td>~480k businesses</td></tr>
+      <tr><td class="k">SOM &mdash; 36 mo.</td><td>Vendors we can realistically reach via direct outreach, partnerships and the marketplace launch.</td><td>~24k paying</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Segments we serve today</h3>
+  <div class="three-col">
+    <div class="card"><h4>Frame &amp; print vendors</h4><p>The core. Sells physical framed art, mounts and prints. High volume, low margin per piece.</p></div>
+    <div class="card"><h4>Wedding &amp; portrait photographers</h4><p>Already deliver framed prints. ScanMyFrame turns each delivery into a referral asset.</p></div>
+    <div class="card"><h4>Galleries &amp; artists</h4><p>Need provenance and storytelling. Pro &amp; Business plans target this segment with branding and password&#8209;protect.</p></div>
+    <div class="card"><h4>Memorial &amp; legacy services</h4><p>Frames for funerals and remembrances. Privacy and longevity matter. Premium per&#8209;frame pricing.</p></div>
+    <div class="card"><h4>Corporate gifting</h4><p>Branded frames for awards, anniversaries, milestones. Bulk QR generation; Business plan upsell.</p></div>
+    <div class="card"><h4>Event &amp; interior design</h4><p>Immersive spaces with frames pointing to playlists, programmes, RSVPs. Marketing channel.</p></div>
+  </div>
+
+  <h3>Why the timing is right</h3>
+  <ul>
+    <li>Smartphone penetration in Nigeria crossed the threshold where buyers default to camera&#8209;scan instead of typing URLs.</li>
+    <li>Paystack and Stripe expansion mean recurring NGN/USD subscriptions clear reliably.</li>
+    <li>Generative AI (text + image) makes storytelling cheap &mdash; we ship that as the AI Story Assistant.</li>
+    <li>Cross&#8209;border e&#8209;commerce demand for African creative goods is growing; the marketplace plugs directly into it.</li>
+  </ul>
+
+  <div class="footer"><span>ScanMyFrame &middot; Investor Brief</span><span>06</span></div>
+</section>
+
+<!-- PAGE 7 — BUSINESS MODEL -->
+<section class="page">
+  <h2 class="section-eyebrow">05 &middot; Business Model &amp; Pricing</h2>
+  <h2 class="section-title">Three tiers. Two billing cycles. One free path in.</h2>
+
+  <p class="lead">All plans are subscription. Annual billing carries a 10&ndash;20% discount. Each tier maps to vendor scale: a starter selling a few frames a month, a growing studio, and a high&#8209;volume gallery / corporate vendor.</p>
+
+  <div class="three-col" style="margin-top: 18px;">
+    <div class="plan">
+      <span class="pill">Starter</span>
+      <h4>Basic</h4>
+      <div class="price">&#8358;3,000<span class="per"> / month</span></div>
+      <p class="small">10 QR credits / month &middot; Save 10% yearly</p>
+      <ul>
+        <li>2MB max image upload</li>
+        <li>1 extra image per frame</li>
+        <li>20MB max video upload</li>
+        <li>PNG QR code download</li>
+        <li>Basic analytics</li>
+      </ul>
+    </div>
+    <div class="plan hi">
+      <span class="pill gold">Growth</span>
+      <h4>Pro</h4>
+      <div class="price">&#8358;15,000<span class="per"> / month</span></div>
+      <p class="small">30 QR credits / month &middot; Save 15% yearly</p>
+      <ul>
+        <li>5MB image &middot; 30MB video</li>
+        <li>4 extra images per frame</li>
+        <li>PNG, SVG &amp; print&#8209;ready PDF</li>
+        <li>Vendor card on public frame page</li>
+        <li>Brand logo on public frame page</li>
+        <li>Password&#8209;protect frames</li>
+        <li>AI Story Assistant</li>
+        <li>Real&#8209;time analytics</li>
+      </ul>
+    </div>
+    <div class="plan">
+      <span class="pill">Scale</span>
+      <h4>Business</h4>
+      <div class="price">&#8358;30,000<span class="per"> / month</span></div>
+      <p class="small">Unlimited QR credits &middot; Save 20% yearly</p>
+      <ul>
+        <li>Everything in Pro</li>
+        <li>Custom QR brand styling</li>
+        <li>Full white&#8209;label experience</li>
+        <li>8 extra images &middot; 50MB video</li>
+        <li>Featured on homepage</li>
+        <li>24/7 priority support</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Unit economics (target, blended)</h3>
+  <table class="spec">
+    <thead><tr><th>Metric</th><th>Basic</th><th>Pro</th><th>Business</th><th>Blended</th></tr></thead>
+    <tbody>
+      <tr><td class="k">ARPU / month</td><td>&#8358;3,000</td><td>&#8358;15,000</td><td>&#8358;30,000</td><td>&#8358;11,200</td></tr>
+      <tr><td class="k">Gross margin</td><td>~88%</td><td>~84%</td><td>~80%</td><td>~84%</td></tr>
+      <tr><td class="k">Target CAC</td><td colspan="3">&#8358;8,500 (community + organic + targeted IG/TikTok)</td><td>&mdash;</td></tr>
+      <tr><td class="k">LTV (24mo retention)</td><td colspan="3">&#8358;268,800 blended</td><td>~32&times; CAC</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Future revenue lines</h3>
+  <ul>
+    <li><strong>Marketplace take rate</strong> &mdash; 8&ndash;12% on direct frame orders, launching Q3 2026.</li>
+    <li><strong>Print fulfilment</strong> &mdash; adhesive QR labels printed and shipped, fixed margin per pack.</li>
+    <li><strong>Enterprise / white label</strong> &mdash; galleries, museums, corporate gifting houses on annual contracts.</li>
+  </ul>
+
+  <div class="footer"><span>ScanMyFrame &middot; Investor Brief</span><span>07</span></div>
+</section>
+
+<!-- PAGE 8 — GTM -->
+<section class="page">
+  <h2 class="section-eyebrow">06 &middot; Go&#8209;to&#8209;Market</h2>
+  <h2 class="section-title">Reach vendors where they already gather. Convert with a free path.</h2>
+
+  <p class="lead">Frame vendors are clustered geographically (markets, art districts) and digitally (Instagram, WhatsApp groups, supplier networks). We work both axes.</p>
+
+  <h3>Acquisition channels</h3>
+  <div class="two-col">
+    <div class="card"><h4>Direct community outreach</h4><p>On&#8209;the&#8209;ground onboarding tours of frame markets in Lagos (Surulere, Lekki, Ikeja), Abuja, Port Harcourt and Ibadan. Free QR sticker pack on signup.</p></div>
+    <div class="card"><h4>Vendor referral loop</h4><p>Every QR scan exposes the vendor card. Each scan is a marketing surface &mdash; no incentive needed. Add a referral bonus on Pro upgrade.</p></div>
+    <div class="card"><h4>Photographer partnerships</h4><p>Wedding and portrait studios are heavy frame buyers. Co&#8209;branded packages: 50 frames + 50 QR labels + 1 year Pro.</p></div>
+    <div class="card"><h4>Content &amp; SEO</h4><p>Blog and YouTube content on storytelling, framing, gallery operations. Long&#8209;tail capture in English &amp; Yoruba/Igbo/Hausa.</p></div>
+    <div class="card"><h4>Instagram &amp; TikTok creator deals</h4><p>Mid&#8209;tier creator content that demonstrates the scan moment. The product is its own demo.</p></div>
+    <div class="card"><h4>Marketplace pull (Q3 2026)</h4><p>Buyers searching for vendors brings vendors back. Two&#8209;sided flywheel kicks in once supply density crosses regional threshold.</p></div>
+  </div>
+
+  <h3>Conversion funnel</h3>
+  <div class="flow">
+    <div class="step"><div class="n">01</div><div class="l">Landing page<br>or referral scan</div></div>
+    <div class="step"><div class="n">02</div><div class="l">Free signup</div></div>
+    <div class="step"><div class="n">03</div><div class="l">Onboarding<br>(profile &rarr; plan)</div></div>
+    <div class="step"><div class="n">04</div><div class="l">First frame<br>published</div></div>
+    <div class="step"><div class="n">05</div><div class="l">Subscribe</div></div>
+  </div>
+
+  <h3>North&#8209;star activation</h3>
+  <p><strong>Vendor reaches "first scan in the wild"</strong> &mdash; i.e. a buyer outside the vendor's own device scans the QR and lands on the frame page. We treat this as the activation event because it's the moment the platform delivers its core promise back to the vendor. Target: &ge;50% of signups within 14 days.</p>
+
+  <div class="footer"><span>ScanMyFrame &middot; Investor Brief</span><span>08</span></div>
+</section>
+
+<!-- PAGE 9 — COMPETITION -->
+<section class="page">
+  <h2 class="section-eyebrow">07 &middot; Competitive Landscape</h2>
+  <h2 class="section-title">No purpose&#8209;built competitor. Substitutes are fragmented and brittle.</h2>
+
+  <p class="lead">Vendors today stitch together free tools that solve none of the four jobs we cover end&#8209;to&#8209;end. The competitive question is not "who else does this?" &mdash; it is "what stack are vendors abandoning when they switch to us?"</p>
+
+  <table class="spec">
+    <thead><tr><th>Substitute</th><th>What it does</th><th>What it's missing</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Free QR generators<br><span class="small">(qr-code-generator, qrserver, etc.)</span></td><td>Encode a URL into a QR.</td><td>No hosting, no analytics, no story page, no vendor card, no branding, expires often.</td></tr>
+      <tr><td class="k">Google Drive / Dropbox links</td><td>Host media a buyer can open.</td><td>Ugly, leaks personal account, no analytics, no privacy controls, breaks on rename.</td></tr>
+      <tr><td class="k">Linktree / Beacons</td><td>Generic link landing page.</td><td>Built for influencers, not frames; no per&#8209;frame storytelling; no print export; weak analytics.</td></tr>
+      <tr><td class="k">Custom websites</td><td>Bespoke vendor site with frame pages.</td><td>&#8358;500k+ build, no QR pipeline, no AI assistant, vendor maintains hosting forever.</td></tr>
+      <tr><td class="k">WhatsApp catalogues</td><td>Show frames in chat.</td><td>No standalone scan target; buyer must already know the vendor's number.</td></tr>
+      <tr><td class="k">Generic NFC tag products</td><td>Tap&#8209;based digital business cards.</td><td>Hardware cost, no storytelling, no QR scan path, no analytics by frame.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Our defensibility</h3>
+  <ul>
+    <li><strong>Vertical depth.</strong> Every part of the product is shaped to the frame&#8209;vendor workflow &mdash; image &amp; story pairing, vendor card, print&#8209;ready labels, marketplace pre&#8209;plumbed.</li>
+    <li><strong>Data &amp; network.</strong> Each scan adds to a panel of geographic + temporal demand data only we hold. The marketplace then turns that data into matchmaking value.</li>
+    <li><strong>Brand position in West Africa.</strong> First&#8209;mover with localised pricing (NGN), local payments (Paystack), and on&#8209;the&#8209;ground community presence.</li>
+    <li><strong>Switching cost.</strong> Once a vendor has 30 published frames, the QR labels live on physical objects in customers' homes. Migration is functionally impossible.</li>
+  </ul>
+
+  <div class="footer"><span>ScanMyFrame &middot; Investor Brief</span><span>09</span></div>
+</section>
+
+<!-- PAGE 10 — TRACTION & ROADMAP -->
+<section class="page">
+  <h2 class="section-eyebrow">08 &middot; Traction &amp; Roadmap</h2>
+  <h2 class="section-title">The product is shipped. The waitlist is built. The question is velocity.</h2>
+
+  <h3>What is live today</h3>
+  <ul>
+    <li>Public marketing site with hero, brands strip, how&#8209;it&#8209;works, features, customer experience slider, in&#8209;page QR demo, testimonials, pricing, FAQ, blog and final CTA.</li>
+    <li>Authentication (email/password + OAuth callback), email verification, forgot/reset password.</li>
+    <li>Three&#8209;step onboarding: business profile + logo upload, plan selection, confirmation.</li>
+    <li>Vendor dashboard with Overview, My Frames, Create Frame, Analytics, Billing and Settings.</li>
+    <li>Frame Editor with media gallery, story editor, vendor card toggle, privacy controls.</li>
+    <li>QR generator with PNG / SVG / print&#8209;ready PDF export.</li>
+    <li>Public frame page (mobile&#8209;first) with image gallery, video, story, vendor card.</li>
+    <li>Real&#8209;time scan analytics with visitor de&#8209;duplication.</li>
+    <li>AI Story Assistant (in&#8209;dashboard widget).</li>
+    <li>Paystack billing, plan upgrade / downgrade, invoices.</li>
+    <li>Admin console (Posts, Users, Newsletter, Push notifications) for internal ops.</li>
+  </ul>
+
+  <h3>Roadmap</h3>
+  <table class="spec">
+    <thead><tr><th>Quarter</th><th>Milestone</th><th>Outcome</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Q2 2026</td><td>Convert waitlist &rarr; paid; on&#8209;the&#8209;ground onboarding in Lagos &amp; Abuja markets.</td><td>Target: 1,200 paying vendors.</td></tr>
+      <tr><td class="k">Q3 2026</td><td>Marketplace MVP &mdash; buyer&#8209;facing catalogue, direct&#8209;order checkout, vendor payouts.</td><td>Two&#8209;sided flywheel begins; take&#8209;rate revenue line opens.</td></tr>
+      <tr><td class="k">Q4 2026</td><td>Print fulfilment &mdash; adhesive QR labels printed &amp; shipped nationally.</td><td>Adds physical revenue line; reduces vendor printing friction to zero.</td></tr>
+      <tr><td class="k">Q1 2027</td><td>Ghana &amp; Kenya rollout; localisation, country&#8209;specific payment rails.</td><td>SAM expansion ~3&times;.</td></tr>
+      <tr><td class="k">Q2 2027</td><td>Enterprise / white label &mdash; galleries, museums, corporate gifting on annual contracts.</td><td>Higher&#8209;ARPU cohort, longer retention.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Risks &amp; mitigations</h3>
+  <table class="spec">
+    <thead><tr><th>Risk</th><th>Mitigation</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Vendor education curve</td><td>3&#8209;step onboarding, in&#8209;dashboard guides, on&#8209;the&#8209;ground market reps in launch cities.</td></tr>
+      <tr><td class="k">Paystack outage / FX volatility</td><td>Stripe as backup rail (US/UK customers); USD plan tier ready for international vendors.</td></tr>
+      <tr><td class="k">QR label print quality at scale</td><td>Q4 print fulfilment partnership with 2 vetted regional printers; QC sample SLA.</td></tr>
+      <tr><td class="k">Marketplace cold start</td><td>Launch only in cities with &ge;150 active vendors; pre&#8209;seed buyer demand via paid IG/TikTok.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="footer"><span>ScanMyFrame &middot; Investor Brief</span><span>10</span></div>
+</section>
+
+<!-- PAGE 11 — THE ASK -->
+<section class="page">
+  <h2 class="section-eyebrow">09 &middot; The Ask</h2>
+  <h2 class="section-title">Pre&#8209;seed round to compound the waitlist into the marketplace.</h2>
+
+  <p class="lead">We are raising to convert demand we already have, build the marketplace pre&#8209;launch, and expand into Ghana and Kenya in 18 months.</p>
+
+  <div class="four-col" style="margin: 22px 0;">
+    <div class="stat"><div class="n">$650k</div><div class="l">Round size</div></div>
+    <div class="stat"><div class="n">SAFE</div><div class="l">Instrument</div></div>
+    <div class="stat"><div class="n">18 mo.</div><div class="l">Runway</div></div>
+    <div class="stat"><div class="n">Q1 &rsquo;27</div><div class="l">Series A trigger</div></div>
+  </div>
+
+  <h3>Use of funds</h3>
+  <table class="spec">
+    <thead><tr><th>Bucket</th><th>%</th><th>What it funds</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Engineering &amp; product</td><td>40%</td><td>Marketplace MVP, print&#8209;fulfilment integration, mobile&#8209;first dashboard refresh, two senior engineers + one designer.</td></tr>
+      <tr><td class="k">Growth &amp; community</td><td>30%</td><td>On&#8209;the&#8209;ground market reps in Lagos, Abuja, Port Harcourt; creator partnerships; performance marketing.</td></tr>
+      <tr><td class="k">Operations &amp; support</td><td>15%</td><td>24/7 vendor support team, knowledge base, training videos.</td></tr>
+      <tr><td class="k">Geographic expansion</td><td>10%</td><td>Ghana &amp; Kenya legal, payment rails, localisation, hiring beachhead leads.</td></tr>
+      <tr><td class="k">Reserve</td><td>5%</td><td>Compliance, FX hedge, contingency.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Milestones to Series A</h3>
+  <ol>
+    <li><strong>4,000 paying vendors</strong> across Nigeria, Ghana, and Kenya.</li>
+    <li><strong>&#8358;450M ARR</strong> blended across plan tiers.</li>
+    <li><strong>Marketplace GMV &ge; &#8358;150M</strong> with 8&ndash;12% take rate.</li>
+    <li><strong>Net retention &ge; 110%</strong> driven by tier upgrades and seat expansion.</li>
+  </ol>
+
+  <h3>Contact</h3>
+  <p><strong>Founder &amp; CEO</strong> &middot; <a href="mailto:founder@scanmyframe.com">founder@scanmyframe.com</a><br>
+  <strong>Website</strong> &middot; scanmyframe.com<br>
+  <strong>This document</strong> &middot; v1.0 &middot; Confidential &mdash; circulate only with prior written consent.</p>
+
+  <div class="footer"><span>ScanMyFrame &middot; Investor Brief</span><span>11</span></div>
+</section>
+
+<!-- PAGE 12 — UX SPEC INTRO -->
+<section class="page">
+  <h2 class="section-eyebrow">10 &middot; Product Principles</h2>
+  <h2 class="section-title">Five principles every screen has to pass.</h2>
+
+  <p class="lead">The investor case stops here. From this page on, the document becomes the UX specification &mdash; the rules, structure and screen behaviour that make the product feel inevitable to the vendors using it.</p>
+
+  <div class="rule"></div>
+
+  <div class="two-col">
+    <div class="card">
+      <h4>1 &middot; Vendor&#8209;first, never tool&#8209;first</h4>
+      <p>The vendor never sees the word "URL", "CMS", "slug", or "embed". They see <em>frame</em>, <em>story</em>, <em>QR</em>, <em>scan</em>. Language is the first product surface.</p>
+    </div>
+    <div class="card">
+      <h4>2 &middot; One screen, one job</h4>
+      <p>Each dashboard tab does exactly one thing. Create Frame creates frames. Analytics shows scans. Settings configures account. No hybrid views.</p>
+    </div>
+    <div class="card">
+      <h4>3 &middot; The buyer is the second user</h4>
+      <p>Public frame pages are mobile&#8209;first, sub&#8209;1.5s load, and never require sign&#8209;in. The buyer experience earns the next vendor.</p>
+    </div>
+    <div class="card">
+      <h4>4 &middot; Defaults beat options</h4>
+      <p>Pre&#8209;filled story prompts, pre&#8209;sized QR exports, pre&#8209;selected privacy = public. Power features (password&#8209;protect, white&#8209;label QR) live behind disclosure.</p>
+    </div>
+    <div class="card">
+      <h4>5 &middot; Brand presence everywhere</h4>
+      <p>Forest green and gold appear consistently on the public site, the dashboard rail, the QR border, the email templates, and the admin console.</p>
+    </div>
+    <div class="card">
+      <h4>6 &middot; Empty states do real work</h4>
+      <p>Every empty state teaches the next action. "No frames yet" is also the first call to <em>Create your first frame</em> &mdash; there is never a dead screen.</p>
+    </div>
+  </div>
+
+  <div class="footer"><span>ScanMyFrame &middot; UX Specification</span><span>12</span></div>
+</section>
+
+<!-- PAGE 13 — PERSONAS -->
+<section class="page">
+  <h2 class="section-eyebrow">11 &middot; Personas</h2>
+  <h2 class="section-title">Three vendors, one buyer.</h2>
+  <p class="lead">We design for three vendor archetypes plus the public buyer who scans the QR. Every screen review checks against these four lenses.</p>
+
+  <div class="persona">
+    <div class="who">
+      <div class="name">Adaeze, the Frame Vendor</div>
+      <div class="role">Lagos &middot; 32 &middot; 5&ndash;15 frames/mo</div>
+      <h5>Plan</h5><p class="small">Basic &rarr; Pro within 60 days</p>
+      <h5>Devices</h5><p class="small">Android phone, occasional shared laptop at the workshop.</p>
+    </div>
+    <div>
+      <h5>Goals</h5>
+      <ul><li>Stay attached to every frame she sells; turn customers into repeat buyers.</li><li>Look professional next to bigger studios with websites.</li></ul>
+      <h5>Frustrations</h5>
+      <ul><li>WhatsApp catalogues are messy and lose old buyers.</li><li>Cannot see which frames are remembered after delivery.</li></ul>
+      <h5>What she needs from us</h5>
+      <ul><li>A 60&#8209;second flow from photo &rarr; QR &rarr; printable label.</li><li>An Analytics tab she can read on a phone in 10 seconds.</li></ul>
+    </div>
+  </div>
+
+  <div class="persona">
+    <div class="who">
+      <div class="name">Emeka, the Wedding Photographer</div>
+      <div class="role">Abuja &middot; 38 &middot; 40+ frames/mo</div>
+      <h5>Plan</h5><p class="small">Pro</p>
+      <h5>Devices</h5><p class="small">MacBook + iPhone; client deliverables are frames+QR.</p>
+    </div>
+    <div>
+      <h5>Goals</h5>
+      <ul><li>Deliver framed portraits with a hidden upgrade &mdash; scan reveals the full shoot reel.</li><li>Keep his brand visible long after the wedding.</li></ul>
+      <h5>Frustrations</h5>
+      <ul><li>Generic QR products produce ugly codes that break the brand.</li><li>Clients lose his contact when phones are replaced.</li></ul>
+      <h5>What he needs from us</h5>
+      <ul><li>Brand&#8209;coloured QR codes; vendor card on every frame; password&#8209;protect for private clients.</li><li>AI Story Assistant for client&#8209;ready captions.</li></ul>
+    </div>
+  </div>
+
+  <div class="persona">
+    <div class="who">
+      <div class="name">Chisom, the Gallery Owner</div>
+      <div class="role">Port Harcourt &middot; 45 &middot; 100+ frames/mo</div>
+      <h5>Plan</h5><p class="small">Business</p>
+      <h5>Devices</h5><p class="small">Desktop&#8209;heavy workflow; admin staff manage uploads.</p>
+    </div>
+    <div>
+      <h5>Goals</h5>
+      <ul><li>Provenance &amp; storytelling on every piece in the gallery.</li><li>Featured visibility on the upcoming marketplace.</li></ul>
+      <h5>Frustrations</h5>
+      <ul><li>Cataloguing tools are art&#8209;gallery&#8209;specific and expensive.</li><li>Buyers never remember which artist they liked.</li></ul>
+      <h5>What she needs from us</h5>
+      <ul><li>Bulk frame creation; white&#8209;label QR styling; team seats (roadmap).</li><li>Analytics by venue / show / artist.</li></ul>
+    </div>
+  </div>
+
+  <div class="persona">
+    <div class="who">
+      <div class="name">Tolu, the Buyer / Visitor</div>
+      <div class="role">Anywhere &middot; 18&ndash;65 &middot; scans, doesn't sign up</div>
+      <h5>Devices</h5><p class="small">Phone, native camera, mobile data &mdash; often slow.</p>
+    </div>
+    <div>
+      <h5>Goals</h5>
+      <ul><li>Find out the story behind the frame on the wall.</li><li>Save / share / contact the vendor in one tap.</li></ul>
+      <h5>What he needs from us</h5>
+      <ul><li>Sub&#8209;1.5s mobile load; no sign&#8209;up; no app prompt; one&#8209;tap WhatsApp/call to vendor.</li></ul>
+    </div>
+  </div>
+
+  <div class="footer"><span>ScanMyFrame &middot; UX Specification</span><span>13</span></div>
+</section>
+
+<!-- PAGE 14 — IA -->
+<section class="page">
+  <h2 class="section-eyebrow">12 &middot; Information Architecture</h2>
+  <h2 class="section-title">Public site, vendor dashboard, public scan, admin.</h2>
+
+  <p class="lead">The product splits into four trees with strict boundaries. A vendor never accidentally walks into admin; a buyer never lands inside a dashboard.</p>
+
+  <h3>Public marketing &amp; auth</h3>
+  <div class="wire">/                       Home &mdash; hero, brands, how-it-works, features, demo, pricing, FAQ
+/about                  Mission, vision, values
+/pricing                Plans (synced with src/data/plans.js)
+/blog                   Blog index
+/blog/:slug             Blog post
+/contact                Contact form
+/privacy &middot; /terms       Legal
+/signin                 Sign in / register (mode=register)
+/forgot-password        Recovery
+/reset-password         Recovery
+/verify-email           Email verification
+/verify-email-pending   Pending state
+/auth/callback          OAuth callback</div>
+
+  <h3>Vendor application (auth required)</h3>
+  <div class="wire">/onboarding             3-step onboarding (profile &rarr; plan &rarr; done)
+/dashboard
+   &mdash;&mdash; Overview          KPI strip + recent frames + recent scans
+   &mdash;&mdash; My Frames         Frame list, search, edit, share, delete
+   &mdash;&mdash; Create Frame      Editor: media &rarr; story &rarr; vendor card &rarr; privacy &rarr; QR
+   &mdash;&mdash; Analytics         Real-time scans, geography, top frames, time series
+   &mdash;&mdash; Billing           Plan, invoices, payment method, plan change
+   &mdash;&mdash; Settings          Profile &middot; Business &middot; QR Branding (Business) &middot; Notifications &middot; Security &middot; Danger</div>
+
+  <h3>Public scan target (no auth)</h3>
+  <div class="wire">/frame/:slug            Public frame page &mdash; image gallery, video, story, vendor card</div>
+
+  <h3>Admin console (separate auth)</h3>
+  <div class="wire">/admin                  Posts &middot; Users &middot; Newsletter &middot; Notifications</div>
+
+  <h3>Routing &amp; guard rules</h3>
+  <ul>
+    <li><strong>OnboardingGuard</strong> wraps <code>/dashboard</code>: incomplete profile &rarr; forced to <code>/onboarding</code>.</li>
+    <li><strong>OnboardingRoute</strong> blocks repeat onboarding once complete.</li>
+    <li><strong>Auth pages</strong> use a short footer; everything else uses the full footer.</li>
+    <li><strong>404</strong> at <code>*</code> &rarr; themed empty state with one CTA back to home or dashboard.</li>
+  </ul>
+
+  <div class="footer"><span>ScanMyFrame &middot; UX Specification</span><span>14</span></div>
+</section>
+
+<!-- PAGE 15 — FLOWS -->
+<section class="page">
+  <h2 class="section-eyebrow">13 &middot; Core User Flows</h2>
+  <h2 class="section-title">Five flows the product lives or dies on.</h2>
+
+  <h3>F1 &middot; Vendor sign&#8209;up &amp; onboarding</h3>
+  <div class="flow">
+    <div class="step"><div class="n">01</div><div class="l">Hero CTA<br>"Get Started Free"</div></div>
+    <div class="step"><div class="n">02</div><div class="l">Email +<br>password OR OAuth</div></div>
+    <div class="step"><div class="n">03</div><div class="l">Verify email</div></div>
+    <div class="step"><div class="n">04</div><div class="l">Onboarding<br>(profile &rarr; plan)</div></div>
+    <div class="step"><div class="n">05</div><div class="l">Dashboard<br>Overview</div></div>
+  </div>
+  <p class="small">Target: complete in &lt; 4 minutes. Drop&#8209;off triggers: email verify (&ge;30%), plan select (&ge;15%). Fallback CTA on plan&#8209;select: "Start free, decide later".</p>
+
+  <h3>F2 &middot; Create Frame &amp; publish</h3>
+  <div class="flow">
+    <div class="step"><div class="n">01</div><div class="l">Click<br>"Create Frame"</div></div>
+    <div class="step"><div class="n">02</div><div class="l">Upload primary<br>image (+ extras)</div></div>
+    <div class="step"><div class="n">03</div><div class="l">Story editor<br>(or AI assist)</div></div>
+    <div class="step"><div class="n">04</div><div class="l">Vendor card +<br>privacy</div></div>
+    <div class="step"><div class="n">05</div><div class="l">Publish &rarr;<br>QR generated</div></div>
+  </div>
+  <p class="small">Target: &lt; 60 seconds for a single&#8209;image frame. AI Story Assistant available throughout step 3 (Pro+). QR returned with PNG / SVG / print&#8209;ready PDF buttons.</p>
+
+  <h3>F3 &middot; Buyer scan</h3>
+  <div class="flow">
+    <div class="step"><div class="n">01</div><div class="l">Buyer points<br>camera at QR</div></div>
+    <div class="step"><div class="n">02</div><div class="l">Native banner<br>"Open link"</div></div>
+    <div class="step"><div class="n">03</div><div class="l">Frame page<br>loads (&lt;1.5s)</div></div>
+    <div class="step"><div class="n">04</div><div class="l">Buyer browses<br>gallery + story</div></div>
+    <div class="step"><div class="n">05</div><div class="l">Tap vendor card<br>(WhatsApp/call)</div></div>
+  </div>
+
+  <h3>F4 &middot; Plan upgrade (Basic &rarr; Pro)</h3>
+  <div class="flow">
+    <div class="step"><div class="n">01</div><div class="l">Hit limit<br>(QR credits / image size)</div></div>
+    <div class="step"><div class="n">02</div><div class="l">Inline upgrade<br>tooltip</div></div>
+    <div class="step"><div class="n">03</div><div class="l">Billing tab</div></div>
+    <div class="step"><div class="n">04</div><div class="l">Paystack<br>checkout</div></div>
+    <div class="step"><div class="n">05</div><div class="l">Pro features<br>unlocked</div></div>
+  </div>
+
+  <h3>F5 &middot; Vendor reviews scan analytics</h3>
+  <div class="flow">
+    <div class="step"><div class="n">01</div><div class="l">Push / email<br>"first scan"</div></div>
+    <div class="step"><div class="n">02</div><div class="l">Open Analytics</div></div>
+    <div class="step"><div class="n">03</div><div class="l">See KPI strip<br>+ recent scans</div></div>
+    <div class="step"><div class="n">04</div><div class="l">Drill into<br>top frame</div></div>
+    <div class="step"><div class="n">05</div><div class="l">Adjust marketing<br>or restock</div></div>
+  </div>
+
+  <div class="footer"><span>ScanMyFrame &middot; UX Specification</span><span>15</span></div>
+</section>
+
+<!-- PAGE 16 — PAGE SPECS 1 -->
+<section class="page">
+  <h2 class="section-eyebrow">14 &middot; Page Specifications &middot; 1 of 3</h2>
+  <h2 class="section-title">Public marketing pages.</h2>
+
+  <h3>Home (/)</h3>
+  <table class="spec">
+    <thead><tr><th>Section</th><th>Purpose</th><th>Components</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Hero</td><td>State the value prop in one sentence; offer two CTAs (Free / View Pricing).</td><td>Header, eyebrow pill, headline, lede, two buttons, hero illustration (FrameScanning.png).</td></tr>
+      <tr><td class="k">Featured vendors</td><td>Logo strip &mdash; social proof.</td><td>JS&#8209;driven marquee (CSS&#8209;animation unreliable on iOS Safari).</td></tr>
+      <tr><td class="k">How it works</td><td>Three&#8209;step explainer.</td><td>Step cards (01 Create, 02 Get QR, 03 Print &amp; Grow).</td></tr>
+      <tr><td class="k">Features</td><td>Auto&#8209;rotating feature list with image preview; manual click pauses.</td><td>AnimatePresence image, list with progress bar (7s).</td></tr>
+      <tr><td class="k">Customer experience</td><td>Three captioned slides showing scan moment.</td><td>Auto&#8209;slide, dot navigation, QR overlay sticker.</td></tr>
+      <tr><td class="k">QR demo</td><td>Live in&#8209;page generator &mdash; try before signup.</td><td>QRCodeGenerator component on dark green panel.</td></tr>
+      <tr><td class="k">Testimonials</td><td>Three vendor quotes &mdash; placeholder data until real quotes land.</td><td>Quote cards with initials avatar + role.</td></tr>
+      <tr><td class="k">Marketplace teaser</td><td>Drives waitlist for Q3 marketplace.</td><td>Coming&#8209;soon pill, count, marketplace screenshot.</td></tr>
+      <tr><td class="k">Pricing</td><td>Embedded plans synced from src/data/plans.js.</td><td>&lt;Price /&gt; component, monthly/yearly toggle.</td></tr>
+      <tr><td class="k">FAQ</td><td>Accordion of nine canonical questions.</td><td>Click to expand, keyboard&#8209;navigable.</td></tr>
+      <tr><td class="k">Final CTA</td><td>Forest&#8209;green CTA section, two buttons.</td><td>Two buttons; forest green; footer follows.</td></tr>
+      <tr><td class="k">Blog preview</td><td>Three latest posts before footer.</td><td>BlogPreview component.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>About (/about)</h3>
+  <p>Hero (Our Story), Who We Are with stat cards (2,000+ waitlist &middot; 4 plans &middot; Real&#8209;time analytics &middot; No app), Mission cards, Vision (global reach + marketplace teaser), Vision pillars (Born in Nigeria &middot; Built for the world &middot; Marketplace ready &middot; Quick vendor orders), Values (4 cards), CTA.</p>
+
+  <h3>Pricing (/pricing)</h3>
+  <p>Three plan cards from <code>PLANS</code>, monthly/yearly toggle (10/15/20% discounts), feature lists, plan&#8209;specific colour outline (Basic = sage, Pro = gold, Business = forest green), FAQ link, final CTA.</p>
+
+  <h3>Sign in (/signin)</h3>
+  <p>Split layout: forest&#8209;green left panel with logo and one&#8209;sentence headline, cream right panel with form (email + password, OAuth, "remember me", forgot link). <code>?mode=register</code> swaps to register form. Auth pages render the short footer (SigninFooter).</p>
+
+  <h3>Public frame page (/frame/:slug)</h3>
+  <p>Mobile&#8209;first scan target. Image gallery (manual swipe, no auto&#8209;slide; height preserved across swaps), optional video, story, vendor card with WhatsApp/call/email taps, "Created with ScanMyFrame" attribution that links to home. Records a scan via <code>recordQRScan()</code> with a stable visitor UUID stored in localStorage (<code>_sfvid</code>).</p>
+
+  <div class="footer"><span>ScanMyFrame &middot; UX Specification</span><span>16</span></div>
+</section>
+
+<!-- PAGE 17 — PAGE SPECS 2 -->
+<section class="page">
+  <h2 class="section-eyebrow">14 &middot; Page Specifications &middot; 2 of 3</h2>
+  <h2 class="section-title">Vendor dashboard.</h2>
+
+  <h3>Layout chrome</h3>
+  <p>Persistent left sidebar (collapsed on mobile, drawer behaviour). Top header with workspace name, theme toggle (sun/moon), notification bell (unread count badge), avatar menu. All colours use explicit hex tokens &mdash; Tailwind's <code>gray</code> is never used because theme overrides fight it.</p>
+
+  <h3>Tabs &amp; their KPIs</h3>
+  <table class="spec">
+    <thead><tr><th>Tab</th><th>Hero KPI</th><th>Secondary KPIs</th><th>Primary action</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Overview</td><td>Total scans (last 30 days)</td><td>Active frames &middot; Unique visitors &middot; QR credits left</td><td>Create Frame</td></tr>
+      <tr><td class="k">My Frames</td><td>Frames published</td><td>Drafts &middot; Pinned &middot; Private</td><td>New Frame</td></tr>
+      <tr><td class="k">Create Frame</td><td>&mdash;</td><td>&mdash;</td><td>Save &amp; generate QR</td></tr>
+      <tr><td class="k">Analytics</td><td>Scans (selected range)</td><td>Top frame &middot; Top city &middot; Avg. dwell</td><td>Export CSV</td></tr>
+      <tr><td class="k">Billing</td><td>Current plan</td><td>Renewal date &middot; Credits used &middot; Last invoice</td><td>Change plan</td></tr>
+      <tr><td class="k">Settings</td><td>&mdash;</td><td>Profile &middot; Business &middot; QR Branding (Business) &middot; Notifications &middot; Security &middot; Danger zone</td><td>Save changes</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Frame Editor &mdash; field specs</h3>
+  <table class="spec">
+    <thead><tr><th>Field</th><th>Constraint</th><th>Plan gate</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Title</td><td>Required &middot; 3&ndash;80 chars &middot; single line &middot; TitleTooltip kicks in &gt; 20 chars</td><td>All</td></tr>
+      <tr><td class="k">Primary image</td><td>Required &middot; JPG/PNG/WebP &middot; Basic 2MB &middot; Pro 5MB &middot; Business 5MB</td><td>All</td></tr>
+      <tr><td class="k">Extra images</td><td>Basic 1 &middot; Pro 4 &middot; Business 8 (per frame)</td><td>Basic+</td></tr>
+      <tr><td class="k">Video</td><td>MP4/WebM &middot; Basic 20MB &middot; Pro 30MB &middot; Business 50MB</td><td>All</td></tr>
+      <tr><td class="k">Story</td><td>Markdown subset &middot; 8,000 chars max &middot; AI assist button visible to Pro+</td><td>AI = Pro+</td></tr>
+      <tr><td class="k">Vendor card</td><td>Toggle &middot; default ON for Pro+ &middot; OFF for Basic (read&#8209;only)</td><td>Pro+</td></tr>
+      <tr><td class="k">Privacy</td><td>Public (default) &middot; Password &middot; Private link</td><td>Password = Pro+</td></tr>
+      <tr><td class="k">QR styling</td><td>Default brand &middot; Custom colours / logo</td><td>Custom = Business</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Onboarding &mdash; three steps</h3>
+  <div class="three-col">
+    <div class="card"><h4>Step 1 &middot; Profile</h4><p>Logo (&le; 2MB JPG only), business name (required), business email (optional), business type (8 options), country (8 options), city, phone. Skip allowed.</p></div>
+    <div class="card"><h4>Step 2 &middot; Plan</h4><p>3 plan cards from <code>PLANS</code>; monthly/yearly toggle; "Start free" tertiary; checkout via Paystack on confirm.</p></div>
+    <div class="card"><h4>Step 3 &middot; Done</h4><p>Confirmation, "Create your first frame" CTA, sends welcome notification via supabaseHelpers.</p></div>
+  </div>
+
+  <div class="footer"><span>ScanMyFrame &middot; UX Specification</span><span>17</span></div>
+</section>
+
+<!-- PAGE 18 — PAGE SPECS 3 -->
+<section class="page">
+  <h2 class="section-eyebrow">14 &middot; Page Specifications &middot; 3 of 3</h2>
+  <h2 class="section-title">Admin console &amp; cross&#8209;cutting components.</h2>
+
+  <h3>Admin (/admin)</h3>
+  <p>Self&#8209;protected username/password gate. Brand&#8209;led split login (forest&#8209;green left panel + cream form). Once authenticated, vertical sidebar with Iconify (Lucide&#8209;shaped) icons; active item gets a gold&#8209;tinted background and 1px gold border. Top header includes a KPI strip on every tab &mdash; first KPI uses the brand&#8209;green/gold "hero" treatment.</p>
+
+  <table class="spec">
+    <thead><tr><th>Tab</th><th>Hero KPI</th><th>Layout</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Posts</td><td>Total / Published / Drafts / Pinned</td><td>Filter pills, table; pinned rows get a 3px gold left accent.</td></tr>
+      <tr><td class="k">Users</td><td>Total / Active / Pro / Business</td><td>Avatar + email; plan badge outlined in plan colour (Basic sage, Pro gold, Business forest green); QR&#8209;usage progress bar.</td></tr>
+      <tr><td class="k">Newsletter</td><td>Total / 30d / Week / Open rate</td><td>Subscriber table + 8&#8209;week growth sparkline + top&#8209;source card.</td></tr>
+      <tr><td class="k">Notifications</td><td>Sent</td><td>Audience picker with count, type chips, message + description fields, live preview rendered inside <code>--sf-primary-deep</code> card; recent broadcasts list.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Cross&#8209;cutting components</h3>
+  <table class="spec">
+    <thead><tr><th>Component</th><th>Where</th><th>Behaviour notes</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Header</td><td>Marketing pages</td><td>Theme&#8209;aware; collapses to hamburger &lt; 768px; logo swaps light/dark variant.</td></tr>
+      <tr><td class="k">Footer</td><td>Marketing pages</td><td>Full footer everywhere except auth flows (where SigninFooter is rendered).</td></tr>
+      <tr><td class="k">CookieConsent</td><td>Global</td><td>One&#8209;time banner; persists choice in localStorage.</td></tr>
+      <tr><td class="k">BackToTop</td><td>Long pages</td><td>Appears after 600px scroll; theme&#8209;aware.</td></tr>
+      <tr><td class="k">SEO + OrganizationSchema</td><td>Every page</td><td>Sets &lt;title&gt;, meta, OpenGraph; OrganizationSchema injected on Home and About.</td></tr>
+      <tr><td class="k">QRCodeGenerator</td><td>Home demo + dashboard</td><td>Live preview as the user types; download as PNG/SVG/PDF (PDF gated to Pro+).</td></tr>
+      <tr><td class="k">AIChatWidget</td><td>Dashboard floating button</td><td>Pro+ only; assistant scoped to writing artwork stories and dashboard navigation help.</td></tr>
+      <tr><td class="k">NotificationDropdown</td><td>Dashboard header</td><td>Unread count badge; live updates via Supabase realtime channel.</td></tr>
+      <tr><td class="k">FrameGuide / GuideChip</td><td>Dashboard</td><td>Inline coach&#8209;mark for first&#8209;frame creation; dismissable, returns on demand.</td></tr>
+      <tr><td class="k">WaitlistModal</td><td>Marketplace teaser</td><td>Captures email; pre&#8209;fills if signed in.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="footer"><span>ScanMyFrame &middot; UX Specification</span><span>18</span></div>
+</section>
+
+<!-- PAGE 19 — DESIGN SYSTEM 1 -->
+<section class="page">
+  <h2 class="section-eyebrow">15 &middot; Design System &middot; Tokens</h2>
+  <h2 class="section-title">Colour, type, radius, motion.</h2>
+
+  <h3>Brand palette</h3>
+  <div class="tokens">
+    <div class="tok"><div class="swatch" style="background:#0F4C3A;"></div><div class="info"><div class="nm">Primary / Forest</div><div class="hex">#0F4C3A</div></div></div>
+    <div class="tok"><div class="swatch" style="background:#0a3a2c;"></div><div class="info"><div class="nm">Primary deep</div><div class="hex">#0A3A2C</div></div></div>
+    <div class="tok"><div class="swatch" style="background:#162722;"></div><div class="info"><div class="nm">Primary darker</div><div class="hex">#162722</div></div></div>
+    <div class="tok"><div class="swatch" style="background:#D4AF37;"></div><div class="info"><div class="nm">Gold accent</div><div class="hex">#D4AF37</div></div></div>
+    <div class="tok"><div class="swatch" style="background:#f7f5ee;"></div><div class="info"><div class="nm">Cream / Secondary</div><div class="hex">#F7F5EE</div></div></div>
+    <div class="tok"><div class="swatch" style="background:#f5f5f0;"></div><div class="info"><div class="nm">Page bg (light)</div><div class="hex">#F5F5F0</div></div></div>
+  </div>
+
+  <h3>Surface &amp; line</h3>
+  <div class="tokens">
+    <div class="tok"><div class="swatch" style="background:#ffffff; border-bottom: 1px solid #e8e8e4;"></div><div class="info"><div class="nm">Card &middot; light</div><div class="hex">#FFFFFF</div></div></div>
+    <div class="tok"><div class="swatch" style="background:#1a1a1a;"></div><div class="info"><div class="nm">Card &middot; dark</div><div class="hex">#1A1A1A</div></div></div>
+    <div class="tok"><div class="swatch" style="background:#0a0a0a;"></div><div class="info"><div class="nm">Page bg &middot; dark</div><div class="hex">#0A0A0A</div></div></div>
+    <div class="tok"><div class="swatch" style="background:#e8e8e4;"></div><div class="info"><div class="nm">Border &middot; light</div><div class="hex">#E8E8E4</div></div></div>
+    <div class="tok"><div class="swatch" style="background:#2a2a2a;"></div><div class="info"><div class="nm">Border &middot; dark</div><div class="hex">#2A2A2A</div></div></div>
+    <div class="tok"><div class="swatch" style="background:#f0efe9;"></div><div class="info"><div class="nm">Chip bg &middot; light</div><div class="hex">#F0EFE9</div></div></div>
+  </div>
+
+  <h3>Status</h3>
+  <div class="tokens">
+    <div class="tok"><div class="swatch" style="background:#1f8a5b;"></div><div class="info"><div class="nm">Success</div><div class="hex">#1F8A5B</div></div></div>
+    <div class="tok"><div class="swatch" style="background:#d99c2b;"></div><div class="info"><div class="nm">Draft / Warn</div><div class="hex">#D99C2B</div></div></div>
+    <div class="tok"><div class="swatch" style="background:#c5443e;"></div><div class="info"><div class="nm">Error</div><div class="hex">#C5443E</div></div></div>
+    <div class="tok"><div class="swatch" style="background:#3b6ea8;"></div><div class="info"><div class="nm">Info</div><div class="hex">#3B6EA8</div></div></div>
+    <div class="tok"><div class="swatch" style="background:#7a8f5a;"></div><div class="info"><div class="nm">Plan &middot; Basic (sage)</div><div class="hex">#7A8F5A</div></div></div>
+    <div class="tok"><div class="swatch" style="background:#0F4C3A;"></div><div class="info"><div class="nm">Plan &middot; Business</div><div class="hex">#0F4C3A</div></div></div>
+  </div>
+
+  <h3>Typography</h3>
+  <table class="spec">
+    <thead><tr><th>Token</th><th>Family</th><th>Use</th><th>Sizes</th></tr></thead>
+    <tbody>
+      <tr><td class="k">font-display</td><td>Poltawski Nowy</td><td>Page titles, hero, slide headings, KPI numbers</td><td>30 / 40 / 48 / 56</td></tr>
+      <tr><td class="k">font-body</td><td>Inter (system fallback)</td><td>UI, body copy, forms, buttons</td><td>11 / 12 / 13 / 14 / 16</td></tr>
+      <tr><td class="k">font-mono</td><td>Menlo / Courier New</td><td>Hex codes, code, wireframes</td><td>10 / 11</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Radii, shadow, motion</h3>
+  <table class="spec">
+    <tbody>
+      <tr><td class="k">Radius</td><td>4 (chip) &middot; 8 (input) &middot; 10 (card) &middot; 12 (panel) &middot; 16 (KPI) &middot; 999 (pill)</td></tr>
+      <tr><td class="k">Shadow</td><td>0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.08) for elevated cards &middot; none on flat tabs</td></tr>
+      <tr><td class="k">Motion</td><td>Framer Motion springs; default <code>{ stiffness: 100, damping: 14 }</code>; feature carousel = 7s linear; image swap = 0.15s opacity dim</td></tr>
+      <tr><td class="k">Easing</td><td>easeOut for entry &middot; easeInOut for transitions &middot; linear for progress bars</td></tr>
+    </tbody>
+  </table>
+
+  <div class="footer"><span>ScanMyFrame &middot; UX Specification</span><span>19</span></div>
+</section>
+
+<!-- PAGE 20 — DESIGN SYSTEM 2 -->
+<section class="page">
+  <h2 class="section-eyebrow">15 &middot; Design System &middot; Components</h2>
+  <h2 class="section-title">The component contract.</h2>
+
+  <h3>Buttons</h3>
+  <table class="spec">
+    <thead><tr><th>Variant</th><th>Background</th><th>Foreground</th><th>Use</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Primary</td><td>#0F4C3A</td><td>#F7F5EE</td><td>Default action &mdash; Get Started, Save, Publish.</td></tr>
+      <tr><td class="k">Gold</td><td>#D4AF37</td><td>#0F4C3A</td><td>High&#8209;emphasis on dark &mdash; "Start for free" on green sections.</td></tr>
+      <tr><td class="k">Outline</td><td>transparent</td><td>#0F4C3A (border 2px)</td><td>Secondary action.</td></tr>
+      <tr><td class="k">Ghost</td><td>transparent</td><td>#0F4C3A</td><td>Tertiary, in&#8209;form, "Skip", "Cancel".</td></tr>
+      <tr><td class="k">Danger</td><td>#C5443E</td><td>#F7F5EE</td><td>Destructive &mdash; Delete, Cancel subscription. Always behind a confirm dialog.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Chips, pills, badges</h3>
+  <ul>
+    <li><strong>Eyebrow pill</strong> &mdash; <code>text-[10/12]</code>, tracking&#8209;widest, uppercase, cream/forest border, used above every section title.</li>
+    <li><strong>Status pill</strong> &mdash; Active / Draft / Error mapping to Success / Warn / Error tokens.</li>
+    <li><strong>Plan badge</strong> &mdash; outlined in plan colour (sage / gold / forest green); used in dashboard, admin Users tab, billing.</li>
+    <li><strong>Coming&#8209;soon pill</strong> &mdash; gold border on cream &mdash; for marketplace teaser and roadmap items.</li>
+  </ul>
+
+  <h3>Form controls</h3>
+  <ul>
+    <li>Inputs: 12px y, 16px x padding, radius 12, 1px border (theme&#8209;aware), focus ring = 2px primary at 30% alpha.</li>
+    <li>Selects: native &lt;select&gt; styled to match input. Theme&#8209;aware option list.</li>
+    <li>File input: rendered as a button labelled "Upload" or "Change" with helper text ("Only JPG, max 2MB").</li>
+    <li>Toggles: 36&times;20 capsule, knob 16, gold when on; used for vendor card, monthly/yearly billing.</li>
+    <li>Slider, password&#8209;protect input, copy&#8209;to&#8209;clipboard chip &mdash; defined in components/ subtree.</li>
+  </ul>
+
+  <h3>Cards &amp; KPIs</h3>
+  <ul>
+    <li><strong>StatCard</strong> &mdash; 16 radius, 1px border, 18px padding, hero variant has 2px accent border + glow at 13% alpha; numeric uses font-display, label is uppercase 10/12 muted.</li>
+    <li><strong>StackCard</strong> &mdash; vertically stackable cards used on landing testimonials and feature explainer.</li>
+    <li><strong>Plan card</strong> &mdash; three variants (Basic, Pro, Business) with the recommended one elevated by 2px gold border and "Recommended" tag.</li>
+  </ul>
+
+  <h3>Public frame page (mobile)</h3>
+  <ul>
+    <li>Hero gallery: max 560px tall image, swipe handlers, opacity dim during swap so height never collapses.</li>
+    <li>Vendor card: sticky on scroll, three taps &mdash; WhatsApp, call, email &mdash; primary tap is WhatsApp.</li>
+    <li>"Created with ScanMyFrame" attribution: bottom&#8209;centre, 11px, tracks 0.12em uppercase, opacity 50%, links to home.</li>
+  </ul>
+
+  <h3>Iconography</h3>
+  <p>Lucide&#8209;shaped inline SVGs everywhere; emoji is reserved for the About page mission/vision tiles only. Stroke 1.8, linecap round, linejoin round, default size 20.</p>
+
+  <div class="footer"><span>ScanMyFrame &middot; UX Specification</span><span>20</span></div>
+</section>
+
+<!-- PAGE 21 — A11Y / PERFORMANCE -->
+<section class="page">
+  <h2 class="section-eyebrow">16 &middot; Accessibility &amp; Performance</h2>
+  <h2 class="section-title">The non&#8209;negotiables.</h2>
+
+  <h3>Accessibility</h3>
+  <table class="spec">
+    <tbody>
+      <tr><td class="k">Contrast</td><td>Body text &ge; 4.5:1 against background in both themes. Forest green (#0F4C3A) on cream (#F7F5EE) = 9.4:1. White on forest = 9.1:1.</td></tr>
+      <tr><td class="k">Focus</td><td>Every interactive element shows a visible 2px focus ring (gold in dark, primary in light). Tab order matches visual order.</td></tr>
+      <tr><td class="k">Keyboard</td><td>Header, sidebar, FAQ accordion, image gallery, plan cards, Frame Editor &mdash; all operable without a mouse.</td></tr>
+      <tr><td class="k">Screen readers</td><td>Hero illustration <code>alt</code>; logo strip <code>title</code>; QR images <code>alt="QR code for &lt;frame title&gt;"</code>; vendor card buttons <code>aria-label</code>.</td></tr>
+      <tr><td class="k">Motion</td><td>All Framer animations respect <code>prefers-reduced-motion</code>; carousels pause on focus; auto&#8209;rotation pauses on click.</td></tr>
+      <tr><td class="k">Forms</td><td>Every input has a visible label; errors announced via <code>role="alert"</code>; required fields explicit, no asterisk&#8209;only marking.</td></tr>
+      <tr><td class="k">Language</td><td>HTML <code>lang="en"</code>; copy reading age &le; Grade 8; no jargon for vendors.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Performance budgets</h3>
+  <table class="spec">
+    <thead><tr><th>Surface</th><th>Budget</th><th>How we hit it</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Public frame page (LCP)</td><td>&le; 1.5s on 4G</td><td>Hero image preloaded, lazy gallery, SVG QR, no React on this route in v2 (SSR/static).</td></tr>
+      <tr><td class="k">Marketing home (LCP)</td><td>&le; 2.5s on 4G</td><td>Hero PNG &le; 200KB, brand strip JS marquee, fonts preloaded with <code>font-display: swap</code>.</td></tr>
+      <tr><td class="k">Dashboard (TTI)</td><td>&le; 3.5s on 4G</td><td>Code&#8209;split per route, Supabase realtime opens after first paint, skeleton placeholders for KPIs.</td></tr>
+      <tr><td class="k">Image uploads</td><td>Plan&#8209;capped (2/5/5MB)</td><td>Client&#8209;side resize before upload; reject &gt; cap with friendly toast.</td></tr>
+      <tr><td class="k">Bundle</td><td>&le; 250KB gz initial</td><td>Vite manual chunks; framer&#8209;motion lazy on dashboard; QR libs lazy on demand.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Privacy &amp; security</h3>
+  <ul>
+    <li>Supabase Row&#8209;Level Security on every table; vendor data is invisible to other vendors at the database layer.</li>
+    <li>Login alert email on new device sign&#8209;in (<code>sendLoginAlertEmail</code>, <code>checkAndUpdateKnownDevices</code>).</li>
+    <li>Account deletion is two&#8209;step with a 30&#8209;day grace window; <code>sendDeletionRequestEmail</code> fires an audit notification.</li>
+    <li>Cookie consent banner on first visit; choice persisted; no third&#8209;party tracking before opt&#8209;in.</li>
+    <li>No personal buyer data collected on the public frame page beyond an opaque visitor UUID.</li>
+  </ul>
+
+  <div class="footer"><span>ScanMyFrame &middot; UX Specification</span><span>21</span></div>
+</section>
+
+<!-- PAGE 22 — METRICS -->
+<section class="page">
+  <h2 class="section-eyebrow">17 &middot; Telemetry &amp; Success Metrics</h2>
+  <h2 class="section-title">What we measure to know we're winning.</h2>
+
+  <p class="lead">Every screen ties back to a metric. The metrics in turn ladder up to the four investor commitments on page 11.</p>
+
+  <h3>Activation funnel &mdash; North&#8209;Star</h3>
+  <table class="spec">
+    <thead><tr><th>Step</th><th>Event</th><th>Target</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Sign&#8209;up</td><td><code>auth.user_created</code></td><td>&mdash;</td></tr>
+      <tr><td class="k">Verified</td><td><code>auth.email_verified</code></td><td>&ge; 70% within 24h</td></tr>
+      <tr><td class="k">Onboarded</td><td><code>onboarding.completed</code></td><td>&ge; 80% of verified</td></tr>
+      <tr><td class="k">First frame</td><td><code>frame.published</code></td><td>&ge; 60% within 7 days</td></tr>
+      <tr><td class="k">First wild scan &#8224;</td><td><code>scan.recorded</code> with non&#8209;self visitor</td><td>&ge; 50% within 14 days</td></tr>
+      <tr><td class="k">First upgrade</td><td><code>billing.subscription_started</code> (Pro+)</td><td>&ge; 18% within 30 days</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Retention</h3>
+  <ul>
+    <li><strong>Weekly active vendor</strong> &mdash; at least one dashboard session OR at least one scan recorded against their frames in 7 days.</li>
+    <li><strong>Plan retention curve</strong> &mdash; month 1, 3, 6, 12 retention by plan tier.</li>
+    <li><strong>Frame velocity</strong> &mdash; frames published per active vendor per 30 days. Target &ge; 4 for Basic, &ge; 12 for Pro, &ge; 30 for Business.</li>
+  </ul>
+
+  <h3>Quality &amp; trust</h3>
+  <ul>
+    <li>Public frame page Core Web Vitals (LCP, CLS, INP) green on &ge; 95% of sessions.</li>
+    <li>QR scan success &mdash; buyer reaches frame page within 2s of scan tap on 4G &ge; 95% of attempts.</li>
+    <li>Support response &lt; 4 business hours; Pro+ &lt; 1 hour during business hours.</li>
+  </ul>
+
+  <h3>Document control</h3>
+  <table class="spec">
+    <thead><tr><th>Field</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Version</td><td>1.0 &mdash; Draft for circulation</td></tr>
+      <tr><td class="k">Date</td><td>May 2026</td></tr>
+      <tr><td class="k">Owner</td><td>Dazeefa, Founder &amp; CEO, ScanMyFrame</td></tr>
+      <tr><td class="k">Review cycle</td><td>Quarterly, alongside roadmap planning</td></tr>
+      <tr><td class="k">Distribution</td><td>Investors, advisors, core team. Confidential.</td></tr>
+    </tbody>
+  </table>
+
+  <p style="margin-top: 24px; text-align: center; font-family: 'Georgia', serif; font-style: italic; color: var(--primary); font-size: 15px;">&mdash; end of document &mdash;</p>
+
+  <div class="footer"><span>ScanMyFrame &middot; UX Specification</span><span>22</span></div>
+</section>
+
+</body>
+</html>
