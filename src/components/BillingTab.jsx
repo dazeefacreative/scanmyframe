@@ -18,51 +18,9 @@ import {
   PLAN_CONFIG,
 } from '../services/paystackService';
 
-const PLAN_ORDER = ['trial', 'free', 'basic', 'pro', 'business'];
+import { PLANS, getQrLabel } from '../data/plans';
 
-// Extra display metadata (kept here so paystackService stays data-only)
-const PLAN_META = {
-  basic: {
-    description: 'Perfect for getting started',
-    discount:    'Save 10%',
-    features: [
-      '2MB max image upload',
-      '1 extra image per frame',
-      '20MB max video upload',
-      'PNG QR code download',
-      'Basic analytics data',
-    ],
-  },
-  pro: {
-    description: 'Best for growing vendors',
-    discount:    'Save 15%',
-    features: [
-      '5MB max image upload',
-      '4 extra images per frame',
-      '30MB max video upload',
-      'PNG, SVG & print-ready PDF export',
-      'Your card on public frame page',
-      'Brand logo on public frame page',
-      'Password-protect frames',
-      'AI Story Assistant',
-      'Real-time analytics data',
-    ],
-  },
-  business: {
-    description: 'For large-scale operations',
-    discount:    'Save 20%',
-    features: [
-      'Everything in Pro +',
-      'Unlimited QR credits',
-      'Customize QR Code to your brand',
-      'Full white label experience',
-      '8 extra images per frame',
-      '50MB max video upload',
-      'Featured on homepage',
-      '24/7 priority support',
-    ],
-  },
-};
+const PLAN_ORDER = ['trial', 'free', 'basic', 'pro', 'business'];
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
 const STATUS = {
@@ -121,17 +79,12 @@ function PlanCard({ plan, currentPlanId, billingCycle, onSelect, payLoading, isD
   const isLoading   = payLoading === plan.id;
   const price       = billingCycle === 'yearly' ? plan.yearly_kobo : plan.monthly_kobo;
   const isPro       = plan.id === 'pro';
-  const meta        = PLAN_META[plan.id] || {};
+  const meta        = PLANS.find(p => p.id === plan.id) || {};
 
   const buttonLabel = isCurrent ? 'Repurchase' : isDowngrade ? 'Downgrade' : 'Upgrade';
 
-  // Dynamic QR credit label based on billing cycle
-  const qrLabel = plan.qr_allocation === -1
-    ? null // business already has 'Unlimited QR credits' in its features list
-    : billingCycle === 'yearly'
-      ? `${plan.qr_allocation * 12} QR credits`
-      : `${plan.qr_allocation} QR credits / month`;
-  const isUpfront = plan.qr_allocation !== -1 && billingCycle === 'yearly';
+  const qrLabel   = getQrLabel(meta, billingCycle);
+  const isUpfront = meta.qr_allocation !== -1 && billingCycle === 'yearly';
 
   const textMain = isPro ? 'text-white'      : isDark ? 'text-white'        : 'text-[#0F4C3A]';
   const textSub  = isPro ? 'text-white/70'   : isDark ? 'text-neutral-400'  : 'text-neutral-500';

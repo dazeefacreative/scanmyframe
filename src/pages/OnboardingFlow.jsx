@@ -9,83 +9,7 @@ import { sendWelcomeNotification } from '../services/supabaseHelpers';
 import scanframeLogo from '../assets/images/Scanframe.png';
 import scanframeLogoAlt from '../assets/images/Scanframe alt.png';
 
-const plans = [
-  {
-    id: 'basic',
-    name: 'Basic',
-    price: { monthly: '₦3,000', yearly: '₦2,700' },
-    discount: 'Save 10%',
-    description: 'Perfect for getting started',
-    features: [
-      '10 QR credits / month',
-      '2MB max image upload',
-      '1 extra image per frame',
-      '20MB max video upload',
-      'PNG QR code download',
-      'Basic analytics data',
-    ],
-    notes: [
-      'Get 10 free QR codes on signup',
-      'Free credits never expire',
-    ],
-    highlighted: false,
-    initial: { opacity: 0, y: 30 },
-    whileInView: { opacity: 1, y: 0 },
-    transition: { delay: 0.1, type: 'spring', stiffness: 100, damping: 14 },
-  },
-  {
-    id: 'pro',
-    name: 'Pro',
-    price: { monthly: '₦15,000', yearly: '₦12,750' },
-    discount: 'Save 15%',
-    description: 'Best for growing vendors',
-    features: [
-      '30 QR credits / month',
-      '5MB max image upload',
-      '4 extra images per frame',
-      '30MB max video upload',
-      'PNG, SVG & print-ready PDF export',
-      'Your card on public frame page',
-      'Brand logo on public frame page',
-      'Password-protect frames',
-      'AI Story Assistant',
-      'Real-time analytics data',
-    ],
-    notes: [
-      'Works alongside your free QR credits',
-      'Scale your QR usage without limits',
-    ],
-    highlighted: true,
-    initial: { opacity: 0, y: 30 },
-    whileInView: { opacity: 1, y: 0 },
-    transition: { delay: 0.2, type: 'spring', stiffness: 100, damping: 14 },
-  },
-  {
-    id: 'business',
-    name: 'Business',
-    price: { monthly: '₦30,000', yearly: '₦24,000' },
-    discount: 'Save 20%',
-    description: 'For large-scale operations',
-    features: [
-      'Everything in Pro +',
-      'Unlimited QR credits',
-      'Customize QR Code to your brand',
-      'Full white label experience',
-      '8 extra images per frame',
-      '50MB max video upload',
-      'Featured on homepage',
-      '24/7 priority support',
-    ],
-    notes: [
-      'Built for high volume QR usage',
-      'No limits on growth',
-    ],
-    highlighted: false,
-    initial: { opacity: 0, y: 30 },
-    whileInView: { opacity: 1, y: 0 },
-    transition: { delay: 0.3, type: 'spring', stiffness: 100, damping: 14 },
-  },
-];
+import { PLANS, getQrLabel } from '../data/plans';
 
 const BUSINESS_TYPES = [
   'Art Gallery', 'Wedding Photography', 'Event Planning',
@@ -339,14 +263,14 @@ function StepPlan({ data, onChange, onNext, onBack, onSkip, loading, error, isDa
 
       {/* Plan cards - full width stacked, no shrinking */}
       <div className="flex flex-col gap-4 mb-8">
-        {plans.map(plan => {
+        {PLANS.map(plan => {
           const selected = data.plan === plan.id;
           return (
             <motion.div
               key={plan.name}
-              initial={plan.initial}
-              whileInView={plan.whileInView}
-              transition={plan.transition}
+              initial={plan.motion.initial}
+              whileInView={plan.motion.whileInView}
+              transition={plan.motion.transition}
               viewport={{ once: true }}
               onClick={() => onChange('plan', plan.id)}
               className={`
@@ -378,6 +302,18 @@ function StepPlan({ data, onChange, onNext, onBack, onSkip, loading, error, isDa
                     {plan.description}
                   </p>
                   <ul className="flex flex-wrap gap-x-4 gap-y-1.5">
+                    {/* Dynamic QR credit line - updates when billing cycle changes */}
+                    {getQrLabel(plan, billing) && (
+                      <li className={`flex items-center gap-1.5 text-xs font-bold ${plan.highlighted ? 'text-white' : isDark ? 'text-white' : 'text-primary'}`}>
+                        <span className="text-gold">✓</span>
+                        {getQrLabel(plan, billing)}
+                        {billing === 'yearly' && (
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${plan.highlighted ? 'bg-gold/20 text-gold' : 'bg-emerald-100 text-emerald-600'}`}>
+                            upfront
+                          </span>
+                        )}
+                      </li>
+                    )}
                     {plan.features.map(feature => (
                       <li key={feature} className={`flex items-center gap-1.5 text-xs ${plan.highlighted ? 'text-white opacity-80' : isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                         <span className="font-bold text-gold">✓</span>
@@ -668,7 +604,7 @@ export default function OnboardingFlow() {
     }
   }
 
-  const selectedPlan = plans.find(p => p.id === planData.plan);
+  const selectedPlan = PLANS.find(p => p.id === planData.plan);
 
   return (
     <div className={`min-h-screen flex items-start justify-center px-4 py-10 transition-colors duration-200 ${isDark ? 'bg-[#0c0c0c] text-white' : 'bg-gray-50 text-black'}`}>

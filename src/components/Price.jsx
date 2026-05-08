@@ -3,85 +3,13 @@ import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { PLANS, getQrLabel } from '../data/plans';
 
 export default function Price() {
   const { isDark }  = useTheme();
   const { user }    = useAuth();
   const navigate    = useNavigate();
   const [billingCycle, setBillingCycle] = useState('monthly');
-
-  const plans = [
-    {
-      id: 'basic',
-      name: 'Basic',
-      qr_allocation: 10,
-      price: { monthly: '₦3,000', yearly: '₦2,700' },
-      discount: 'Save 10%',
-      description: 'Perfect for getting started',
-      features: [
-        '2MB max image upload',
-        '1 extra image per frame',
-        '20MB max video upload',
-        'PNG QR code download',
-        'Basic analytics data',
-      ],
-      notes: ['Good for starter', 'Upgrade anytime to unlock more'],
-      cta: 'Get Started',
-      highlighted: false,
-      initial: { opacity: 0, x: 100, zIndex: 0 },
-      whileInView: { opacity: 1, x: 0 },
-      transition: { delay: 0.4, type: 'spring', stiffness: 100, damping: 10, duration: 0.3 },
-    },
-    {
-      id: 'pro',
-      name: 'Pro',
-      qr_allocation: 30,
-      price: { monthly: '₦15,000', yearly: '₦12,750' },
-      discount: 'Save 15%',
-      description: 'Best for growing vendors',
-      features: [
-        '5MB max image upload',
-        '4 extra images per frame',
-        '30MB max video upload',
-        'PNG, SVG & print-ready PDF export',
-        'Your card on public frame page',
-        'Brand logo on public frame page',
-        'Password-protect frames',
-        'AI Story Assistant',
-        'Real-time analytics data',
-      ],
-      notes: ['Everything in Basic', 'Unlock branding & advanced exports'],
-      cta: 'Subscribe Now',
-      highlighted: true,
-      initial: { opacity: 1, scale: 0.8, zIndex: 1 },
-      whileInView: { opacity: 1, scale: 1 },
-      transition: { delay: 0.2, type: 'spring', stiffness: 100, damping: 10, duration: 0.5 },
-    },
-    {
-      id: 'business',
-      name: 'Business',
-      qr_allocation: -1,
-      price: { monthly: '₦30,000', yearly: '₦24,000' },
-      discount: 'Save 20%',
-      description: 'For large-scale operations',
-      features: [
-        'Everything in Pro +',
-        'Unlimited QR credits',
-        'Customize QR Code to your brand',
-        'Full white label experience',
-        '8 extra images per frame',
-        '50MB max video upload',
-        'Featured on homepage',
-        '24/7 priority support',
-      ],
-      notes: ['Everything in Pro', 'Built for high-volume vendors'],
-      cta: 'Subscribe Now',
-      highlighted: false,
-      initial: { opacity: 0, x: -100, zIndex: 0 },
-      whileInView: { opacity: 1, x: 0 },
-      transition: { delay: 0.4, type: 'spring', stiffness: 100, damping: 10, duration: 0.3 },
-    },
-  ];
 
   function handleCTA() {
     if (!user) {
@@ -136,11 +64,11 @@ export default function Price() {
       )}
 
       <div className="grid md:grid-cols-3 gap-4">
-        {plans.map((plan) => (
+        {PLANS.map((plan) => (
           <motion.div
-            initial={plan.initial}
-            whileInView={plan.whileInView}
-            transition={plan.transition}
+            initial={plan.motion.initial}
+            whileInView={plan.motion.whileInView}
+            transition={plan.motion.transition}
             viewport={{ once: true }}
             key={plan.name}
             className={`rounded-2xl p-5 transition-all ${
@@ -192,13 +120,11 @@ export default function Price() {
 
             <ul className={`space-y-2.5 ${plan.highlighted ? 'text-white' : isDark ? 'text-neutral-400' : 'text-neutral-700'}`}>
               {/* Dynamic QR credit line */}
-              {plan.qr_allocation !== -1 && (
+              {getQrLabel(plan, billingCycle) && (
                 <li className="flex items-center gap-2.5 text-xs">
                   <span className="text-[#D4AF37]">✓</span>
                   <span className={`font-bold ${plan.highlighted ? 'text-white' : isDark ? 'text-white' : 'text-[#0F4C3A]'}`}>
-                    {billingCycle === 'yearly'
-                      ? `${plan.qr_allocation * 12} QR credits`
-                      : `${plan.qr_allocation} QR credits / month`}
+                    {getQrLabel(plan, billingCycle)}
                   </span>
                   {billingCycle === 'yearly' && (
                     <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${plan.highlighted ? 'bg-[#D4AF37]/20 text-[#D4AF37]' : 'bg-emerald-100 text-emerald-600'}`}>
