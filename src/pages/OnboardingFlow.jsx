@@ -357,10 +357,10 @@ function StepPlan({ data, onChange, onNext, onBack, onSkip, loading, error, isDa
                 ${selected && plan.highlighted ? 'ring-2 ring-gold ring-offset-2 ring-offset-black' : ''}
               `}
             >
-              {/* Card layout: two columns - info left, price + CTA right */}
-              <div className="flex items-start justify-between gap-4">
+              {/* Card layout: stacks on mobile, side-by-side on sm+ */}
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
 
-                {/* Left: badge + name + features */}
+                {/* Info: name + description + features */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className={`text-lg font-bold font-poltawski ${plan.highlighted ? 'text-white' : isDark ? 'text-white' : 'text-primary'}`}>
@@ -378,22 +378,20 @@ function StepPlan({ data, onChange, onNext, onBack, onSkip, loading, error, isDa
                   <ul className="flex flex-wrap gap-x-4 gap-y-1.5">
                     {plan.features.map(feature => (
                       <li key={feature} className={`flex items-center gap-1.5 text-xs ${plan.highlighted ? 'text-white opacity-80' : isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                        <span className={`font-bold ${plan.highlighted ? 'text-gold' : 'text-gold'}`}>✓</span>
+                        <span className="font-bold text-gold">✓</span>
                         {feature}
                       </li>
                     ))}
                   </ul>
                 </div>
 
-                {/* Right: price + yearly discount + select button */}
-                <div className="flex flex-col items-end gap-3 shrink-0">
-                  <div className="text-right">
+                {/* Price + select — row on mobile (price left, button right), column on sm+ (right-aligned) */}
+                <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-3 shrink-0">
+                  <div className="text-left sm:text-right">
                     {billing === 'yearly' && (
-                      <div className="text-xs font-bold text-red-400 mb-0.5">
-                        {plan.discount}
-                      </div>
+                      <div className="text-xs font-bold text-red-400 mb-0.5">{plan.discount}</div>
                     )}
-                    <span className={`text-2xl font-bold ${plan.highlighted ? 'text-white' : isDark ? 'text-white' : 'text-primary'}`}>
+                    <span className={`text-xl sm:text-2xl font-bold ${plan.highlighted ? 'text-white' : isDark ? 'text-white' : 'text-primary'}`}>
                       {billing === 'monthly' ? plan.price.monthly : plan.price.yearly}
                     </span>
                     <span className={`ml-1 text-xs ${plan.highlighted ? 'text-white opacity-70' : isDark ? 'text-gray-400' : 'text-gray-500'}`}>
@@ -406,7 +404,7 @@ function StepPlan({ data, onChange, onNext, onBack, onSkip, loading, error, isDa
                     )}
                   </div>
 
-                  <div className={`px-5 py-2 rounded-full text-xs font-bold text-center whitespace-nowrap transition-all
+                  <div className={`px-4 py-2 rounded-full text-xs font-bold text-center whitespace-nowrap transition-all
                     ${selected
                       ? plan.highlighted ? 'bg-gold text-primary' : isDark ? 'bg-gold text-primary' : 'bg-primary text-white'
                       : plan.highlighted
