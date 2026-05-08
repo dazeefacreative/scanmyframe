@@ -17,6 +17,7 @@ const plans = [
     discount: 'Save 10%',
     description: 'Perfect for getting started',
     features: [
+      '10 QR credits / month',
       '2MB max image upload',
       '1 extra image per frame',
       '20MB max video upload',
@@ -37,8 +38,9 @@ const plans = [
     name: 'Pro',
     price: { monthly: '₦15,000', yearly: '₦12,750' },
     discount: 'Save 15%',
-    description: 'Best for growing users',
+    description: 'Best for growing vendors',
     features: [
+      '30 QR credits / month',
       '5MB max image upload',
       '4 extra images per frame',
       '30MB max video upload',
@@ -63,7 +65,7 @@ const plans = [
     name: 'Business',
     price: { monthly: '₦30,000', yearly: '₦24,000' },
     discount: 'Save 20%',
-    description: 'For large scale operations',
+    description: 'For large-scale operations',
     features: [
       'Everything in Pro +',
       'Unlimited QR credits',
