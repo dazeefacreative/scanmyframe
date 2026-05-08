@@ -254,50 +254,42 @@ export default function Home() {
       <section className="bg-primary overflow-hidden transition-colors duration-200 py-6">
         <style>{`
           @keyframes marquee {
-            0%   { transform: translateX(0); }
-            100% { transform: translateX(-25%); }
+            from { transform: translate3d(0, 0, 0); }
+            to   { transform: translate3d(-50%, 0, 0); }
           }
           @-webkit-keyframes marquee {
-            0%   { -webkit-transform: translateX(0); }
-            100% { -webkit-transform: translateX(-25%); }
+            from { -webkit-transform: translate3d(0, 0, 0); }
+            to   { -webkit-transform: translate3d(-50%, 0, 0); }
           }
           .logo-track {
+            display: -webkit-flex;
             display: flex;
             gap: 48px;
             align-items: center;
             width: max-content;
-            animation: marquee 24s linear infinite;
             -webkit-animation: marquee 24s linear infinite;
-            will-change: transform;
-            -webkit-transform: translateZ(0);
-            transform: translateZ(0);
+            animation: marquee 24s linear infinite;
+          }
+          /* Remove mask on small screens — it kills GPU compositing on iOS */
+          @media (min-width: 640px) {
+            .logo-wrapper {
+              -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+              mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+            }
           }
         `}</style>
         <p className="text-center text-[10px] font-bold tracking-[0.2em] uppercase text-white/40 mb-4">
           Featured vendors
         </p>
-        <div
-          ref={logoRef}
-          className="w-full overflow-hidden"
-          style={{
-            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)',
-            maskImage: 'linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)',
-            WebkitTransform: 'translateZ(0)',
-            transform: 'translateZ(0)',
-          }}
-        >
+        <div ref={logoRef} className="logo-wrapper w-full overflow-hidden">
           <div className="logo-track">
-            {logos.length > 0 && [...logos, ...logos, ...logos, ...logos].map((logo, idx) => (
+            {logos.length > 0 && [...logos, ...logos].map((logo, idx) => (
               <img
                 key={idx}
                 src={logo.logo_url}
                 title={logo.name}
                 className="h-10 w-auto flex-shrink-0"
-                style={{
-                  // Pure CSS filter avoids SVG filter reference which breaks
-                  // GPU compositing on iOS Safari and freezes the animation
-                  filter: 'brightness(0) invert(1) sepia(1) saturate(0.15) hue-rotate(10deg) opacity(0.85)',
-                }}
+                style={{ filter: 'brightness(0) invert(1) sepia(1) saturate(0.15) hue-rotate(10deg) opacity(0.85)' }}
               />
             ))}
           </div>
