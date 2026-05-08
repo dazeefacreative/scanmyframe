@@ -169,6 +169,7 @@ export default function Home() {
   const [logos, setLogos] = useState([]);
   const scrollRef = useRef(null);
   const logoRef   = useRef(null);
+  const trackRef  = useRef(null);
 
   const isInView = useInView(scrollRef, { amount: 0.5 }); // 30% visible
 
@@ -190,6 +191,28 @@ export default function Home() {
       setLogos(data);
     });
   }, []);
+
+  // JS-driven marquee — CSS animations inside overflow:hidden are unreliable on iOS Safari
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el || logos.length === 0) return;
+
+    const DURATION = 24000; // ms for one full loop
+    let start = null;
+    let animId = null;
+
+    function tick(ts) {
+      if (!start) start = ts;
+      const halfW = el.scrollWidth / 2; // width of one copy
+      if (halfW === 0) { animId = requestAnimationFrame(tick); return; }
+      const progress = ((ts - start) % DURATION) / DURATION;
+      el.style.transform = `translateX(${-progress * halfW}px)`;
+      animId = requestAnimationFrame(tick);
+    }
+
+    animId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(animId);
+  }, [logos]);
 
   useEffect(() => {
     const t = setInterval(() => setCtaIndex(prev => (prev + 1) % 3), 3000);
@@ -253,24 +276,14 @@ export default function Home() {
       {/* ── 2. BRANDS / AS FEATURED IN ───────────────────────────────────── */}
       <section className="bg-primary overflow-hidden transition-colors duration-200 py-6">
         <style>{`
-          @keyframes marquee {
-            from { transform: translate3d(0, 0, 0); }
-            to   { transform: translate3d(-50%, 0, 0); }
-          }
-          @-webkit-keyframes marquee {
-            from { -webkit-transform: translate3d(0, 0, 0); }
-            to   { -webkit-transform: translate3d(-50%, 0, 0); }
-          }
           .logo-track {
             display: -webkit-flex;
             display: flex;
             gap: 48px;
             align-items: center;
             width: max-content;
-            -webkit-animation: marquee 24s linear infinite;
-            animation: marquee 24s linear infinite;
+            will-change: transform;
           }
-          /* Remove mask on small screens — it kills GPU compositing on iOS */
           @media (min-width: 640px) {
             .logo-wrapper {
               -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
@@ -282,7 +295,7 @@ export default function Home() {
           Featured vendors
         </p>
         <div ref={logoRef} className="logo-wrapper w-full overflow-hidden">
-          <div className="logo-track">
+          <div ref={trackRef} className="logo-track">
             {logos.length > 0 && [...logos, ...logos].map((logo, idx) => (
               <img
                 key={idx}
