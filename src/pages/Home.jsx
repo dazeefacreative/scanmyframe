@@ -164,6 +164,7 @@ export default function Home() {
   const [index, setIndex] = useState(0);
   const [featurePaused, setFeaturePaused] = useState(false);
   const [waitlistOpen, setWaitlistOpen] = useState(false);
+  const [videoOpen,   setVideoOpen]   = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [ctaIndex, setCtaIndex] = useState(0);
   const [logos, setLogos] = useState([]);
@@ -260,10 +261,11 @@ export default function Home() {
                 Get Started Free
               </button>
               <button
-                onClick={() => navigate('/pricing')}
-                className={`px-5 py-2 rounded-lg font-bold border-2 border-primary transition ${isDark ? 'text-secondary hover:bg-primary hover:bg-opacity-10' : 'text-primary hover:bg-gray-100'}`}
+                onClick={() => setVideoOpen(true)}
+                className={`inline-flex items-center gap-2 px-5 py-2 rounded-lg font-bold border-2 border-primary transition ${isDark ? 'text-secondary hover:bg-primary hover:bg-opacity-10' : 'text-primary hover:bg-gray-100'}`}
               >
-                View Pricing
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+                See It Live
               </button>
             </div>
           </div>
@@ -797,6 +799,37 @@ export default function Home() {
         onClose={() => setWaitlistOpen(false)}
         userEmail={user?.email ?? ''}
       />
+
+      {/* ── Video modal ───────────────────────────────────────────────────── */}
+      {videoOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4"
+          onClick={() => setVideoOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-sm"
+            style={{ aspectRatio: '9/16' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <iframe
+              src="https://www.youtube.com/embed/KwbOUFPI-j0?autoplay=1&rel=0&modestbranding=1"
+              allow="autoplay; encrypted-media"
+              allowFullScreen
+              className="w-full h-full rounded-2xl"
+              style={{ border: 'none' }}
+              title="See ScanMyFrame in real life"
+            />
+            {/* close button — overlaid on top-right of video */}
+            <button
+              onClick={() => setVideoOpen(false)}
+              className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 transition-colors flex items-center justify-center text-white"
+              aria-label="Close video"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
