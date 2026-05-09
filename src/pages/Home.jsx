@@ -75,13 +75,13 @@ const howItWorks = [
   {
     step: '01',
     title: 'Create a Frame',
-    desc: 'Upload your arwork, story behind the art, and genrate the QR code.',
+    desc: 'Upload your artwork, write the story behind the piece, and generate your QR code.',
     icon: 'lucide:layout-template',
   },
   {
     step: '02',
     title: 'Get your QR Code',
-    desc: 'A unique QR code is generated instantly and sent to your mailbox.',
+    desc: 'Your unique QR code is generated instantly and emailed to your mailbox - always safe, never lost.',
     icon: 'lucide:qr-code',
   },
   {
@@ -93,25 +93,27 @@ const howItWorks = [
 ];
 
 // ── Testimonials ──────────────────────────────────────────────────────────────
-// PLACEHOLDER: replace with real vendor quotes when available
 const testimonials = [
   {
-    name: 'Adaeze Nwosu',
-    role: 'Frame vendor, Lagos',
-    quote: 'I linked QR codes to eight frames I sold last month and two customers came back within a week to order more. Seeing where my frames are being scanned changed how I approach marketing completely.',
-    initials: 'AN',
+    name: 'OGL',
+    role: 'Fashion Designer',
+    quote: 'Awwwn, this is really amazing I love my art and the scanning efizy. Thank you thank you.',
+    initials: 'OG',
+    instagram: 'ogl_couture',
   },
   {
-    name: 'Emeka Okafor',
-    role: 'Photography studio, Abuja',
-    quote: 'My clients used to take their framed portraits home and that was the end of the relationship. Now they scan the QR and see the full story behind the shoot. Three of them have already referred friends.',
-    initials: 'EO',
+    name: 'Adebimpe Lawal',
+    role: 'Fashion Designer',
+    quote: 'The fact that I can scan my frame and read the love story my man sent to me, it\'s a 10/10.',
+    initials: 'AL',
+    instagram: 'queen_of_stitches_',
   },
   {
-    name: 'Chisom Eze',
-    role: 'Art gallery owner, Port Harcourt',
-    quote: 'I had my first frame live with a QR code in under ten minutes. The dashboard gives me a clear view of which pieces are getting attention and from where. It has become a core part of how I run the gallery.',
-    initials: 'CE',
+    name: 'Oladipupo Soidiq',
+    role: 'Disc Jockey',
+    quote: 'Our wedding photo is indeed lively, even people that visit us any time they scan, they feel the wedding day vibe watching our beautiful video.',
+    initials: 'OS',
+    instagram: 'djopdot_iloveyou',
   },
 ];
 
@@ -193,7 +195,7 @@ export default function Home() {
     });
   }, []);
 
-  // JS-driven marquee — CSS animations inside overflow:hidden are unreliable on iOS Safari
+  // JS-driven marquee - CSS animations inside overflow:hidden are unreliable on iOS Safari
   useEffect(() => {
     const el = trackRef.current;
     if (!el || logos.length === 0) return;
@@ -228,7 +230,7 @@ export default function Home() {
 
 
   return (
-    <main className={`${isDark ? 'bg-[#0a0a0a] text-white' : 'bg-secondary text-gray-900'} transition-colors duration-200`}>
+    <main className={`${isDark ? 'bg-[#0a0a0a] text-white' : 'bg-[#fffdf3] text-gray-900'} transition-colors duration-200`}>
       <SEO
         title={null}
         description="ScanMyFrame connects physical picture frames to rich digital content via QR codes. Empower your frames with stories, photos, videos, and more."
@@ -237,21 +239,16 @@ export default function Home() {
       <OrganizationSchema />
       <BackToTop isDark={isDark} />
 
-
       {/* ── 1. HERO ───────────────────────────────────────────────────────── */}
-      
       <section className={`${isDark ? 'bg-gradient-to-b from-[#1C1C1C] to-black' : 'bg-white'} transition-colors duration-200`}>
         <Header />
-        <div className="min-w-[300px] max-w-6xl mx-auto pt-12 overflow-hidden">
+        <div className="min-w-[300px] max-w-6xl mx-auto pt-20 overflow-hidden">
           <div className="flex flex-col items-center max-w-4xl px-4 mx-auto text-center">
-            <span className={`inline-block text-xs font-light tracking-wide px-6 py-2 mb-4 rounded-full transition-all duration-500 ${isDark ? 'bg-gray-900 text-white border border-gray-700 shadow-[0_0_12px_rgba(255,255,255,0.25),0_0_30px_rgba(255,255,255,0.15)]' : 'bg-white text-gray-900 border border-gray-300 shadow-[0_0_10px_rgba(0,0,0,0.15),0_0_25px_rgba(0,0,0,0.1)]'}`}>
-              {currentFeature.desc}
-            </span>
             <h1 className={`text-4xl md:text-5xl font-poltawski text-center font-bold mb-6 ${isDark ? 'text-secondary' : 'text-primary'}`}>
-              Turn Every Frame You Sell Into a Digital Experience
+              Give every frame a soul.
             </h1>
             <p className={`text-md mb-6 text-center ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-              ScanMyFrame gives frame vendors a branded QR system to link photos, videos and stories to any physical frame, with real-time analytics and zero technical setup.
+              Scan the frame. Feel the moment. Every physical frame can now carry a living story - a video, a love letter, a memory - discovered instantly by anyone who points their phone at it.
             </p>
             <div className="flex gap-4">
               <button
@@ -275,7 +272,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 2. BRANDS / AS FEATURED IN ───────────────────────────────────── */}
+      {/* ── 2. BRANDS ────────────────────────────────────────────────────── */}
       <section className="bg-primary overflow-hidden transition-colors duration-200 py-6">
         <style>{`
           .logo-track {
@@ -294,7 +291,7 @@ export default function Home() {
           }
         `}</style>
         <p className="text-center text-[10px] font-bold tracking-[0.2em] uppercase text-white/40 mb-4">
-          Featured vendors
+          Trusted by vendors across Nigeria
         </p>
         <div ref={logoRef} className="logo-wrapper w-full overflow-hidden">
           <div ref={trackRef} className="logo-track">
@@ -311,197 +308,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 3. HOW IT WORKS ──────────────────────────────────────────────── */}
-      <section 
-      id='guidelines'
-      className={`py-16 md:py-16 px-4 transition-colors duration-200 ${isDark ? 'bg-[#0a0a0a]' : 'bg-secondary'}`}>
-        <div className="min-w-[300px] max-w-5xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="text-center mb-14"
-          >
-            <span className={`inline-block text-xs font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full mb-4 ${isDark ? 'bg-white/5 text-gold border border-white/10' : 'bg-[#0F4C3A]/5 text-[#0F4C3A] border border-[#0F4C3A]/20'}`}>
-              How it works
-            </span>
-            <h2 className={`text-3xl md:text-4xl font-poltawski font-bold ${isDark ? 'text-white' : 'text-primary'}`}>
-              Up and running in three steps
-            </h2>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-6 relative">
-            {/* Connector line, desktop only */}
-            <div className="hidden md:block absolute top-16 left-[calc(16.67%+16px)] right-[calc(16.67%+16px)] h-[2px] bg-gradient-to-r from-primary via-gold to-primary opacity-20" />
-
-            {howItWorks.map(({ step, title, desc, icon }, i) => (
-              <motion.div
-                key={step}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: i * 0.12 }}
-                viewport={{ once: true }}
-                className={`relative flex flex-col items-center text-center p-8 rounded-2xl`}
-              >
-                {/* Step badge */}
-                <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center mb-5 flex-shrink-0">
-                  <Icon icon={icon} width={22} className="text-gold" />
-                </div>
-                <span className={`text-[10px] font-bold tracking-widest uppercase mb-2 ${isDark ? 'text-white/30' : 'text-gray-400'}`}>
-                  Step {step}
-                </span>
-                <h3 className={`text-lg font-bold mb-3 ${isDark ? 'text-white' : 'text-primary'}`}>{title}</h3>
-                <p className={`text-sm leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── 4. FEATURES ──────────────────────────────────────────────────── */}
-      <section className={`${isDark ? 'bg-[#0a0a0a]' : 'bg-secondary'}`}>
-
-      <motion.div
-        ref={scrollRef}
-        initial={{ scale: 0.8, y: 20, borderRadius: "40px" }}
-        animate={
-          isInView
-            ? { scale: 1, y: 0, borderRadius: "0px" }
-            : { scale: 0.8, y: 20, borderRadius: "40px" }
-        }
-        transition={{ duration: 0.5, ease: 'easeInOut' }}
-        style={{ overflow: "hidden" }}
-      >
-        <div className="bg-primary py-16 md:py-16 px-4 transition-colors duration-200">
-          <div className="min-w-[300px] max-w-6xl mx-auto">
-
-            {/* Header */}
-            <div className="text-center mb-14">
-              <span className="inline-block text-[10px] font-semibold tracking-[0.18em] uppercase px-4 py-1.5 rounded-full text-gold bg-white/6 border border-white/12 mb-4">
-                What you get
-              </span>
-              <h2 className="text-3xl md:text-4xl font-poltawski text-white font-bold">
-                Built for the way you sell.
-              </h2>
-            </div>
-
-            {/* Desktop: image left, list right */}
-            <div className="hidden md:grid grid-cols-[1fr_1.2fr] gap-12 items-center">
-
-              {/* Left - image panel */}
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 18 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -12 }}
-                  transition={{ duration: 0.38, ease: 'easeOut' }}
-                  className="bg-white/5 border border-white/10 rounded-3xl p-10 flex items-center justify-center min-h-[360px]"
-                >
-                  <img
-                    src={features[index].icon}
-                    alt={features[index].title}
-                    className="w-[85%] max-w-[320px] object-contain"
-                  />
-                </motion.div>
-              </AnimatePresence>
-
-              {/* Right - feature list */}
-              <div className="flex flex-col gap-0.5">
-                {features.map((f, i) => (
-                  <button
-                    key={i}
-                    onClick={() => { if (i === index) { setFeaturePaused(p => !p); } else { setIndex(i); setFeaturePaused(true); } }}
-                    className={`text-left px-5 py-4 rounded-2xl cursor-pointer transition-all duration-200 border ${
-                      i === index ? 'bg-white/10 border-white/15' : 'border-transparent hover:bg-white/5'
-                    }`}
-                  >
-                    <h4 className={`font-poltawski text-lg font-bold mb-1 transition-colors ${i === index ? 'text-gold' : 'text-white/70'}`}>
-                      {f.title}
-                    </h4>
-                    {i === index && (
-                      <p className="text-sm text-white/65 leading-relaxed mb-3">{f.summary}</p>
-                    )}
-                    {i === index && (
-                      <div className="h-[2px] bg-white/10 rounded-full overflow-hidden">
-                        <motion.div
-                          key={`bar-${index}-${featurePaused}`}
-                          className="h-full bg-gold rounded-full"
-                          initial={{ width: '0%' }}
-                          animate={{ width: featurePaused ? undefined : '100%' }}
-                          transition={{ duration: 7, ease: 'linear' }}
-                        />
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Mobile */}
-            <div className="md:hidden">
-              <div className="flex gap-2 overflow-x-auto pb-3 mb-5" style={{ scrollbarWidth: 'none' }}>
-                {features.map((f, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setIndex(i)}
-                    className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 ${i === index ? 'bg-white text-primary' : 'bg-white/10 text-white/60'}`}
-                  >
-                    {f.title}
-                  </button>
-                ))}
-              </div>
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -12 }}
-                  transition={{ duration: 0.35, ease: 'easeOut' }}
-                  className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden"
-                >
-                  <div className="flex items-center justify-center bg-white/5 py-1 px-6">
-                    <img src={features[index].icon} alt={features[index].title} className="w-64 h-64 object-contain" />
-                  </div>
-                  <div className="px-6 py-5 border-t border-white/10">
-                    <h3 className="text-lg font-bold text-white mb-2">{features[index].title}</h3>
-                    <p className="text-sm text-white/65 leading-relaxed">{features[index].summary}</p>
-                  </div>
-                </motion.div>
-              </AnimatePresence>
-              <div className="flex justify-center gap-2 mt-5">
-                {features.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setIndex(i)}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${i === index ? 'bg-white w-5' : 'bg-white/30 w-1.5'}`}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* CTA */}
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true }}
-              className="mt-14 text-center"
-            >
-              <button
-                onClick={() => navigate('/signin?mode=register')}
-                className="bg-gold text-primary font-bold px-8 py-3 rounded-lg hover:bg-opacity-90 transition text-sm"
-              >
-                Start for free, no credit card required
-              </button>
-            </motion.div>
-          </div>
-        </div>
-      </motion.div>
-      </section>
-
-      {/* ── 5. VISITOR EXPERIENCE (CTA / image slider) ───────────────────── */}
+      {/* ── 3. CUSTOMER EXPERIENCE ───────────────────────────────────────── */}
       <section id="about" className={`py-16 md:py-28 px-4 transition-colors duration-200`}>
         <div className="min-w-[300px] max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row gap-16 items-center">
@@ -597,36 +404,305 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 6. QR CODE GENERATOR ─────────────────────────────────────────── */}
-      <section id="newframes" className={`py-12 md:py-16 px-4 ${isDark? 'bg-[#000000]' : 'bg-white'}`}>
-        <div className="min-w-[300px] max-w-6xl mx-auto">
-          <div className="text-center mb-10">
+      {/* ── 4. PROBLEM ───────────────────────────────────────────────────── */}
+      <section className={`py-16 md:py-20 px-4 ${isDark ? 'bg-[#0a0a0a]' : 'bg-[#fffdf3]'}`}>
+        <div className="min-w-[300px] max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="text-center mb-14"
+          >
             <span className={`inline-block text-xs font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full mb-4 ${isDark ? 'bg-white/5 text-gold border border-white/10' : 'bg-[#0F4C3A]/5 text-[#0F4C3A] border border-[#0F4C3A]/20'}`}>
-              Try it yourself
+              The problem
             </span>
-            <h2 className={`text-2xl md:text-3xl font-poltawski font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              Create your first QR-linked frame
+            <h2 className={`text-3xl md:text-4xl font-poltawski font-bold mb-4 ${isDark ? 'text-white' : 'text-primary'}`}>
+              A frame has always just sat on a wall.
             </h2>
-          </div>
-          <div className="relative flex flex-col px-4 py-16 items-center border rounded-xl transition-colors duration-200 bg-[#162722] border-gray-700 overflow-hidden">
-            <div className='z-10'>
-            <QRCodeGenerator />
-            </div>
-            <motion.img
-              initial={{ y: 100, opacity: 0 }}
-              whileInView={{ y: 0, opacity: 0.5 }}
-              transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
-              src={qrCode}
-              alt="QR Code"
-              className="hidden md:block absolute w-[250px] -left-16 top-1/2 -translate-y-1/2 rounded-lg shadow-lg -rotate-12"
-            />
+            <p className={`text-base max-w-2xl mx-auto leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              For centuries, frames have held the most meaningful moments of our lives - weddings, firstborns, lost loved ones, great art. But the frame itself has never been able to say anything. It just hangs there, beautiful and silent, while the story behind it slowly disappears.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                icon: 'lucide:image',
+                title: 'Frames are one-dimensional',
+                desc: 'A frame shows you a moment frozen in time. But it cannot tell you who took the photo, what was said that day, or why that moment mattered. It is a window with the curtain drawn.',
+              },
+              {
+                icon: 'lucide:volume-x',
+                title: 'Every story gets buried',
+                desc: "The emotion behind a frame - the shoot, the gift, the memory, the artist's intent - lives only in the head of the person who made it. Once it leaves their hands, that story is gone.",
+              },
+              {
+                icon: 'lucide:clock-fading',
+                title: "Memories fade. Walls don't explain.",
+                desc: 'People look at frames for years - visitors, children, grandchildren - without ever knowing what they are really looking at. The frame holds a world inside it. But no one can get in.',
+              },
+            ].map(({ icon, title, desc }, i) => (
+              <motion.div
+                key={title}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: i * 0.12 }}
+                viewport={{ once: true }}
+                className={`p-7 rounded-2xl border ${isDark ? 'bg-[#111] border-white/8' : 'bg-white border-gray-200'}`}
+              >
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-4 ${isDark ? 'bg-white/5' : 'bg-secondary'}`}>
+                  <Icon icon={icon} width={20} className={isDark ? 'text-gold' : 'text-primary'} />
+                </div>
+                <h3 className={`text-base font-bold mb-3 ${isDark ? 'text-white' : 'text-primary'}`}>{title}</h3>
+                <p className={`text-sm leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{desc}</p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ── 7. TESTIMONIALS ──────────────────────────────────────────────── */}
-      {/* PLACEHOLDER: swap testimonial data above with real vendor quotes */}
-      <section className={`py-12 md:py-16 px-4 ${isDark? 'bg-[#000000]' : 'bg-white'} transition-colors duration-200`}>
+      {/* ── 5. HOW IT WORKS ──────────────────────────────────────────────── */}
+      <section
+        id="guidelines"
+        className={`py-16 md:py-16 px-4 transition-colors duration-200 ${isDark ? 'bg-[#0a0a0a]' : 'bg-[#fffdf3]'}`}>
+        <div className="min-w-[300px] max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="text-center mb-14"
+          >
+            <span className={`inline-block text-xs font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full mb-4 ${isDark ? 'bg-white/5 text-gold border border-white/10' : 'bg-[#0F4C3A]/5 text-[#0F4C3A] border border-[#0F4C3A]/20'}`}>
+              How it works
+            </span>
+            <h2 className={`text-3xl md:text-4xl font-poltawski font-bold ${isDark ? 'text-white' : 'text-primary'}`}>
+              Up and running in three steps
+            </h2>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-6 relative">
+            <div className="hidden md:block absolute top-16 left-[calc(16.67%+16px)] right-[calc(16.67%+16px)] h-[2px] bg-gradient-to-r from-primary via-gold to-primary opacity-20" />
+            {howItWorks.map(({ step, title, desc, icon }, i) => (
+              <motion.div
+                key={step}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: i * 0.12 }}
+                viewport={{ once: true }}
+                className={`relative flex flex-col items-center text-center p-8 rounded-2xl`}
+              >
+                <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center mb-5 flex-shrink-0">
+                  <Icon icon={icon} width={22} className="text-gold" />
+                </div>
+                <span className={`text-[10px] font-bold tracking-widest uppercase mb-2 ${isDark ? 'text-white/30' : 'text-gray-400'}`}>
+                  Step {step}
+                </span>
+                <h3 className={`text-lg font-bold mb-3 ${isDark ? 'text-white' : 'text-primary'}`}>{title}</h3>
+                <p className={`text-sm leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 6. FEATURES ──────────────────────────────────────────────────── */}
+      <section className={`${isDark ? 'bg-[#0a0a0a]' : 'bg-[#fffdf3]'}`}>
+        <motion.div
+          ref={scrollRef}
+          initial={{ scale: 0.8, y: 20, borderRadius: "40px" }}
+          animate={
+            isInView
+              ? { scale: 1, y: 0, borderRadius: "0px" }
+              : { scale: 0.8, y: 20, borderRadius: "40px" }
+          }
+          transition={{ duration: 0.5, ease: 'easeInOut' }}
+          style={{ overflow: "hidden" }}
+        >
+          <div className="bg-primary py-16 md:py-16 px-4 transition-colors duration-200">
+            <div className="min-w-[300px] max-w-6xl mx-auto">
+              <div className="text-center mb-14">
+                <span className="inline-block text-[10px] font-semibold tracking-[0.18em] uppercase px-4 py-1.5 rounded-full text-gold bg-white/6 border border-white/12 mb-4">
+                  What you get
+                </span>
+                <h2 className="text-3xl md:text-4xl font-poltawski text-white font-bold">
+                  Built for the way you sell.
+                </h2>
+              </div>
+
+              <div className="hidden md:grid grid-cols-[1fr_1.2fr] gap-12 items-center">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 18 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -12 }}
+                    transition={{ duration: 0.38, ease: 'easeOut' }}
+                    className="bg-white/5 border border-white/10 rounded-3xl p-10 flex items-center justify-center min-h-[360px]"
+                  >
+                    <img
+                      src={features[index].icon}
+                      alt={features[index].title}
+                      className="w-[85%] max-w-[320px] object-contain"
+                    />
+                  </motion.div>
+                </AnimatePresence>
+                <div className="flex flex-col gap-0.5">
+                  {features.map((f, i) => (
+                    <button
+                      key={i}
+                      onClick={() => { if (i === index) { setFeaturePaused(p => !p); } else { setIndex(i); setFeaturePaused(true); } }}
+                      className={`text-left px-5 py-4 rounded-2xl cursor-pointer transition-all duration-200 border ${
+                        i === index ? 'bg-white/10 border-white/15' : 'border-transparent hover:bg-white/5'
+                      }`}
+                    >
+                      <h4 className={`font-poltawski text-lg font-bold mb-1 transition-colors ${i === index ? 'text-gold' : 'text-white/70'}`}>
+                        {f.title}
+                      </h4>
+                      {i === index && (
+                        <p className="text-sm text-white/65 leading-relaxed mb-3">{f.summary}</p>
+                      )}
+                      {i === index && (
+                        <div className="h-[2px] bg-white/10 rounded-full overflow-hidden">
+                          <motion.div
+                            key={`bar-${index}-${featurePaused}`}
+                            className="h-full bg-gold rounded-full"
+                            initial={{ width: '0%' }}
+                            animate={{ width: featurePaused ? undefined : '100%' }}
+                            transition={{ duration: 7, ease: 'linear' }}
+                          />
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="md:hidden">
+                <div className="flex gap-2 overflow-x-auto pb-3 mb-5" style={{ scrollbarWidth: 'none' }}>
+                  {features.map((f, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setIndex(i)}
+                      className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 ${i === index ? 'bg-white text-primary' : 'bg-white/10 text-white/60'}`}
+                    >
+                      {f.title}
+                    </button>
+                  ))}
+                </div>
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -12 }}
+                    transition={{ duration: 0.35, ease: 'easeOut' }}
+                    className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden"
+                  >
+                    <div className="flex items-center justify-center bg-white/5 py-1 px-6">
+                      <img src={features[index].icon} alt={features[index].title} className="w-64 h-64 object-contain" />
+                    </div>
+                    <div className="px-6 py-5 border-t border-white/10">
+                      <h3 className="text-lg font-bold text-white mb-2">{features[index].title}</h3>
+                      <p className="text-sm text-white/65 leading-relaxed">{features[index].summary}</p>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+                <div className="flex justify-center gap-2 mt-5">
+                  {features.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setIndex(i)}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${i === index ? 'bg-white w-5' : 'bg-white/30 w-1.5'}`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                viewport={{ once: true }}
+                className="mt-14 text-center"
+              >
+                <button
+                  onClick={() => navigate('/signin?mode=register')}
+                  className="bg-gold text-primary font-bold px-8 py-3 rounded-lg hover:bg-opacity-90 transition text-sm"
+                >
+                  Start for free, no credit card required
+                </button>
+              </motion.div>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* ── 7. WHO IT'S FOR ──────────────────────────────────────────────── */}
+      <section className={`py-16 md:py-20 px-4 ${isDark ? 'bg-[#0a0a0a]' : 'bg-[#fffdf3]'}`}>
+        <div className="min-w-[300px] max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="text-center mb-14"
+          >
+            <span className={`inline-block text-xs font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full mb-4 ${isDark ? 'bg-white/5 text-gold border border-white/10' : 'bg-[#0F4C3A]/5 text-[#0F4C3A] border border-[#0F4C3A]/20'}`}>
+              Who it's for
+            </span>
+            <h2 className={`text-3xl md:text-4xl font-poltawski font-bold ${isDark ? 'text-white' : 'text-primary'}`}>
+              Built for creators like you
+            </h2>
+          </motion.div>
+
+          <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-5">
+            {[
+              {
+                icon: 'lucide:frame',
+                title: 'Frame Vendors',
+                desc: 'Sell the frame. Keep the relationship. Every scan brings a buyer back to you.',
+              },
+              {
+                icon: 'lucide:camera',
+                title: 'Photographers',
+                desc: 'Your portraits should keep working long after delivery. Attach the story, the shoot, the feeling.',
+              },
+              {
+                icon: 'lucide:palette',
+                title: 'Artists & Galleries',
+                desc: 'Provenance and storytelling for every piece. Let the art speak - even after it leaves the wall.',
+              },
+              {
+                icon: 'lucide:gift',
+                title: 'Gift & Event Creators',
+                desc: 'Turn a wedding gift or memorial frame into a memory they relive every time they scan.',
+              },
+            ].map(({ icon, title, desc }, i) => (
+              <motion.div
+                key={title}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                viewport={{ once: true }}
+                className={`flex flex-col gap-4 p-6 rounded-2xl border ${isDark ? 'bg-[#111] border-white/8' : 'bg-white border-gray-200'}`}
+              >
+                <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Icon icon={icon} width={20} className="text-primary" />
+                </div>
+                <div>
+                  <h3 className={`text-base font-bold mb-2 ${isDark ? 'text-white' : 'text-primary'}`}>{title}</h3>
+                  <p className={`text-sm leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 8. TESTIMONIALS ──────────────────────────────────────────────── */}
+      <section className={`py-12 md:py-16 px-4 ${isDark ? 'bg-[#000000]' : 'bg-white'} transition-colors duration-200`}>
         <div className="min-w-[300px] max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -644,7 +720,7 @@ export default function Home() {
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            {testimonials.map(({ name, role, quote, initials }, i) => (
+            {testimonials.map(({ name, role, quote, initials, instagram }, i) => (
               <motion.div
                 key={name}
                 initial={{ opacity: 0, y: 24 }}
@@ -653,21 +729,25 @@ export default function Home() {
                 viewport={{ once: true }}
                 className={`flex flex-col gap-5 p-7 rounded-2xl border ${isDark ? 'bg-[#111] border-white/10' : 'bg-white border-gray-200'}`}
               >
-                {/* Quote mark */}
                 <span className="text-gold text-4xl leading-none font-serif select-none">"</span>
-
-                <p className={`text-sm leading-relaxed flex-1 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                  {quote}
-                </p>
-
-                <div className="flex items-center gap-3 pt-2 border-t border-dashed ${isDark ? 'border-white/10' : 'border-gray-200'}">
-                  {/* Avatar initials */}
+                <p className={`text-sm leading-relaxed flex-1 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{quote}</p>
+                <div className={`flex items-center gap-3 pt-2 border-t border-dashed ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
                   <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
                     <span className="text-xs font-bold text-gold">{initials}</span>
                   </div>
                   <div>
                     <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{name}</p>
                     <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{role}</p>
+                    {instagram && (
+                      <a
+                        href={`https://instagram.com/${instagram}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`text-[11px] font-medium ${isDark ? 'text-secondary/40' : 'text-primary'} hover:underline`}
+                      >
+                        @{instagram}
+                      </a>
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -676,62 +756,40 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 8. MARKETPLACE / FOMO ────────────────────────────────────────── */}
-      <section className="overflow-hidden py-12 md:py-16 px-4">
-        <div className="min-w-[300px] max-w-6xl mx-auto px-4 py-10 md:py-16">
-          <div className="flex flex-col items-center max-w-3xl mx-auto text-center">
-            <span className={`inline-block text-xs font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full mb-4 ${isDark ? 'bg-white/5 text-gold border border-white/10' : 'bg-[#0F4C3A]/5 text-[#0F4C3A] border border-[#0F4C3A]/20'}`}>
-              Coming Soon
-            </span>
-            <h2 className={`text-3xl md:text-4xl font-poltawski font-bold mb-6 text-center ${isDark ? 'text-white' : 'text-primary'}`}>
-              Over 2,000 vendors are already on the waitlist for the ScanMyFrame marketplace
-            </h2>
-            <p className={`text-sm mb-6 text-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              A fully integrated marketplace where vendors list their physical frames for quick sale and buyers discover and order directly. Get on the list before we launch.
-            </p>
-            <button
-              onClick={() => setWaitlistOpen(true)}
-              className="bg-primary text-secondary px-5 py-2 rounded-lg font-bold hover:bg-opacity-80 transition"
-            >
-              Join the Waitlist
-            </button>
-          </div>
-        </div>
-        <div className="overflow-x-auto">
-          <div className="w-[250vw] md:w-full md:max-w-6xl md:mx-auto px-4 md:px-0 pb-4 md:pb-16">
-            <img src={marketPlace} alt="ScanMyFrame Marketplace" className="w-full rounded-3xl shadow-lg" />
-          </div>
-        </div>
-      </section>
-
-      {/* ── 9. PRICING ───────────────────────────────────────────────────── */}
-      <section id="pricing" className={`${isDark? 'bg-[#000000]' : 'bg-white'} py-12 md:py-20 px-4 transition-colors duration-200 overflow-hidden`}>
+      {/* ── 9. QR CODE GENERATOR ─────────────────────────────────────────── */}
+      <section id="newframes" className={`py-12 md:py-16 px-4 ${isDark ? 'bg-[#000000]' : 'bg-white'}`}>
         <div className="min-w-[300px] max-w-6xl mx-auto">
-          <div className="max-w-3xl mx-auto text-center mb-16">
-            <h2 className={`text-3xl md:text-4xl font-poltawski font-bold mb-4 ${isDark ? 'text-secondary' : 'text-gray-900'}`}>
-              Start free. Upgrade when you grow.
+          <div className="text-center mb-10">
+            <span className={`inline-block text-xs font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full mb-4 ${isDark ? 'bg-white/5 text-gold border border-white/10' : 'bg-[#0F4C3A]/5 text-[#0F4C3A] border border-[#0F4C3A]/20'}`}>
+              Try it yourself
+            </span>
+            <h2 className={`text-2xl md:text-3xl font-poltawski font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              Create your first QR-linked frame
             </h2>
-            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              No contracts, no lock-in. Cancel or change your plan at any time.
-            </p>
           </div>
-          <Price />
-          <div className="text-center mt-10">
-            <button
-              onClick={() => navigate('/signin?mode=register')}
-              className="bg-primary text-secondary font-bold px-8 py-3 rounded-lg hover:bg-opacity-80 transition text-sm"
-            >
-              Get started free, no credit card required
-            </button>
+          <div className="relative flex flex-col px-4 py-16 items-center border rounded-xl transition-colors duration-200 bg-[#162722] border-gray-700 overflow-hidden">
+            <div className='z-10'>
+              <QRCodeGenerator />
+            </div>
+            <motion.img
+              initial={{ y: 100, opacity: 0 }}
+              whileInView={{ y: 0, opacity: 0.5 }}
+              transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
+              src={qrCode}
+              alt="QR Code"
+              className="hidden md:block absolute w-[250px] -left-16 top-1/2 -translate-y-1/2 rounded-lg shadow-lg -rotate-12"
+            />
           </div>
         </div>
       </section>
 
       {/* ── 10. FAQ ──────────────────────────────────────────────────────── */}
-      <section id="faq" className={`py-12 md:py-16 px-4 ${isDark? 'bg-[#000000]' : 'bg-white'}`}>
+      <section id="faq" className={`py-12 md:py-16 px-4 ${isDark ? 'bg-[#000000]' : 'bg-white'}`}>
         <div className="flex flex-col md:py-16 py-12 px-[30px] lg:px-[250px] md:px-[120px] mx-auto items-center">
           <p className={`text-center mb-6 uppercase tracking-[0.6rem] text-[14px] ${isDark ? 'text-secondary' : 'text-gray-600'}`}>FAQ</p>
-          <h2 className="md:text-4xl text-2xl mb-10 text-center">Frequently Asked Questions</h2>
+          <h2 className={`md:text-4xl text-2xl mb-10 text-center font-poltawski font-bold ${isDark ? 'text-white' : 'text-primary'}`}>
+            Frequently Asked Questions
+          </h2>
           <div className="w-full max-w-[650px] flex flex-col gap-4 justify-center">
             {faq.map((item, i) => (
               <div
@@ -754,7 +812,58 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 11. FINAL CTA BLOCK ──────────────────────────────────────────── */}
+      {/* ── 11. PRICING ──────────────────────────────────────────────────── */}
+      <section id="pricing" className={`${isDark ? 'bg-[#000000]' : 'bg-white'} py-12 md:py-20 px-4 transition-colors duration-200 overflow-hidden`}>
+        <div className="min-w-[300px] max-w-6xl mx-auto">
+          <div className="max-w-3xl mx-auto text-center mb-16">
+            <h2 className={`text-3xl md:text-4xl font-poltawski font-bold mb-4 ${isDark ? 'text-secondary' : 'text-gray-900'}`}>
+              Start free. Upgrade when you grow.
+            </h2>
+            <p className={`max-w-4xl mt-6 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+            You get free access to all features for 30 days on your first signup. No credit card required.
+            </p>
+          </div>
+          <Price />
+          <div className="text-center mt-10">
+            <button
+              onClick={() => navigate('/signin?mode=register')}
+              className="bg-primary text-secondary font-bold px-8 py-3 rounded-lg hover:bg-opacity-80 transition text-sm"
+            >
+              Get started free, no credit card required
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 12. MARKETPLACE ──────────────────────────────────────────────── */}
+      <section className="overflow-hidden py-12 md:py-16 px-4">
+        <div className="min-w-[300px] max-w-6xl mx-auto px-4 py-10 md:py-16">
+          <div className="flex flex-col items-center max-w-3xl mx-auto text-center">
+            <span className={`inline-block text-xs font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full mb-4 ${isDark ? 'bg-white/5 text-gold border border-white/10' : 'bg-[#0F4C3A]/5 text-[#0F4C3A] border border-[#0F4C3A]/20'}`}>
+              What's next
+            </span>
+            <h2 className={`text-3xl md:text-4xl font-poltawski font-bold mb-6 text-center ${isDark ? 'text-white' : 'text-primary'}`}>
+              Over 2,000 vendors are already on the waitlist for the ScanMyFrame marketplace
+            </h2>
+            <p className={`text-sm mb-6 text-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              A fully integrated marketplace where vendors list their physical frames for quick sale and buyers discover and order directly. Get on the list before we launch.
+            </p>
+            <button
+              onClick={() => setWaitlistOpen(true)}
+              className="bg-primary text-secondary px-5 py-2 rounded-lg font-bold hover:bg-opacity-80 transition"
+            >
+              Join the Waitlist
+            </button>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <div className="w-[250vw] md:w-full md:max-w-6xl md:mx-auto px-4 md:px-0 pb-4 md:pb-16">
+            <img src={marketPlace} alt="ScanMyFrame Marketplace" className="w-full rounded-3xl shadow-lg" />
+          </div>
+        </div>
+      </section>
+
+      {/* ── 13. FINAL CTA ────────────────────────────────────────────────── */}
       <section className='py-12 md:py-20 px-4 bg-green-800'>
         <motion.div
           initial={{ opacity: 0, y: 24 }}
@@ -781,7 +890,7 @@ export default function Home() {
             </button>
             <button
               onClick={() => navigate('/pricing')}
-              className="border border-secondary/30 text-secondary font-bold px-8 py-3.5 rounded-lg hover:bg-secondary/10 transition text-sm"
+              className="border border-secondary/30 text-secondary font-bold px-8 py-3.5 rounded-lg hover:bg-[#fffdf3]/10 transition text-sm"
             >
               View Pricing
             </button>
@@ -789,7 +898,7 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* ── 12. BLOG PREVIEW ─────────────────────────────────────────────── */}
+      {/* ── 14. BLOG PREVIEW ─────────────────────────────────────────────── */}
       <BlogPreview />
 
       <Footer />
@@ -812,14 +921,13 @@ export default function Home() {
             onClick={e => e.stopPropagation()}
           >
             <iframe
-              src="https://www.youtube.com/embed/KwbOUFPI-j0?autoplay=1&rel=0&modestbranding=1"
+              src="https://www.youtube.com/embed/KwbOUFPI-j0?autoplay=1&rel=0&modestbranding=1&vq=hd1080"
               allow="autoplay; encrypted-media"
               allowFullScreen
               className="w-full h-full rounded-2xl"
               style={{ border: 'none' }}
               title="See ScanMyFrame in real life"
             />
-            {/* close button — overlaid on top-right of video */}
             <button
               onClick={() => setVideoOpen(false)}
               className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 transition-colors flex items-center justify-center text-white"
