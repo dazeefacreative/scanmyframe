@@ -7,6 +7,8 @@ import NewsletterForm from "./NewsletterForm"
 
 const FooterLinks = [
   { href: "/", label: "Home" },
+  { href: "/#who_its_for", label: "Who It's For" },
+  { href: "/#create_frames", label: "Generate Code" },
   { href: "/blog", label: "Blog" },
   { href: "/pricing", label: "Pricing" },
   { href: "/about", label: "About Us" },
@@ -19,27 +21,14 @@ const supportLinks = [
   { href: "/terms",   label: "Terms of Use" },
 ]
 
-// Anchor links that live on the Home page — handled separately to avoid
-// React Router swallowing the hash without scrolling
 const anchorLinks = [
-  { id: "faq",        label: "FAQ" },
-  { id: "guidelines", label: "How It Works" },
+  { href: "/#faq",        label: "FAQ" },
+  { href: "/#guidelines", label: "How It Works" },
 ]
 
 function openCookiePrefs(e) {
   e.preventDefault();
   window.dispatchEvent(new CustomEvent('sf:openCookiePrefs'));
-}
-
-function scrollToAnchor(e, id) {
-  e.preventDefault();
-  const el = document.getElementById(id);
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth' });
-  } else {
-    // Not on the home page — navigate there with the hash
-    window.location.href = `/#${id}`;
-  }
 }
 
 export default function Footer() {
@@ -80,9 +69,8 @@ export default function Footer() {
           <span className="font-semibold mb-4">Support</span>
           {anchorLinks.map((link) => (
             <a
-              key={link.id}
-              href={`/#${link.id}`}
-              onClick={(e) => scrollToAnchor(e, link.id)}
+              key={link.label}
+              href={link.href}
               className="text-sm hover:text-brand-green transition-colors duration-200"
             >
               {link.label}

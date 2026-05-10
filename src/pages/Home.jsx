@@ -189,6 +189,16 @@ export default function Home() {
   useEffect(() => { document.title = 'ScanMyFrame | Smart QR Frames'; }, []);
 
   useEffect(() => {
+    if (window.location.hash) {
+      const id = window.location.hash.slice(1);
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  }, []);
+
+  useEffect(() => {
     getFeaturedLogos().then(({ logos: data, error }) => {
       if (error) throw error;
       setLogos(data);
@@ -240,7 +250,7 @@ export default function Home() {
       <BackToTop isDark={isDark} />
 
       {/* ── 1. HERO ───────────────────────────────────────────────────────── */}
-      <section className={`${isDark ? 'bg-gradient-to-b from-[#1C1C1C] to-black' : 'bg-white'} transition-colors duration-200`}>
+      <section id='hero' className={`${isDark ? 'bg-gradient-to-b from-[#1C1C1C] to-black' : 'bg-white'} transition-colors duration-200`}>
         <Header />
         <div className="min-w-[300px] max-w-6xl mx-auto pt-20 overflow-hidden">
           <div className="flex flex-col items-center max-w-4xl px-4 mx-auto text-center">
@@ -251,12 +261,12 @@ export default function Home() {
               Scan the frame. Feel the moment. Every physical frame can now carry a living story - a video, a love letter, a memory - discovered instantly by anyone who points their phone at it.
             </p>
             <div className="flex gap-4">
-              <button
-                onClick={() => navigate('/signin?mode=register')}
+              <a
+                href="/signin?mode=register"
                 className="bg-primary text-secondary px-5 py-2 rounded-lg font-bold hover:bg-opacity-80 transition"
               >
                 Get Started Free
-              </button>
+              </a>
               <button
                 onClick={() => setVideoOpen(true)}
                 className={`inline-flex items-center gap-2 px-5 py-2 rounded-lg font-bold border-2 border-primary transition ${isDark ? 'text-secondary hover:bg-primary hover:bg-opacity-10' : 'text-primary hover:bg-gray-100'}`}
@@ -265,6 +275,22 @@ export default function Home() {
                 See It Live
               </button>
             </div>
+            <motion.a
+              href="https://www.producthunt.com/products/scanmyframe?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-scanmyframe"
+              target="_blank"
+              rel="noopener noreferrer"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="mt-5"
+            >
+              <img
+                alt="ScanMyFrame - Turn frames into interactive digital memories | Product Hunt"
+                width="250"
+                height="54"
+                src={`https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1142708&theme=${isDark ? 'dark' : 'light'}&t=1778370270369`}
+              />
+            </motion.a>
           </div>
           <div className="w-[1000px] h-auto ml-5 md:ml-0 md:h-full md:w-full">
             <img src={frameScanning} alt="ScanMyFrame Feature" className="w-full md:mt-0" />
@@ -273,7 +299,7 @@ export default function Home() {
       </section>
 
       {/* ── 2. BRANDS ────────────────────────────────────────────────────── */}
-      <section className="bg-primary overflow-hidden transition-colors duration-200 py-6">
+      <section id="brands" className="bg-primary overflow-hidden transition-colors duration-200 py-6">
         <style>{`
           .logo-track {
             display: -webkit-flex;
@@ -309,7 +335,7 @@ export default function Home() {
       </section>
 
       {/* ── 3. CUSTOMER EXPERIENCE ───────────────────────────────────────── */}
-      <section id="about" className={`py-16 md:py-28 px-4 transition-colors duration-200`}>
+      <section id="customer_experience" className={`py-16 md:py-28 px-4 transition-colors duration-200`}>
         <div className="min-w-[300px] max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row gap-16 items-center">
             <motion.div
@@ -405,7 +431,7 @@ export default function Home() {
       </section>
 
       {/* ── 4. PROBLEM ───────────────────────────────────────────────────── */}
-      <section className={`py-16 md:py-20 px-4 ${isDark ? 'bg-[#0a0a0a]' : 'bg-[#fffdf3]'}`}>
+      <section id="problem" className={`py-16 md:py-20 px-4 ${isDark ? 'bg-[#0a0a0a]' : 'bg-[#fffdf3]'}`}>
         <div className="min-w-[300px] max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -463,9 +489,7 @@ export default function Home() {
       </section>
 
       {/* ── 5. HOW IT WORKS ──────────────────────────────────────────────── */}
-      <section
-        id="guidelines"
-        className={`py-16 md:py-16 px-4 transition-colors duration-200 ${isDark ? 'bg-[#0a0a0a]' : 'bg-[#fffdf3]'}`}>
+      <section id="guidelines" className={`py-16 md:py-16 px-4 transition-colors duration-200 ${isDark ? 'bg-[#0a0a0a]' : 'bg-[#fffdf3]'}`}>
         <div className="min-w-[300px] max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -508,7 +532,7 @@ export default function Home() {
       </section>
 
       {/* ── 6. FEATURES ──────────────────────────────────────────────────── */}
-      <section className={`${isDark ? 'bg-[#0a0a0a]' : 'bg-[#fffdf3]'}`}>
+      <section id="features" className={`${isDark ? 'bg-[#0a0a0a]' : 'bg-[#fffdf3]'}`}>
         <motion.div
           ref={scrollRef}
           initial={{ scale: 0.8, y: 20, borderRadius: "40px" }}
@@ -627,12 +651,12 @@ export default function Home() {
                 viewport={{ once: true }}
                 className="mt-14 text-center"
               >
-                <button
-                  onClick={() => navigate('/signin?mode=register')}
+                <a
+                  href="/signin?mode=register"
                   className="bg-gold text-primary font-bold px-8 py-3 rounded-lg hover:bg-opacity-90 transition text-sm"
                 >
                   Start for free, no credit card required
-                </button>
+                </a>
               </motion.div>
             </div>
           </div>
@@ -640,7 +664,7 @@ export default function Home() {
       </section>
 
       {/* ── 7. WHO IT'S FOR ──────────────────────────────────────────────── */}
-      <section className={`py-16 md:py-20 px-4 ${isDark ? 'bg-[#0a0a0a]' : 'bg-[#fffdf3]'}`}>
+      <section id="who_its_for" className={`py-16 md:py-20 px-4 ${isDark ? 'bg-[#0a0a0a]' : 'bg-[#fffdf3]'}`}>
         <div className="min-w-[300px] max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -702,7 +726,7 @@ export default function Home() {
       </section>
 
       {/* ── 8. TESTIMONIALS ──────────────────────────────────────────────── */}
-      <section className={`py-12 md:py-16 px-4 ${isDark ? 'bg-[#000000]' : 'bg-white'} transition-colors duration-200`}>
+      <section id="testimonials" className={`py-12 md:py-16 px-4 ${isDark ? 'bg-[#000000]' : 'bg-white'} transition-colors duration-200`}>
         <div className="min-w-[300px] max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -757,7 +781,7 @@ export default function Home() {
       </section>
 
       {/* ── 9. QR CODE GENERATOR ─────────────────────────────────────────── */}
-      <section id="newframes" className={`py-12 md:py-16 px-4 ${isDark ? 'bg-[#000000]' : 'bg-white'}`}>
+      <section id="create_frames" className={`py-12 md:py-16 px-4 ${isDark ? 'bg-[#000000]' : 'bg-white'}`}>
         <div className="min-w-[300px] max-w-6xl mx-auto">
           <div className="text-center mb-10">
             <span className={`inline-block text-xs font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full mb-4 ${isDark ? 'bg-white/5 text-gold border border-white/10' : 'bg-[#0F4C3A]/5 text-[#0F4C3A] border border-[#0F4C3A]/20'}`}>
@@ -825,18 +849,18 @@ export default function Home() {
           </div>
           <Price />
           <div className="text-center mt-10">
-            <button
-              onClick={() => navigate('/signin?mode=register')}
+            <a
+              href="/signin?mode=register"
               className="bg-primary text-secondary font-bold px-8 py-3 rounded-lg hover:bg-opacity-80 transition text-sm"
             >
               Get started free, no credit card required
-            </button>
+            </a>
           </div>
         </div>
       </section>
 
       {/* ── 12. MARKETPLACE ──────────────────────────────────────────────── */}
-      <section className="overflow-hidden py-12 md:py-16 px-4">
+      <section id="marketplace" className="overflow-hidden py-12 md:py-16 px-4">
         <div className="min-w-[300px] max-w-6xl mx-auto px-4 py-10 md:py-16">
           <div className="flex flex-col items-center max-w-3xl mx-auto text-center">
             <span className={`inline-block text-xs font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full mb-4 ${isDark ? 'bg-white/5 text-gold border border-white/10' : 'bg-[#0F4C3A]/5 text-[#0F4C3A] border border-[#0F4C3A]/20'}`}>
@@ -864,7 +888,7 @@ export default function Home() {
       </section>
 
       {/* ── 13. FINAL CTA ────────────────────────────────────────────────── */}
-      <section className='py-12 md:py-20 px-4 bg-green-800'>
+      <section id="final_cta" className='py-12 md:py-20 px-4 bg-green-800'>
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -882,18 +906,18 @@ export default function Home() {
             Join vendors across Nigeria using ScanMyFrame to turn every frame they sell into a digital experience their customers never forget.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              onClick={() => navigate('/signin?mode=register')}
+            <a
+              href="/signin?mode=register"
               className="bg-gold text-primary font-bold px-8 py-3.5 rounded-lg hover:bg-opacity-90 transition text-sm"
             >
               Get Started Free
-            </button>
-            <button
-              onClick={() => navigate('/pricing')}
+            </a>
+            <a
+              href="/pricing"
               className="border border-secondary/30 text-secondary font-bold px-8 py-3.5 rounded-lg hover:bg-[#fffdf3]/10 transition text-sm"
             >
               View Pricing
-            </button>
+            </a>
           </div>
         </motion.div>
       </section>
