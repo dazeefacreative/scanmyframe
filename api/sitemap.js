@@ -27,7 +27,7 @@ export default async function handler(req, res) {
   try {
     // Fetch all published blog posts
     const response = await fetch(
-      `${SUPABASE_URL}/rest/v1/posts?status=eq.published&select=slug,published_at,updated_at&order=published_at.desc`,
+      `${SUPABASE_URL}/rest/v1/blog_posts?status=eq.published&select=slug,published_at,updated_at&order=published_at.desc`,
       {
         headers: {
           apikey: SUPABASE_KEY,

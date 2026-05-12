@@ -38,7 +38,7 @@ export default async function handler(req, res) {
   // Social/search bot: fetch post metadata and serve OG-enriched HTML
   try {
     const response = await fetch(
-      `${SUPABASE_URL}/rest/v1/posts?slug=eq.${encodeURIComponent(slug)}&status=eq.published&select=title,excerpt,cover_image,author,published_at&limit=1`,
+      `${SUPABASE_URL}/rest/v1/blog_posts?slug=eq.${encodeURIComponent(slug)}&status=eq.published&select=title,excerpt,cover_image,author,published_at&limit=1`,
       { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
     );
 
@@ -53,6 +53,8 @@ export default async function handler(req, res) {
     const title       = `${post.title} | ScanMyFrame`;
     const description = post.excerpt || `Read "${post.title}" on the ScanMyFrame blog.`;
     const image       = post.cover_image || `${SITE_URL}/og-default.png`;
+
+    const publishedDate = post.published_at ? post.published_at.split('T')[0] : '';
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
@@ -71,6 +73,8 @@ export default async function handler(req, res) {
   <meta property="og:image"        content="${esc(image)}">
   <meta property="og:image:width"  content="1200">
   <meta property="og:image:height" content="630">
+  ${publishedDate ? `<meta property="article:published_time" content="${esc(post.published_at)}">` : ''}
+  ${post.author ? `<meta property="article:author" content="${esc(post.author)}">` : ''}
 
   <meta name="twitter:card"        content="summary_large_image">
   <meta name="twitter:title"       content="${esc(title)}">
@@ -79,10 +83,33 @@ export default async function handler(req, res) {
   <meta name="twitter:site"        content="@scanmyframe">
 
   <link rel="canonical" href="${esc(url)}">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "${esc(post.title)}",
+    "description": "${esc(description)}",
+    "image": "${esc(image)}",
+    "url": "${esc(url)}",
+    ${publishedDate ? `"datePublished": "${esc(post.published_at)}",` : ''}
+    ${post.author ? `"author": { "@type": "Person", "name": "${esc(post.author)}" },` : ''}
+    "publisher": {
+      "@type": "Organization",
+      "name": "ScanMyFrame",
+      "url": "${esc(SITE_URL)}"
+    }
+  }
+  </script>
 </head>
 <body>
+  <article>
+    <h1>${esc(post.title)}</h1>
+    ${publishedDate ? `<time datetime="${esc(publishedDate)}">${esc(publishedDate)}</time>` : ''}
+    ${post.author ? `<p>By ${esc(post.author)}</p>` : ''}
+    <p>${esc(description)}</p>
+  </article>
   <script>window.location.replace("${esc(url)}");</script>
-  <a href="${esc(url)}">${esc(post.title)}</a>
 </body>
 </html>`);
   } catch {
