@@ -54,17 +54,33 @@ export async function handleGoogleLogin() {
   }
 }
 
-// Handle Google User Profile Creation
-export async function handleGoogleUserProfile(user) {
+// Apple Login
+export async function handleAppleLogin() {
   try {
-    // Check if user profile exists
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'apple',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) throw error;
+
+    return data.user;
+  } catch (err) {
+    throw err;
+  }
+}
+
+// Handle OAuth User Profile Creation (Google, Apple, etc.)
+export async function handleOAuthUserProfile(user) {
+  try {
     const { data: existingUser, error: fetchError } = await supabase
       .from('users')
       .select('*')
       .eq('id', user.id)
       .single();
 
-    // If user doesn't exist, create profile
     if (fetchError && fetchError.code === 'PGRST116') {
       const { error: insertError } = await supabase
         .from('users')
@@ -72,7 +88,11 @@ export async function handleGoogleUserProfile(user) {
           {
             id: user.id,
             email: user.email,
-            full_name: user.user_metadata?.full_name || user.email.split('@')[0],
+            full_name:
+              user.user_metadata?.full_name ||
+              user.user_metadata?.name ||
+              user.email?.split('@')[0] ||
+              'User',
             avatar_url: user.user_metadata?.avatar_url || null,
             is_user: true,
           },
@@ -83,10 +103,13 @@ export async function handleGoogleUserProfile(user) {
 
     return existingUser;
   } catch (err) {
-    console.error('Error handling Google user profile:', err);
+    console.error('Error handling OAuth user profile:', err);
     return null;
   }
 }
+
+// Keep old name as alias so any other imports don't break
+export const handleGoogleUserProfile = handleOAuthUserProfile;
 
 // Post Login - Get user profile
 export async function handlePostLogin(supabaseUser) {

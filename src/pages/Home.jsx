@@ -42,9 +42,9 @@ const features = [
       "The assistant is accessible directly from your dashboard. No switching tabs, no separate tools. Just describe the piece and let the AI do the heavy lifting, so you can focus on your craft.",
     ] },
   { icon: branding,
-    title: "Vendor Card",
-    desc: "Your contact on every frame scan",
-    summary: "Every time a customer scans one of your frames, your contact card appears alongside the content. Your name, business details, and how to reach you. You are always visible, your contact card always attached to your work. No more anonymous frames.",
+    title: "Branding & Vendor Card",
+    desc: "Custom QR code plus your contact card",
+    summary: "Customize your QR code with your logo and colors, and attach a vendor card to every frame that shares your name, business details, and contact info. It is effortless branding that turns every scan into a connection, making sure customers always know who to come back to.",
     explanation: [
       "When a customer scans a frame QR code, they don't just see the artwork story - they see you. Your vendor card appears on the frame page, showing your name, business details, and how to get in touch.",
       "This turns every frame you sell into a quiet referral. A customer who loves the piece already has your contact in front of them, with no extra step required on your part.",

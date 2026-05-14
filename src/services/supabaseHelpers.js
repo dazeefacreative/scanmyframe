@@ -673,7 +673,7 @@ export const getPinnedPosts = async () => {
   try {
     const { data, error } = await supabase
       .from('blog_posts')
-      .select('id, title, slug, excerpt, cover_image, tags, author, published_at, created_at')
+      .select('id, title, slug, excerpt, cover_image, tags, keywords, author, published_at, created_at')
       .eq('status', 'published')
       .eq('is_pinned', true)
       .order('published_at', { ascending: false })
@@ -690,7 +690,7 @@ export const getBlogPosts = async () => {
   try {
     const { data, error } = await supabase
       .from('blog_posts')
-      .select('id, title, slug, excerpt, cover_image, tags, author, published_at, created_at')
+      .select('id, title, slug, excerpt, cover_image, tags, keywords, author, published_at, created_at')
       .eq('status', 'published')
       .order('published_at', { ascending: false });
     if (error) throw error;
@@ -707,7 +707,7 @@ export const getRelatedPosts = async (currentId, tags = [], limit = 3) => {
       // No tags - fall back to latest posts
       const { data, error } = await supabase
         .from('blog_posts')
-        .select('id, title, slug, excerpt, cover_image, tags, author, published_at, created_at')
+        .select('id, title, slug, excerpt, cover_image, tags, keywords, author, published_at, created_at')
         .eq('status', 'published')
         .neq('id', currentId)
         .order('published_at', { ascending: false })
@@ -719,7 +719,7 @@ export const getRelatedPosts = async (currentId, tags = [], limit = 3) => {
     // Fetch all published posts except the current one
     const { data, error } = await supabase
       .from('blog_posts')
-      .select('id, title, slug, excerpt, cover_image, tags, author, published_at, created_at')
+      .select('id, title, slug, excerpt, cover_image, tags, keywords, author, published_at, created_at')
       .eq('status', 'published')
       .neq('id', currentId)
       .order('published_at', { ascending: false });
@@ -809,8 +809,9 @@ export const adminCreatePost = async (postData) => {
         slug: postData.slug,
         excerpt: postData.excerpt || '',
         cover_image: postData.cover_image || null,
-        body: postData.body || [],
+        body: postData.body || '',
         tags: postData.tags || [],
+        keywords: postData.keywords || [],
         author: postData.author || 'ScanMyFrame',
         status: postData.status || 'draft',
         published_at: postData.status === 'published' ? now : null,

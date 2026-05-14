@@ -170,6 +170,7 @@ export default function BlogPost() {
           modifiedTime:  post.updated_at   || post.published_at || post.created_at,
           author:        post.author,
           tags:          post.tags || [],
+          keywords:      post.keywords || [],
         }}
       />
       <ArticleSchema post={post} url={postUrl} />
@@ -230,12 +231,19 @@ export default function BlogPost() {
           </p>
         )}
 
-        {/* Body blocks */}
-        <div className="flex flex-col gap-2">
-          {(post.body || []).map((block, i) => (
-            <BlockRenderer key={i} block={block} isDark={isDark} />
-          ))}
-        </div>
+        {/* Body — array = old block format, anything else = ReactQuill HTML */}
+        {Array.isArray(post.body) ? (
+          <div className="flex flex-col gap-2">
+            {post.body.map((block, i) => (
+              <BlockRenderer key={i} block={block} isDark={isDark} />
+            ))}
+          </div>
+        ) : (
+          <div
+            className={`sf-post-body ${isDark ? 'sf-post-body--dark' : ''}`}
+            dangerouslySetInnerHTML={{ __html: post.body || '' }}
+          />
+        )}
 
         {/* Bottom nav */}
         <div className={`mt-16 pt-8 border-t ${border} text-center`}>

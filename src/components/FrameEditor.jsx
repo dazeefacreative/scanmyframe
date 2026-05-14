@@ -1,9 +1,43 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import { supabase } from '../services/supabaseClient';
 import { uploadMedia, addMediaToFrame } from '../services/supabaseHelpers';
-import StoryEditor from './StoryEditor';
 import FramePreview from './FramePreview';
+
+const STORY_QUILL_MODULES = {
+  toolbar: [
+    ['bold', 'italic', 'underline'],
+    [{ list: 'ordered' }, { list: 'bullet' }],
+    ['blockquote', 'link'],
+    ['clean'],
+  ],
+};
+const STORY_QUILL_FORMATS = ['bold', 'italic', 'underline', 'list', 'bullet', 'blockquote', 'link'];
+const STORY_QUILL_STYLES = `
+  .sf-story-quill .ql-toolbar { border: 1px solid #d1d5db !important; border-bottom: 1px solid #e5e7eb !important; border-radius: 12px 12px 0 0 !important; background: #f9fafb !important; padding: 6px 8px !important; }
+  .sf-story-quill .ql-container { border: 1px solid #d1d5db !important; border-top: none !important; border-radius: 0 0 12px 12px !important; }
+  .sf-story-quill .ql-container.ql-snow { font-family: inherit !important; }
+  .sf-story-quill .ql-editor { min-height: 180px !important; font-size: 14px !important; line-height: 1.65 !important; color: #111827 !important; padding: 14px 16px !important; }
+  .sf-story-quill .ql-editor.ql-blank::before { color: #9ca3af !important; font-style: italic !important; }
+  .sf-story-quill .ql-editor blockquote { border-left: 3px solid #D4AF37 !important; padding-left: 12px !important; color: #4a7c6f !important; font-style: italic !important; margin: 8px 0 !important; }
+  .sf-story-quill .ql-editor a { color: #0F4C3A !important; }
+  .sf-story-quill.sf-story-quill--err .ql-toolbar,
+  .sf-story-quill.sf-story-quill--err .ql-container { border-color: #f87171 !important; }
+  .sf-story-quill .ql-toolbar button:hover .ql-stroke,
+  .sf-story-quill .ql-toolbar button.ql-active .ql-stroke { stroke: #0F4C3A !important; }
+  .sf-story-quill .ql-toolbar button:hover .ql-fill,
+  .sf-story-quill .ql-toolbar button.ql-active .ql-fill { fill: #0F4C3A !important; }
+`;
+
+function stripHtml(html) { return (html || '').replace(/<[^>]*>/g, '').trim(); }
+
+function normalizeStory(text) {
+  if (!text) return '';
+  if (text.trim().startsWith('<')) return text;
+  return '<p>' + text.replace(/\n\n+/g, '</p><p>').replace(/\n/g, '<br>') + '</p>';
+}
 
 const FEATURE_SUGGESTIONS = [
   'Acrylic glass', 'Black edges', 'White edges', 'Gold edges', 'Silver edges',
@@ -194,7 +228,7 @@ export default function FrameEditor({ editingFrame, onSaved }) {
     if (!editingFrame) return;
     setForm({
       title:      editingFrame.title       || '',
-      story:      editingFrame.description || '',
+      story:      normalizeStory(editingFrame.description),
       frameOwner: editingFrame.client_name || '',
       width:      editingFrame.width       || '',
       height:     editingFrame.height      || '',
@@ -256,7 +290,7 @@ export default function FrameEditor({ editingFrame, onSaved }) {
     const errs = {};
     if (s === 0) {
       if (!form.title.trim())      errs.title      = 'Art title is required.';
-      if (!form.story.trim())      errs.story      = 'Story is required.';
+      if (!stripHtml(form.story))  errs.story      = 'Story is required.';
       if (!form.frameOwner.trim()) errs.frameOwner = 'Frame owner is required.';
     }
     return errs;
@@ -400,12 +434,17 @@ export default function FrameEditor({ editingFrame, onSaved }) {
 
             <div className="mb-3">
               <label className={labelCls}>Story <span className="text-red-400">*</span></label>
-              <StoryEditor
-                value={form.story}
-                onChange={val => setForm(f => ({ ...f, story: val }))}
-                error={errors.story}
-                rows={7}
-              />
+              <style>{STORY_QUILL_STYLES}</style>
+              <div className={`sf-story-quill${errors.story ? ' sf-story-quill--err' : ''}`}>
+                <ReactQuill
+                  theme="snow"
+                  value={form.story}
+                  onChange={val => { setForm(f => ({ ...f, story: val })); setErrors(e => ({ ...e, story: '' })); }}
+                  modules={STORY_QUILL_MODULES}
+                  formats={STORY_QUILL_FORMATS}
+                  placeholder="Tell the story behind this frame…"
+                />
+              </div>
               {errors.story && <p className="text-xs text-red-500 mt-1">{errors.story}</p>}
             </div>
 

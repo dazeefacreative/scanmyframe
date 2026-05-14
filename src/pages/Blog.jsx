@@ -119,6 +119,7 @@ export default function Blog() {
       ? (p.title?.toLowerCase().includes(q) ||
          p.excerpt?.toLowerCase().includes(q) ||
          p.tags?.some(t => t.toLowerCase().includes(q)) ||
+         p.keywords?.some(k => k.toLowerCase().includes(q)) ||
          p.author?.toLowerCase().includes(q))
       : true;
     return matchesTag && matchesQuery;

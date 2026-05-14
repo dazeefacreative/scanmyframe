@@ -11,7 +11,7 @@ export default function SEO({
   image = DEFAULT_IMG,
   url,
   type = 'website',
-  article = null, // { publishedTime, modifiedTime, author, tags }
+  article = null, // { publishedTime, modifiedTime, author, tags, keywords }
   noIndex = false,
 }) {
   const fullTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} | Smart QR Frames`;
@@ -49,6 +49,10 @@ export default function SEO({
       {article?.tags?.map(tag => (
         <meta key={tag} property="article:tag" content={tag} />
       ))}
+      {/* ── Meta keywords (used by Bing; Google ignores but harmless) ── */}
+      {article && [...(article.tags || []), ...(article.keywords || [])].length > 0 && (
+        <meta name="keywords" content={[...(article.tags || []), ...(article.keywords || [])].join(', ')} />
+      )}
     </Helmet>
   );
 }
@@ -83,7 +87,7 @@ export function ArticleSchema({ post, url }) {
       '@type': 'WebPage',
       '@id': canonical,
     },
-    keywords: (post.tags || []).join(', '),
+    keywords: [...(post.tags || []), ...(post.keywords || [])].join(', '),
   };
 
   return (

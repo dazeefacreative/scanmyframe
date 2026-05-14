@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import {
   adminGetAllPosts, adminCreatePost, adminUpdatePost, adminDeletePost,
   adminGetAllUsers, adminGetNewsletter, uploadBlogImage, adminPushNotification,
@@ -107,7 +109,7 @@ function initials(name = '') {
   return name.split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || '?';
 }
 
-const EMPTY_POST = { title: '', slug: '', excerpt: '', cover_image: '', tags: '', author: 'ScanMyFrame', status: 'draft', body: [] };
+const EMPTY_POST = { title: '', slug: '', excerpt: '', cover_image: '', author: 'ScanMyFrame', status: 'draft', body: [] };
 
 function CopyIdButton({ id }) {
   const [copied, setCopied] = useState(false);
@@ -158,185 +160,107 @@ function AdminHeader({ title, eyebrow, kpis = [], action }) {
   );
 }
 
-// ─── Block Editor ─────────────────────────────────────────────────────────────
-function BlockEditor({ blocks, onChange }) {
-  const [uploading, setUploading] = useState({});
-  const [dragOver, setDragOver] = useState(null);
-  const dragSrc = useRef(null);
-  const touchDragOver = useRef(null);
-
-  function addBlock(type) {
-    const defaults = {
-      paragraph: { type: 'paragraph', content: '' },
-      h2:        { type: 'h2',        content: '' },
-      h3:        { type: 'h3',        content: '' },
-      quote:     { type: 'quote',     content: '' },
-      list:      { type: 'list',      ordered: false, items: [''] },
-      image:     { type: 'image',     url: '', caption: '' },
-      divider:   { type: 'divider' },
-      link:      { type: 'link', text: '', url: '' },
-    };
-    onChange([...blocks, defaults[type]]);
+// ─── Quill styles (ScanMyFrame branding) ─────────────────────────────────────
+const QUILL_STYLES = `
+  .sf-quill-wrapper .ql-toolbar {
+    border: 1px solid rgba(15,76,58,0.18) !important;
+    border-bottom: 1px solid rgba(15,76,58,0.12) !important;
+    border-radius: 10px 10px 0 0 !important;
+    background: #f0efe9 !important;
+    padding: 10px 8px !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+    box-shadow: 0 2px 8px rgba(15,76,58,0.06) !important;
   }
-
-  function updateBlock(i, patch) { onChange(blocks.map((b, idx) => idx === i ? { ...b, ...patch } : b)); }
-  function removeBlock(i) { onChange(blocks.filter((_, idx) => idx !== i)); }
-  function moveBlock(i, dir) {
-    const next = [...blocks]; const swap = i + dir;
-    if (swap < 0 || swap >= next.length) return;
-    [next[i], next[swap]] = [next[swap], next[i]]; onChange(next);
+  .sf-quill-wrapper .ql-container {
+    border: 1px solid rgba(15,76,58,0.18) !important;
+    border-top: none !important;
+    border-radius: 0 0 10px 10px !important;
+    font-family: 'Montserrat Alternates', system-ui, sans-serif !important;
   }
-
-  async function handleImageUpload(i, file) {
-    if (!file) return;
-    setUploading(u => ({ ...u, [i]: true }));
-    const { url, error } = await uploadBlogImage(file);
-    setUploading(u => ({ ...u, [i]: false }));
-    if (url) updateBlock(i, { url }); else alert('Upload failed: ' + error);
+  .sf-quill-wrapper .ql-editor {
+    min-height: 420px !important;
+    font-size: 14px !important;
+    line-height: 1.7 !important;
+    padding: 20px !important;
+    color: #1a1a1a !important;
   }
-
-  function handleTouchStart(i) {
-    dragSrc.current = i;
-    touchDragOver.current = i;
+  .sf-quill-wrapper .ql-editor.ql-blank::before {
+    color: #9aaea9 !important;
+    font-style: italic !important;
   }
-
-  function handleTouchMove(e) {
-    e.preventDefault();
-    const touch = e.touches[0];
-    const el = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (!el) return;
-    const blockEl = el.closest('[data-block-idx]');
-    if (!blockEl) return;
-    const idx = parseInt(blockEl.getAttribute('data-block-idx'));
-    if (!isNaN(idx)) { touchDragOver.current = idx; setDragOver(idx); }
-  }
-
-  function handleTouchEnd() {
-    const src = dragSrc.current;
-    const dest = touchDragOver.current;
-    dragSrc.current = null;
-    touchDragOver.current = null;
-    setDragOver(null);
-    if (src === null || dest === null || src === dest) return;
-    const next = [...blocks];
-    const [moved] = next.splice(src, 1);
-    next.splice(dest, 0, moved);
-    onChange(next);
-  }
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {blocks.map((block, i) => (
-        <div
-          key={i}
-          data-block-idx={i}
-          draggable
-          onDragStart={() => { dragSrc.current = i; }}
-          onDragOver={e => { e.preventDefault(); setDragOver(i); }}
-          onDrop={() => {
-            const src = dragSrc.current;
-            setDragOver(null);
-            if (src === null || src === i) return;
-            const next = [...blocks];
-            const [moved] = next.splice(src, 1);
-            next.splice(i, 0, moved);
-            onChange(next);
-            dragSrc.current = null;
-          }}
-          onDragEnd={() => { dragSrc.current = null; setDragOver(null); }}
-          style={{ background: 'var(--bg-subtle)', border: `1px solid ${dragOver === i ? 'var(--sf-primary)' : 'var(--border)'}`, borderRadius: 12, padding: 16, transition: 'border-color 0.15s' }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span
-                style={{ cursor: 'grab', color: 'var(--fg-muted)', lineHeight: 1, flexShrink: 0, touchAction: 'none' }}
-                title="Drag to reorder"
-                onTouchStart={() => handleTouchStart(i)}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-              >
-                <svg width="10" height="16" viewBox="0 0 10 20" fill="currentColor">
-                  <circle cx="3" cy="4" r="1.5"/><circle cx="7" cy="4" r="1.5"/>
-                  <circle cx="3" cy="10" r="1.5"/><circle cx="7" cy="10" r="1.5"/>
-                  <circle cx="3" cy="16" r="1.5"/><circle cx="7" cy="16" r="1.5"/>
-                </svg>
-              </span>
-              <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--fg-muted)' }}>
-                {block.type === 'h2' ? 'Heading 2' : block.type === 'h3' ? 'Heading 3' : block.type}
-              </span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <button type="button" onClick={() => moveBlock(i, -1)} disabled={i === 0} title="Move up"
-                style={{ background: 'none', border: 'none', cursor: i === 0 ? 'default' : 'pointer', color: 'var(--fg-muted)', padding: '2px 5px', lineHeight: 1, opacity: i === 0 ? 0.25 : 0.6, fontSize: 11 }}>▲</button>
-              <button type="button" onClick={() => moveBlock(i, 1)} disabled={i === blocks.length - 1} title="Move down"
-                style={{ background: 'none', border: 'none', cursor: i === blocks.length - 1 ? 'default' : 'pointer', color: 'var(--fg-muted)', padding: '2px 5px', lineHeight: 1, opacity: i === blocks.length - 1 ? 0.25 : 0.6, fontSize: 11 }}>▼</button>
-              <button type="button" onClick={() => removeBlock(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: 4 }}>✕</button>
-            </div>
-          </div>
-
-          {(block.type === 'paragraph') && <textarea rows={4} className="sf-input sf-textarea" placeholder="Paragraph…" value={block.content} onChange={e => updateBlock(i, { content: e.target.value })} />}
-          {(block.type === 'h2' || block.type === 'h3') && <input className="sf-input" placeholder="Heading…" value={block.content} onChange={e => updateBlock(i, { content: e.target.value })} />}
-          {block.type === 'quote' && <textarea rows={3} className="sf-input sf-textarea" placeholder="Quote…" value={block.content} onChange={e => updateBlock(i, { content: e.target.value })} />}
-
-          {block.type === 'list' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--fg-sub)' }}>
-                <input type="checkbox" checked={block.ordered} onChange={e => updateBlock(i, { ordered: e.target.checked })} /> Ordered
-              </label>
-              {(block.items || []).map((item, j) => (
-                <div key={j} style={{ display: 'flex', gap: 8 }}>
-                  <input className="sf-input" style={{ flex: 1 }} placeholder={`Item ${j + 1}`} value={item} onChange={e => { const items = [...block.items]; items[j] = e.target.value; updateBlock(i, { items }); }} />
-                  <button type="button" onClick={() => updateBlock(i, { items: block.items.filter((_, k) => k !== j) })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)' }}>✕</button>
-                </div>
-              ))}
-              <button type="button" onClick={() => updateBlock(i, { items: [...(block.items || []), ''] })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--sf-primary)', fontSize: 12, textAlign: 'left', fontWeight: 600 }}>+ Add item</button>
-            </div>
-          )}
-
-          {block.type === 'image' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <input className="sf-input" placeholder="https://…" value={block.url} onChange={e => updateBlock(i, { url: e.target.value })} />
-              <label style={{ cursor: 'pointer', fontSize: 12, color: 'var(--sf-primary)', fontWeight: 600 }}>
-                {uploading[i] ? 'Uploading…' : '↑ Upload image'}
-                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleImageUpload(i, e.target.files[0])} />
-              </label>
-              {block.url && <img src={block.url} alt="" style={{ maxHeight: 120, objectFit: 'contain', borderRadius: 8 }} />}
-              <input className="sf-input" placeholder="Caption (optional)" value={block.caption || ''} onChange={e => updateBlock(i, { caption: e.target.value })} />
-            </div>
-          )}
-
-          {block.type === 'divider' && <hr style={{ border: 'none', borderTop: '1px solid var(--border)', margin: 0 }} />}
-
-          {block.type === 'link' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <input className="sf-input" placeholder="Link display text" value={block.text} onChange={e => updateBlock(i, { text: e.target.value })} />
-              <input className="sf-input" placeholder="https://…" value={block.url} onChange={e => updateBlock(i, { url: e.target.value })} />
-            </div>
-          )}
-        </div>
-      ))}
-
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
-        {['paragraph','h2','h3','quote','list','image','divider','link'].map(type => (
-          <button key={type} type="button" onClick={() => addBlock(type)} style={{
-            fontSize: 11, fontWeight: 600, padding: '6px 12px', borderRadius: 8,
-            background: 'var(--surface)', border: '1px solid var(--border)',
-            color: 'var(--fg-sub)', cursor: 'pointer',
-          }}>+ {type === 'h2' ? 'Heading 2' : type === 'h3' ? 'Heading 3' : type.charAt(0).toUpperCase() + type.slice(1)}</button>
-        ))}
-      </div>
-    </div>
-  );
-}
+  .sf-quill-wrapper .ql-editor h1 { font-family: 'Poltawski Nowy', Georgia, serif !important; font-size: 26px !important; color: #0F4C3A !important; margin: 1.4em 0 0.4em !important; }
+  .sf-quill-wrapper .ql-editor h2 { font-family: 'Poltawski Nowy', Georgia, serif !important; font-size: 22px !important; color: #0F4C3A !important; margin: 1.3em 0 0.4em !important; }
+  .sf-quill-wrapper .ql-editor h3 { font-family: 'Poltawski Nowy', Georgia, serif !important; font-size: 18px !important; color: #0F4C3A !important; margin: 1.2em 0 0.3em !important; }
+  .sf-quill-wrapper .ql-editor p { margin: 0 0 1em 0 !important; }
+  .sf-quill-wrapper .ql-editor a { color: #0F4C3A !important; text-decoration: underline !important; }
+  .sf-quill-wrapper .ql-editor blockquote { border-left: 4px solid #D4AF37 !important; padding: 12px 16px !important; margin: 16px 0 !important; color: #4a7c6f !important; font-style: italic !important; background: rgba(212,175,55,0.06) !important; border-radius: 0 8px 8px 0 !important; }
+  .sf-quill-wrapper .ql-editor img { max-width: 100% !important; border-radius: 8px !important; margin: 12px 0 !important; }
+  .sf-quill-wrapper .ql-editor ul, .sf-quill-wrapper .ql-editor ol { padding-left: 1.5em !important; margin: 0 0 1em 0 !important; }
+  .sf-quill-wrapper .ql-toolbar button:hover .ql-stroke,
+  .sf-quill-wrapper .ql-toolbar button.ql-active .ql-stroke { stroke: #0F4C3A !important; }
+  .sf-quill-wrapper .ql-toolbar button:hover .ql-fill,
+  .sf-quill-wrapper .ql-toolbar button.ql-active .ql-fill { fill: #0F4C3A !important; }
+  .sf-quill-wrapper .ql-toolbar .ql-picker-label:hover,
+  .sf-quill-wrapper .ql-toolbar .ql-picker-label.ql-active { color: #0F4C3A !important; }
+  .sf-quill-wrapper .ql-editor::-webkit-scrollbar { width: 6px; }
+  .sf-quill-wrapper .ql-editor::-webkit-scrollbar-track { background: #f0efe9; border-radius: 4px; }
+  .sf-quill-wrapper .ql-editor::-webkit-scrollbar-thumb { background: #4a7c6f; border-radius: 4px; }
+  .sf-quill-wrapper .ql-editor::-webkit-scrollbar-thumb:hover { background: #0F4C3A; }
+`;
 
 // ─── Post Modal ───────────────────────────────────────────────────────────────
+const QUILL_MODULES = {
+  toolbar: {
+    container: [
+      [{ header: [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ align: [] }],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      ['blockquote'],
+      [{ color: ['#0F4C3A', '#D4AF37', '#FAF5DD', '#4a7c6f', '#0a3329', '#000000', '#ffffff', '#ef4444'] }],
+      ['link', 'image'],
+      ['clean'],
+    ],
+    handlers: {},
+  },
+};
+
+const QUILL_FORMATS = ['header','bold','italic','underline','strike','align','list','bullet','blockquote','color','link','image'];
+
 function PostModal({ post, onClose, onSaved }) {
-  const [form, setForm] = useState({ ...EMPTY_POST, ...post });
+  const [form, setForm] = useState({
+    ...EMPTY_POST,
+    ...post,
+    body: typeof post?.body === 'string' ? post.body : '',
+  });
   const [saving, setSaving] = useState(false);
   const [coverUp, setCoverUp] = useState(false);
+  const quillRef = useRef(null);
 
   function set(k, v) { setForm(f => ({ ...f, [k]: v })); }
   function onTitleChange(v) { set('title', v); if (!post?.id) set('slug', slugify(v)); }
+
+  function imageHandler() {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.click();
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) return;
+      const { url, error } = await uploadBlogImage(file);
+      if (error) { alert('Upload failed: ' + error); return; }
+      const editor = quillRef.current?.getEditor();
+      if (editor) {
+        const range = editor.getSelection(true);
+        editor.insertEmbed(range.index, 'image', url);
+      }
+    };
+  }
+
+  QUILL_MODULES.toolbar.handlers.image = imageHandler;
 
   async function uploadCover(file) {
     if (!file) return;
@@ -351,7 +275,8 @@ function PostModal({ post, onClose, onSaved }) {
     if (!form.title.trim() || !form.slug.trim()) return alert('Title and slug are required.');
     setSaving(true);
     try {
-      const payload = { ...form, tags: Array.isArray(form.tags) ? form.tags : form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [], slug: slugify(form.slug) };
+      const { tags: _t, keywords: _k, ...rest } = form;
+      const payload = { ...rest, slug: slugify(form.slug) };
       const { error } = post?.id ? await adminUpdatePost(post.id, payload) : await adminCreatePost(payload);
       if (error) { alert('Error: ' + error); return; }
       onSaved();
@@ -400,13 +325,82 @@ function PostModal({ post, onClose, onSaved }) {
             </div>
           </div>
 
-          <div><label style={lbl}>Tags (comma-separated)</label><input className="sf-input" placeholder="tips, guide, update" value={form.tags} onChange={e => set('tags', e.target.value)} /></div>
-
-          <div><label style={lbl}>Content blocks</label><BlockEditor blocks={form.body} onChange={v => set('body', v)} /></div>
+          <div>
+            <label style={lbl}>Content</label>
+            <style>{QUILL_STYLES}</style>
+            <div className="sf-quill-wrapper">
+              <ReactQuill
+                ref={quillRef}
+                theme="snow"
+                value={form.body}
+                onChange={v => set('body', v)}
+                modules={QUILL_MODULES}
+                formats={QUILL_FORMATS}
+                placeholder="Write your post content here…"
+              />
+            </div>
+          </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
             <button type="button" onClick={onClose} style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', fontSize: 13, fontWeight: 600, color: 'var(--fg-sub)', cursor: 'pointer' }}>Cancel</button>
             <button type="submit" disabled={saving} className="sf-btn-primary">{saving ? 'Saving…' : post?.id ? 'Save changes' : 'Create post'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ─── SEO Modal ────────────────────────────────────────────────────────────────
+function SEOModal({ post, onClose, onSaved }) {
+  const [tags, setTags]       = useState((post.tags || []).join(', '));
+  const [keywords, setKeywords] = useState((post.keywords || []).join(', '));
+  const [saving, setSaving]   = useState(false);
+
+  async function handleSave(e) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const payload = {
+        tags:     tags.split(',').map(t => t.trim()).filter(Boolean),
+        keywords: keywords.split(',').map(k => k.trim()).filter(Boolean),
+      };
+      const { error } = await adminUpdatePost(post.id, payload);
+      if (error) { alert('Error: ' + error); return; }
+      onSaved();
+    } catch (err) { alert('Unexpected error: ' + err.message); }
+    finally { setSaving(false); }
+  }
+
+  const lbl = { display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--fg-sub)', marginBottom: 8 };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(10,46,34,0.55)', backdropFilter: 'blur(4px)', overflowY: 'auto', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '20px 12px' }}>
+      <div className="sf-admin-modal-inner" style={{ maxWidth: 520 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
+          <div>
+            <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-muted)' }}>SEO Settings</p>
+            <h2 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, color: 'var(--sf-primary)', maxWidth: 380, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{post.title}</h2>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: 'var(--fg-muted)', lineHeight: 1 }}>×</button>
+        </div>
+
+        <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div>
+            <label style={lbl}>Tags (comma-separated)</label>
+            <input className="sf-input" placeholder="guide, tips, update" value={tags} onChange={e => setTags(e.target.value)} />
+            <p style={{ margin: '4px 0 0', fontSize: 11, color: 'var(--fg-muted)' }}>Shown as clickable filters on the blog. Also used as <code>article:tag</code> meta.</p>
+          </div>
+
+          <div>
+            <label style={lbl}>Search keywords (comma-separated)</label>
+            <input className="sf-input" placeholder="QR frame, photo display, wall art" value={keywords} onChange={e => setKeywords(e.target.value)} />
+            <p style={{ margin: '4px 0 0', fontSize: 11, color: 'var(--fg-muted)' }}>Hidden from readers. Added to JSON-LD schema and meta keywords for Bing.</p>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
+            <button type="button" onClick={onClose} style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', fontSize: 13, fontWeight: 600, color: 'var(--fg-sub)', cursor: 'pointer' }}>Cancel</button>
+            <button type="submit" disabled={saving} className="sf-btn-primary">{saving ? 'Saving…' : 'Save SEO'}</button>
           </div>
         </form>
       </div>
@@ -474,9 +468,10 @@ function LoginScreen({ onLogin }) {
 function PostsTab() {
   const [posts, setPosts]   = useState([]);
   const [loading, setLoad]  = useState(true);
-  const [modal, setModal]   = useState(null);
-  const [deleting, setDel]  = useState(null);
-  const [filter, setFilter] = useState('all');
+  const [modal, setModal]     = useState(null);
+  const [seoModal, setSeoModal] = useState(null);
+  const [deleting, setDel]    = useState(null);
+  const [filter, setFilter]   = useState('all');
   const [search, setSearch] = useState('');
 
   async function load() {
@@ -588,6 +583,7 @@ function PostsTab() {
                         <td style={{ padding: '14px 20px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                           <button onClick={() => togglePin(p)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: p.is_pinned ? 'var(--sf-gold)' : 'var(--fg-muted)', fontWeight: 600, fontSize: 12, marginRight: 12 }}>{p.is_pinned ? 'Unpin' : 'Pin'}</button>
                           <button onClick={() => setModal(p)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--sf-primary)', fontWeight: 600, fontSize: 12, marginRight: 12 }}>Edit</button>
+                          <button onClick={() => setSeoModal(p)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--fg-sub)', fontWeight: 600, fontSize: 12, marginRight: 12 }}>SEO</button>
                           <button onClick={() => doDelete(p.id)} disabled={deleting === p.id} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontWeight: 600, fontSize: 12, opacity: deleting === p.id ? 0.4 : 1 }}>{deleting === p.id ? '…' : 'Delete'}</button>
                         </td>
                       </tr>
@@ -611,6 +607,7 @@ function PostsTab() {
                         <div style={{ display: 'flex', gap: 12 }}>
                           <button onClick={() => togglePin(p)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: p.is_pinned ? 'var(--sf-gold)' : 'var(--fg-muted)', fontWeight: 600, fontSize: 12 }}>{p.is_pinned ? 'Unpin' : 'Pin'}</button>
                           <button onClick={() => setModal(p)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--sf-primary)', fontWeight: 600, fontSize: 12 }}>Edit</button>
+                          <button onClick={() => setSeoModal(p)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--fg-sub)', fontWeight: 600, fontSize: 12 }}>SEO</button>
                           <button onClick={() => doDelete(p.id)} disabled={deleting === p.id} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontWeight: 600, fontSize: 12 }}>{deleting === p.id ? '…' : 'Delete'}</button>
                         </div>
                       </div>
@@ -624,6 +621,7 @@ function PostsTab() {
       </div>
 
       {modal !== null && <PostModal post={modal} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />}
+      {seoModal !== null && <SEOModal post={seoModal} onClose={() => setSeoModal(null)} onSaved={() => { setSeoModal(null); load(); }} />}
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </>
   );

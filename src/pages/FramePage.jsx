@@ -129,15 +129,28 @@ function ImageGallery({ images, title, cardRing, isDark }) {
   );
 }
 
-// ─── Story rich-text renderer ─────────────────────────────────────────────────
+// ─── Story renderer — HTML (ReactQuill) or legacy plain-text markdown ─────────
 function StoryRenderer({ text, textPrim, textSub, isDark }) {
+  if (!text) return null;
+
+  // New format: ReactQuill HTML
+  if (text.trim().startsWith('<')) {
+    return (
+      <div
+        className={`sf-frame-story text-sm leading-relaxed ${isDark ? 'sf-frame-story--dark' : ''}`}
+        dangerouslySetInnerHTML={{ __html: text }}
+      />
+    );
+  }
+
+  // Legacy: plain-text markdown-like format
   const lines = text.split('\n');
   const elements = [];
   let bulletBuffer = [];
   let key = 0;
 
   function flushBullets() {
-    if (bulletBuffer.length === 0) return;
+    if (!bulletBuffer.length) return;
     elements.push(
       <ul key={key++} className={`list-disc list-outside ml-5 space-y-1 text-sm leading-relaxed ${textPrim}`}>
         {bulletBuffer.map((item, i) => <li key={i}>{item}</li>)}
@@ -146,67 +159,18 @@ function StoryRenderer({ text, textPrim, textSub, isDark }) {
     bulletBuffer = [];
   }
 
-  for (let i = 0; i < lines.length; i++) {
-    const raw = lines[i];
+  for (const raw of lines) {
     const line = raw.trimEnd();
-
-    // Heading 1: # text
-    if (/^# /.test(line)) {
-      flushBullets();
-      elements.push(
-        <h2 key={key++} className={`text-xl font-bold font-[Poltawski_Nowy,serif] mt-5 mb-1 ${textPrim}`}>
-          {line.slice(2)}
-        </h2>
-      );
-    }
-    // Heading 2: ## text
-    else if (/^## /.test(line)) {
-      flushBullets();
-      elements.push(
-        <h3 key={key++} className={`text-base font-bold mt-4 mb-1 ${textPrim}`}>
-          {line.slice(3)}
-        </h3>
-      );
-    }
-    // Bullet: - text
-    else if (/^- /.test(line)) {
-      bulletBuffer.push(line.slice(2));
-    }
-    // Quote: > text
-    else if (/^> /.test(line)) {
-      flushBullets();
-      elements.push(
-        <blockquote key={key++}
-          className={`border-l-4 border-[#D4AF37] pl-4 py-2 pr-2 rounded-r-xl italic text-sm leading-relaxed
-            ${isDark ? 'text-[#aaa] bg-[#1a1a1a]' : 'text-[#4a7c6f] bg-[#f0f7f4]'}`}>
-          {line.slice(2)}
-        </blockquote>
-      );
-    }
-    // Divider: ---
-    else if (/^---$/.test(line.trim())) {
-      flushBullets();
-      elements.push(
-        <hr key={key++} className={`border-none h-px my-2 ${isDark ? 'bg-white/10' : 'bg-[#0F4C3A]/10'}`} />
-      );
-    }
-    // Blank line - skip (acts as paragraph separator)
-    else if (line.trim() === '') {
-      flushBullets();
-    }
-    // Plain paragraph
-    else {
-      flushBullets();
-      elements.push(
-        <p key={key++} className={`text-sm leading-relaxed ${textPrim}`}>
-          {line}
-        </p>
-      );
-    }
+    if (/^# /.test(line))        { flushBullets(); elements.push(<h2 key={key++} className={`text-xl font-bold font-[Poltawski_Nowy,serif] mt-5 mb-1 ${textPrim}`}>{line.slice(2)}</h2>); }
+    else if (/^## /.test(line))  { flushBullets(); elements.push(<h3 key={key++} className={`text-base font-bold mt-4 mb-1 ${textPrim}`}>{line.slice(3)}</h3>); }
+    else if (/^- /.test(line))   { bulletBuffer.push(line.slice(2)); }
+    else if (/^> /.test(line))   { flushBullets(); elements.push(<blockquote key={key++} className={`border-l-4 border-[#D4AF37] pl-4 py-2 pr-2 rounded-r-xl italic text-sm leading-relaxed ${isDark ? 'text-[#aaa] bg-[#1a1a1a]' : 'text-[#4a7c6f] bg-[#f0f7f4]'}`}>{line.slice(2)}</blockquote>); }
+    else if (/^---$/.test(line.trim())) { flushBullets(); elements.push(<hr key={key++} className={`border-none h-px my-2 ${isDark ? 'bg-white/10' : 'bg-[#0F4C3A]/10'}`} />); }
+    else if (line.trim() === '') { flushBullets(); }
+    else                         { flushBullets(); elements.push(<p key={key++} className={`text-sm leading-relaxed ${textPrim}`}>{line}</p>); }
   }
 
   flushBullets();
-
   return <div className="flex flex-col gap-2">{elements}</div>;
 }
 

@@ -168,7 +168,10 @@ export default function FramePreview({ form, artworkFile }) {
                 <div>
                   <p style={{ margin: '0 0 6px', fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#D4AF37' }}>The Story</p>
                   <div style={{ fontSize: 12, color: '#4a7c6f', lineHeight: 1.6, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 8, WebkitBoxOrient: 'vertical' }}>
-                    {parseStoryContent(story).map(renderStoryBlock)}
+                    {story.trim().startsWith('<')
+                      ? <div dangerouslySetInnerHTML={{ __html: story }} />
+                      : parseStoryContent(story).map(renderStoryBlock)
+                    }
                   </div>
                 </div>
               )}

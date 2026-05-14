@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { handleGoogleUserProfile } from '../components/AuthService';
+import { handleOAuthUserProfile } from '../components/AuthService';
 
 export default function AuthCallback() {
   const navigate = useNavigate();
@@ -10,8 +10,7 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleCallback = async () => {
       if (user) {
-        // Ensure user profile is created for Google users
-        await handleGoogleUserProfile(user);
+        await handleOAuthUserProfile(user);
         const hasDraft = localStorage.getItem('scanframe_qr_pending');
         setTimeout(() => navigate(hasDraft ? '/#newframes' : '/dashboard'), 1000);
       } else {

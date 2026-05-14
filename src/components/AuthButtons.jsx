@@ -125,7 +125,7 @@ export default function AuthButtons({ setMessage, initialMode = false }) {
             onClick={useGoogleLogin}
             disabled={googleClickLoading}
             className={`w-full flex items-center justify-center gap-5 p-2.5 rounded-full text-[16px] text-white ${
-              googleClickLoading 
+              googleClickLoading
                 ? "bg-zinc-700 cursor-not-allowed"
                 : "bg-[#6a3fff] hover:bg-[#454ACD] cursor-pointer"
             }`}
