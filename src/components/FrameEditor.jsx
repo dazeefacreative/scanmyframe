@@ -8,19 +8,27 @@ import FramePreview from './FramePreview';
 
 const STORY_QUILL_MODULES = {
   toolbar: [
+    [{ header: [2, 3, false] }],
     ['bold', 'italic', 'underline'],
     [{ list: 'ordered' }, { list: 'bullet' }],
     ['blockquote', 'link'],
     ['clean'],
   ],
 };
-const STORY_QUILL_FORMATS = ['bold', 'italic', 'underline', 'list', 'bullet', 'blockquote', 'link'];
+const STORY_QUILL_FORMATS = ['header', 'bold', 'italic', 'underline', 'list', 'bullet', 'blockquote', 'link'];
 const STORY_QUILL_STYLES = `
-  .sf-story-quill .ql-toolbar { border: 1px solid #d1d5db !important; border-bottom: 1px solid #e5e7eb !important; border-radius: 12px 12px 0 0 !important; background: #f9fafb !important; padding: 6px 8px !important; }
+  .sf-story-quill .ql-toolbar { border: 1px solid #d1d5db !important; border-bottom: 1px solid #e5e7eb !important; border-radius: 12px 12px 0 0 !important; background: #f9fafb !important; padding: 5px 8px !important; display: flex !important; flex-wrap: nowrap !important; align-items: center !important; gap: 0 !important; }
+  .sf-story-quill .ql-toolbar .ql-formats { margin-right: 6px !important; display: flex !important; align-items: center !important; flex-shrink: 0 !important; }
+  .sf-story-quill .ql-toolbar button { padding: 3px !important; width: 26px !important; height: 26px !important; display: flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; }
+  .sf-story-quill .ql-toolbar button svg { width: 15px !important; height: 15px !important; }
+  .sf-story-quill .ql-toolbar .ql-picker { width: 88px !important; min-width: 88px !important; flex-shrink: 0 !important; font-size: 12px !important; }
+  .sf-story-quill .ql-toolbar .ql-picker-label { padding: 0 6px !important; height: 26px !important; display: flex !important; align-items: center !important; white-space: nowrap !important; }
   .sf-story-quill .ql-container { border: 1px solid #d1d5db !important; border-top: none !important; border-radius: 0 0 12px 12px !important; }
   .sf-story-quill .ql-container.ql-snow { font-family: inherit !important; }
   .sf-story-quill .ql-editor { min-height: 180px !important; font-size: 14px !important; line-height: 1.65 !important; color: #111827 !important; padding: 14px 16px !important; }
   .sf-story-quill .ql-editor.ql-blank::before { color: #9ca3af !important; font-style: italic !important; }
+  .sf-story-quill .ql-editor h2 { font-size: 20px !important; font-weight: 700 !important; color: #0F4C3A !important; margin: 12px 0 6px !important; }
+  .sf-story-quill .ql-editor h3 { font-size: 16px !important; font-weight: 700 !important; color: #0F4C3A !important; margin: 10px 0 4px !important; }
   .sf-story-quill .ql-editor blockquote { border-left: 3px solid #D4AF37 !important; padding-left: 12px !important; color: #4a7c6f !important; font-style: italic !important; margin: 8px 0 !important; }
   .sf-story-quill .ql-editor a { color: #0F4C3A !important; }
   .sf-story-quill.sf-story-quill--err .ql-toolbar,

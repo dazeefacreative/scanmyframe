@@ -2214,6 +2214,7 @@ export default function Dashboard() {
     if (tab !== 'create') setEditingFrame(null);
     setActiveTab(tab);
     setSidebarOpen(false);
+    if (tab === 'frames') refetchFrames();
   };
 
   const handleNotification = () => {setNotification(!notification)}
@@ -2290,7 +2291,7 @@ export default function Dashboard() {
     const { data } = await supabase.from('frames').select('*, analytics(total_scans), media(media_url)').eq('user_id', user.id).order('created_at', { ascending: false });
     if (data) setFrames(data.map(f => ({
       ...f,
-      total_scans: (f.analytics || []).reduce((s, r) => s + (r.total_scans || 0), 0),
+      total_scans: Array.isArray(f.analytics) ? f.analytics.reduce((s, r) => s + (r.total_scans || 0), 0) : f.analytics?.total_scans || 0,
       media_url: f.media?.[0]?.media_url || null,
       width: f.size?.width || 0,
       height: f.size?.height || 0,
