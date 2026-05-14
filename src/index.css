@@ -61,7 +61,8 @@ h1, h2, h3, h4, h5, h6 {
 @media (hover: none) and (pointer: coarse) {
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
   textarea,
-  select {
+  select,
+  .ql-editor {
     font-size: max(16px, 1em) !important;
   }
 }

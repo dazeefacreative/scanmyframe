@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 import {
   adminGetAllPosts, adminCreatePost, adminUpdatePost, adminDeletePost,
   adminGetAllUsers, adminGetNewsletter, uploadBlogImage, adminPushNotification,
@@ -162,6 +162,9 @@ function AdminHeader({ title, eyebrow, kpis = [], action }) {
 
 // ─── Quill styles (ScanMyFrame branding) ─────────────────────────────────────
 const QUILL_STYLES = `
+  .sf-quill-wrapper {
+    max-width: 100%;
+  }
   .sf-quill-wrapper .ql-toolbar {
     border: 1px solid rgba(15,76,58,0.18) !important;
     border-bottom: 1px solid rgba(15,76,58,0.12) !important;
@@ -172,12 +175,15 @@ const QUILL_STYLES = `
     top: 0 !important;
     z-index: 10 !important;
     box-shadow: 0 2px 8px rgba(15,76,58,0.06) !important;
+    flex-wrap: wrap !important;
   }
   .sf-quill-wrapper .ql-container {
     border: 1px solid rgba(15,76,58,0.18) !important;
     border-top: none !important;
     border-radius: 0 0 10px 10px !important;
     font-family: 'Montserrat Alternates', system-ui, sans-serif !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
   }
   .sf-quill-wrapper .ql-editor {
     min-height: 420px !important;
@@ -185,6 +191,8 @@ const QUILL_STYLES = `
     line-height: 1.7 !important;
     padding: 20px !important;
     color: #1a1a1a !important;
+    overflow-x: hidden !important;
+    word-break: break-word !important;
   }
   .sf-quill-wrapper .ql-editor.ql-blank::before {
     color: #9aaea9 !important;

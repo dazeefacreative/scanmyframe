@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 import { supabase } from '../services/supabaseClient';
 import { uploadMedia, addMediaToFrame } from '../services/supabaseHelpers';
 import FramePreview from './FramePreview';
@@ -17,15 +17,17 @@ const STORY_QUILL_MODULES = {
 };
 const STORY_QUILL_FORMATS = ['header', 'bold', 'italic', 'underline', 'list', 'bullet', 'blockquote', 'link'];
 const STORY_QUILL_STYLES = `
-  .sf-story-quill .ql-toolbar { border: 1px solid #d1d5db !important; border-bottom: 1px solid #e5e7eb !important; border-radius: 12px 12px 0 0 !important; background: #f9fafb !important; padding: 5px 8px !important; display: flex !important; flex-wrap: nowrap !important; align-items: center !important; gap: 0 !important; }
+  .sf-story-quill { max-width: 100%; }
+  .sf-story-quill .ql-toolbar { border: 1px solid #d1d5db !important; border-bottom: 1px solid #e5e7eb !important; border-radius: 12px 12px 0 0 !important; background: #f9fafb !important; padding: 5px 8px !important; display: flex !important; flex-wrap: wrap !important; align-items: center !important; gap: 0 !important; }
+  @media (min-width: 640px) { .sf-story-quill .ql-toolbar { flex-wrap: nowrap !important; } }
   .sf-story-quill .ql-toolbar .ql-formats { margin-right: 6px !important; display: flex !important; align-items: center !important; flex-shrink: 0 !important; }
   .sf-story-quill .ql-toolbar button { padding: 3px !important; width: 26px !important; height: 26px !important; display: flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; }
   .sf-story-quill .ql-toolbar button svg { width: 15px !important; height: 15px !important; }
   .sf-story-quill .ql-toolbar .ql-picker { width: 88px !important; min-width: 88px !important; flex-shrink: 0 !important; font-size: 12px !important; }
   .sf-story-quill .ql-toolbar .ql-picker-label { padding: 0 6px !important; height: 26px !important; display: flex !important; align-items: center !important; white-space: nowrap !important; }
-  .sf-story-quill .ql-container { border: 1px solid #d1d5db !important; border-top: none !important; border-radius: 0 0 12px 12px !important; }
+  .sf-story-quill .ql-container { border: 1px solid #d1d5db !important; border-top: none !important; border-radius: 0 0 12px 12px !important; max-width: 100% !important; overflow: hidden !important; }
   .sf-story-quill .ql-container.ql-snow { font-family: inherit !important; }
-  .sf-story-quill .ql-editor { min-height: 180px !important; font-size: 14px !important; line-height: 1.65 !important; color: #111827 !important; padding: 14px 16px !important; }
+  .sf-story-quill .ql-editor { min-height: 180px !important; font-size: 14px !important; line-height: 1.65 !important; color: #111827 !important; padding: 14px 16px !important; overflow-x: hidden !important; word-break: break-word !important; }
   .sf-story-quill .ql-editor.ql-blank::before { color: #9ca3af !important; font-style: italic !important; }
   .sf-story-quill .ql-editor h2 { font-size: 20px !important; font-weight: 700 !important; color: #0F4C3A !important; margin: 12px 0 6px !important; }
   .sf-story-quill .ql-editor h3 { font-size: 16px !important; font-weight: 700 !important; color: #0F4C3A !important; margin: 10px 0 4px !important; }
