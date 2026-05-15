@@ -6,16 +6,31 @@ import { supabase } from '../services/supabaseClient';
 import { uploadMedia, addMediaToFrame } from '../services/supabaseHelpers';
 import FramePreview from './FramePreview';
 
+function quillLinkHandler(value) {
+  if (value) {
+    const href = prompt('Enter URL:');
+    if (href) {
+      const url = /^https?:\/\//i.test(href.trim()) ? href.trim() : `https://${href.trim()}`;
+      this.quill.format('link', url);
+    }
+  } else {
+    this.quill.format('link', false);
+  }
+}
+
 const STORY_QUILL_MODULES = {
-  toolbar: [
-    [{ header: [2, 3, false] }],
-    ['bold', 'italic', 'underline'],
-    [{ list: 'ordered' }, { list: 'bullet' }],
-    ['blockquote', 'link'],
-    ['clean'],
-  ],
+  toolbar: {
+    container: [
+      [{ header: [2, 3, false] }],
+      ['bold', 'italic', 'underline'],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      ['blockquote'],
+      ['clean'],
+    ],
+    handlers: { link: quillLinkHandler },
+  },
 };
-const STORY_QUILL_FORMATS = ['header', 'bold', 'italic', 'underline', 'list', 'bullet', 'blockquote', 'link'];
+const STORY_QUILL_FORMATS = ['header', 'bold', 'italic', 'underline', 'list', 'blockquote'];
 const STORY_QUILL_STYLES = `
   .sf-story-quill { max-width: 100%; }
   .sf-story-quill .ql-toolbar { border: 1px solid #d1d5db !important; border-bottom: 1px solid #e5e7eb !important; border-radius: 12px 12px 0 0 !important; background: #f9fafb !important; padding: 5px 8px !important; display: flex !important; flex-wrap: wrap !important; align-items: center !important; gap: 0 !important; }
@@ -172,7 +187,7 @@ function AdditionalImagesManager({ frameId, existingExtras, newFiles, onNewFiles
   function removeNew(idx) { onNewFilesChange(newFiles.filter((_, i) => i !== idx)); }
 
   return (
-    <div className="border border-[#d1d5db] rounded-xl p-4 mb-3">
+    <div className="border border-[#d1d5db] rounded-xl p-3 sm:p-4 mb-3">
       <label className={labelCls}>Additional images <span className="normal-case font-normal text-[#9ca3af]">(optional, up to {MAX})</span></label>
       <p className="text-xs text-[#6b7280] mb-3">Extra photos. Leave existing ones to keep them, or delete them individually.</p>
 
@@ -416,7 +431,7 @@ export default function FrameEditor({ editingFrame, onSaved }) {
   return (
     <div className="flex gap-8 items-start w-full">
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
-      className="bg-white rounded-2xl p-4 sm:p-5 w-full max-w-lg">
+      className="bg-white rounded-2xl py-4 sm:p-5 w-full max-w-lg">
 
       <StepIndicator step={step} />
 
@@ -464,7 +479,7 @@ export default function FrameEditor({ editingFrame, onSaved }) {
               {errors.frameOwner && <p className="text-xs text-red-500 mt-1">{errors.frameOwner}</p>}
             </div>
 
-            <div className="border border-[#d1d5db] rounded-xl p-4">
+            <div className="border border-[#d1d5db] rounded-xl p-3 sm:p-4">
               <p className="text-sm font-medium text-[#374151] mb-3">Frame size in inches (optional)</p>
               <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                 {['width', 'height'].map(dim => (
@@ -482,7 +497,7 @@ export default function FrameEditor({ editingFrame, onSaved }) {
         {/* ── Step 1: Media ── */}
         {step === 1 && (
           <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
-            <div className="border border-[#d1d5db] rounded-xl p-4 mb-3">
+            <div className="border border-[#d1d5db] rounded-xl p-3 sm:p-4 mb-3">
               <label className={labelCls}>Artwork</label>
               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                 <label className="inline-block bg-[#e5e7eb] text-[#374151] px-4 py-2 rounded-lg text-sm font-medium cursor-pointer whitespace-nowrap hover:bg-[#d1d5db] transition-colors text-center">
@@ -504,7 +519,7 @@ export default function FrameEditor({ editingFrame, onSaved }) {
               onDeleteExisting={handleDeleteExisting}
             />
 
-            <div className="border border-[#d1d5db] rounded-xl p-4 mb-3">
+            <div className="border border-[#d1d5db] rounded-xl p-3 sm:p-4 mb-3">
               <label className={labelCls}>Video <span className="normal-case font-normal text-[#9ca3af]">(optional)</span></label>
               <p className="text-sm text-[#374151] mb-3 leading-relaxed">Optionally replace the attached video. Leave empty to keep the existing one.</p>
               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -524,7 +539,7 @@ export default function FrameEditor({ editingFrame, onSaved }) {
         {/* ── Step 2: Password & Comments ── */}
         {step === 2 && (
           <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
-            <div className="border border-[#d1d5db] rounded-xl p-4 mb-3">
+            <div className="border border-[#d1d5db] rounded-xl p-3 sm:p-4 mb-3">
               <div className="flex items-center justify-between mb-1">
                 <div>
                   <label className={labelCls}>Password Protection</label>
@@ -593,7 +608,7 @@ export default function FrameEditor({ editingFrame, onSaved }) {
               )}
             </div>
 
-            <div className="border border-[#d1d5db] rounded-xl p-4 mb-3">
+            <div className="border border-[#d1d5db] rounded-xl p-3 sm:p-4 mb-3">
               <div className="flex items-center justify-between">
                 <div>
                   <label className={labelCls}>Allow comments</label>

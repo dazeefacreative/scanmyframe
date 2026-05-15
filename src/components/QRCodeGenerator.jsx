@@ -8,16 +8,31 @@ import { createFrame, uploadMedia, addMediaToFrame, consumeQRCode, sendQREmail, 
 import { supabase } from '../services/supabaseClient';
 import FramePreview from './FramePreview';
 
+function quillLinkHandler(value) {
+  if (value) {
+    const href = prompt('Enter URL:');
+    if (href) {
+      const url = /^https?:\/\//i.test(href.trim()) ? href.trim() : `https://${href.trim()}`;
+      this.quill.format('link', url);
+    }
+  } else {
+    this.quill.format('link', false);
+  }
+}
+
 const STORY_QUILL_MODULES = {
-  toolbar: [
-    [{ header: [2, 3, false] }],
-    ['bold', 'italic', 'underline'],
-    [{ list: 'ordered' }, { list: 'bullet' }],
-    ['blockquote', 'link'],
-    ['clean'],
-  ],
+  toolbar: {
+    container: [
+      [{ header: [2, 3, false] }],
+      ['bold', 'italic', 'underline'],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      ['blockquote'],
+      ['clean'],
+    ],
+    handlers: { link: quillLinkHandler },
+  },
 };
-const STORY_QUILL_FORMATS = ['header', 'bold', 'italic', 'underline', 'list', 'bullet', 'blockquote', 'link'];
+const STORY_QUILL_FORMATS = ['header', 'bold', 'italic', 'underline', 'list', 'blockquote'];
 const STORY_QUILL_STYLES = `
   .sf-story-quill { max-width: 100%; }
   .sf-story-quill .ql-toolbar { border: 1px solid #d1d5db !important; border-bottom: 1px solid #e5e7eb !important; border-radius: 12px 12px 0 0 !important; background: #f9fafb !important; padding: 5px 8px !important; display: flex !important; flex-wrap: wrap !important; align-items: center !important; gap: 0 !important; }
@@ -260,7 +275,7 @@ function AdditionalImagesInput({ files, onChange, imgMaxMB, imgMaxBytes, maxImag
   }
 
   return (
-    <div className="border border-neutral-300 rounded-xl p-4 mb-3">
+    <div className="border border-neutral-300 rounded-xl p-3 sm:p-4 mb-3">
       <p className="text-xs font-bold uppercase tracking-widest text-neutral-400 mb-1">
         Additional images <span className="normal-case font-normal">(optional, up to {MAX})</span>
       </p>
@@ -692,7 +707,7 @@ export default function QRCodeGenerator({ onNavigateToBilling, onSaved, planId =
   return (
     <div className="flex gap-8 items-start w-full">
     <motion.div ref={rootRef} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
-      className="bg-white rounded-2xl p-4 sm:p-6 w-full max-w-md">
+      className="bg-white rounded-2xl py-4 sm:p-6 w-full max-w-md">
 
       <StepIndicator step={step} />
 
@@ -752,7 +767,7 @@ export default function QRCodeGenerator({ onNavigateToBilling, onSaved, planId =
               <input data-guide="owner" name="frameOwner" placeholder="Frame Owner (e.g Mr Scan)" value={form.frameOwner} onChange={handleChange} className={inputCls(errors.frameOwner)} />
             </Field>
 
-            <div className="border border-neutral-300 rounded-xl p-4">
+            <div className="border border-neutral-300 rounded-xl p-3 sm:p-4">
               <p className="text-xs font-bold uppercase tracking-widest text-neutral-400 mb-3">Frame size in inches (optional)</p>
               <div className="flex flex-wrap items-center gap-4">
                 {['width', 'height'].map(dim => (
@@ -770,7 +785,7 @@ export default function QRCodeGenerator({ onNavigateToBilling, onSaved, planId =
         {/* ── Step 1: Media ── */}
         {step === 1 && (
           <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
-            <div data-guide="artwork-wrap" data-filled={artworkFile ? 'true' : 'false'} className="border border-neutral-300 rounded-xl p-4 mb-3">
+            <div data-guide="artwork-wrap" data-filled={artworkFile ? 'true' : 'false'} className="border border-neutral-300 rounded-xl p-3 sm:p-4 mb-3">
               <p className="text-xs font-bold uppercase tracking-widest text-neutral-400 mb-1">Artwork <span className="text-red-400">*</span></p>
               <p className="text-xs text-neutral-500 mb-3">Upload the actual photo of the frame artwork. This is the main image shown on the frame page.</p>
               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -787,7 +802,7 @@ export default function QRCodeGenerator({ onNavigateToBilling, onSaved, planId =
 
             <AdditionalImagesInput files={extraImages} onChange={setExtraImages} imgMaxMB={imgMaxMB} imgMaxBytes={imgMaxBytes} maxImages={maxImages} />
 
-            <div className="border border-neutral-300 rounded-xl p-4 mb-3">
+            <div className="border border-neutral-300 rounded-xl p-3 sm:p-4 mb-3">
               <p className="text-xs font-bold uppercase tracking-widest text-neutral-400 mb-1">Video <span className="normal-case font-normal text-neutral-400">(optional)</span></p>
               <p className="text-xs text-neutral-500 mb-3 leading-relaxed">Optional event video for a richer experience</p>
               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -808,7 +823,7 @@ export default function QRCodeGenerator({ onNavigateToBilling, onSaved, planId =
         {/* ── Step 2: Password & Comments ── */}
         {step === 2 && (
           <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
-            <div className={`border rounded-xl p-4 mb-3 ${canUsePassword ? 'border-neutral-300' : 'border-neutral-200 bg-neutral-50'}`}>
+            <div className={`border rounded-xl p-3 sm:p-4 mb-3 ${canUsePassword ? 'border-neutral-300' : 'border-neutral-200 bg-neutral-50'}`}>
               <div className="flex items-center justify-between mb-1">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
@@ -895,7 +910,7 @@ export default function QRCodeGenerator({ onNavigateToBilling, onSaved, planId =
               )}
             </div>
 
-            <div className="border border-neutral-200 rounded-xl p-4 mb-3">
+            <div className="border border-neutral-200 rounded-xl p-3 sm:p-4 mb-3">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-widest text-[#6b7280] mb-1">Allow comments</p>

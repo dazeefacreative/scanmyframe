@@ -204,7 +204,7 @@ const QUILL_STYLES = `
   .sf-quill-wrapper .ql-editor p { margin: 0 0 1em 0 !important; }
   .sf-quill-wrapper .ql-editor a { color: #0F4C3A !important; text-decoration: underline !important; }
   .sf-quill-wrapper .ql-editor blockquote { border-left: 4px solid #D4AF37 !important; padding: 12px 16px !important; margin: 16px 0 !important; color: #4a7c6f !important; font-style: italic !important; background: rgba(212,175,55,0.06) !important; border-radius: 0 8px 8px 0 !important; }
-  .sf-quill-wrapper .ql-editor img { max-width: 100% !important; border-radius: 8px !important; margin: 12px 0 !important; }
+  .sf-quill-wrapper .ql-editor img { max-width: 100% !important; margin: 12px 0 !important; display: block !important; }
   .sf-quill-wrapper .ql-editor ul, .sf-quill-wrapper .ql-editor ol { padding-left: 1.5em !important; margin: 0 0 1em 0 !important; }
   .sf-quill-wrapper .ql-toolbar button:hover .ql-stroke,
   .sf-quill-wrapper .ql-toolbar button.ql-active .ql-stroke { stroke: #0F4C3A !important; }
@@ -219,6 +219,18 @@ const QUILL_STYLES = `
 `;
 
 // ─── Post Modal ───────────────────────────────────────────────────────────────
+function quillLinkHandler(value) {
+  if (value) {
+    const href = prompt('Enter URL:');
+    if (href) {
+      const url = /^https?:\/\//i.test(href.trim()) ? href.trim() : `https://${href.trim()}`;
+      this.quill.format('link', url);
+    }
+  } else {
+    this.quill.format('link', false);
+  }
+}
+
 const QUILL_MODULES = {
   toolbar: {
     container: [
@@ -228,14 +240,14 @@ const QUILL_MODULES = {
       [{ list: 'ordered' }, { list: 'bullet' }],
       ['blockquote'],
       [{ color: ['#0F4C3A', '#D4AF37', '#FAF5DD', '#4a7c6f', '#0a3329', '#000000', '#ffffff', '#ef4444'] }],
-      ['link', 'image'],
+      ['link', 'image', 'video'],
       ['clean'],
     ],
-    handlers: {},
+    handlers: { link: quillLinkHandler },
   },
 };
 
-const QUILL_FORMATS = ['header','bold','italic','underline','strike','align','list','bullet','blockquote','color','link','image'];
+const QUILL_FORMATS = ['header','bold','italic','underline','strike','align','list','blockquote','color','link','image','video'];
 
 function PostModal({ post, onClose, onSaved }) {
   const [form, setForm] = useState({
