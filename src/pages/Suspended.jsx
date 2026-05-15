@@ -15,6 +15,9 @@ export default function Suspended() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+  const [isDisabled, setIsDisabled] = useState(null);
+  const [isSuspended, setIsSuspended] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
@@ -23,13 +26,22 @@ export default function Suspended() {
       if (user.email) updates.email = user.email;
       const { data: profile } = await supabase
         .from('users')
-        .select('full_name')
+        .select('full_name, is_disabled, is_suspended')
         .eq('id', user.id)
         .single();
       if (profile?.full_name) updates.name = profile.full_name;
+      setIsDisabled(profile?.is_disabled || false);
+      setIsSuspended(profile?.is_suspended || false);
       if (Object.keys(updates).length) setForm(f => ({ ...f, ...updates }));
+      setLoading(false);
     });
   }, []);
+
+  useEffect(() => {
+    if (!loading && !isDisabled && !isSuspended) {
+      window.location.href = '/dashboard';
+    }
+  }, [loading, isDisabled, isSuspended]);
 
   function set(k, v) { setForm(f => ({ ...f, [k]: v })); }
 
@@ -83,7 +95,11 @@ export default function Suspended() {
 
       <div className={`w-full max-w-lg border rounded-2xl p-8 sm:p-10 ${card}`}>
 
-        {submitted ? (
+        {loading || (!isDisabled && !isSuspended) ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className={`w-12 h-12 border-4 rounded-full animate-spin ${isDark ? 'border-white/20 border-t-white' : 'border-[#0F4C3A]/20 border-t-[#0F4C3A]'}`}></div>
+          </div>
+        ) : submitted ? (
           <div>
             <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5 ${isDark ? 'bg-[#0F4C3A]/20' : 'bg-[#0F4C3A]/10'}`}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0F4C3A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -126,27 +142,76 @@ export default function Suspended() {
           </div>
         ) : (
           <>
-            {/* Header */}
-            <div className="mb-8">
-              <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-5 ${isDark ? 'bg-amber-500/10 text-amber-400' : 'bg-amber-50 text-amber-700 border border-amber-200'}`}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-                </svg>
-                Account suspended
-              </div>
-              <h1 className={`text-2xl sm:text-3xl font-bold font-[Poltawski_Nowy,serif] mb-3 ${text}`}>
-                Your account has been suspended
-              </h1>
-              <p className={`text-sm leading-relaxed ${sub}`}>
-                We noticed activity on your account that doesn't align with ScanMyFrame's rules and guidelines. As a result, access to your dashboard has been temporarily suspended.
-              </p>
-              <p className={`text-sm leading-relaxed mt-3 ${sub}`}>
-                Your frames and data are safe. If you believe this was a mistake, please fill in the form below and our team will review your case promptly.
-              </p>
-            </div>
+            {isDisabled ? (
+              // ─── DISABLED ACCOUNT VIEW ───
+              <div>
+                <div className="mb-8">
+                  <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-5 ${isDark ? 'bg-red-500/10 text-red-400' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    Account Closed
+                  </div>
+                  <h1 className={`text-2xl sm:text-3xl font-bold font-[Poltawski_Nowy,serif] mb-3 ${text}`}>
+                    Your account has been permanently closed
+                  </h1>
+                </div>
 
-            {/* Appeal form */}
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                <div className={`rounded-xl p-6 mb-6 ${isDark ? 'bg-white/5 border border-white/8' : 'bg-[#f5f9f7] border border-[#0F4C3A]/10'}`}>
+                  <p className={`text-sm leading-relaxed mb-4 ${sub}`}>
+                    Due to a violation of our policies and terms of service. This decision was made after a thorough review of account activity and is considered final.
+                  </p>
+                  <p className={`text-sm leading-relaxed ${sub}`}>
+                    As a result, you will no longer be able to access the platform, associated services, or any stored data linked to this account. If you believe this action was taken in error, you may contact our support team for further clarification.
+                  </p>
+                </div>
+
+                <div className="mb-6">
+                  <p className={`text-xs text-center font-bold uppercase tracking-widest mb-3 ${sub}`}>Are we wrong on this decision?</p>
+                  <a
+                    href={`mailto:support@scanmyframe.com?subject=CLOSURE REVIEW - ScanMyFrame, ${form.email}`}
+                    className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold transition-colors ${
+                      isDark
+                        ? 'bg-white/10 text-white hover:bg-white/15'
+                        : 'bg-[#0F4C3A]/10 text-[#0F4C3A] hover:bg-[#0F4C3A]/20'
+                    }`}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                    </svg>
+                    Contact Support
+                  </a>
+                </div>
+
+                <div className={`mt-6 pt-6 border-t ${isDark ? 'border-white/10' : 'border-[#0F4C3A]/10'}`}>
+                  <p className={`text-xs leading-relaxed ${sub}`}>
+                    For more information, please review our <a href="/terms" className="underline hover:opacity-70 transition-opacity">Terms of Service</a> and <a href="/privacy" className="underline hover:opacity-70 transition-opacity">Privacy Policy</a>.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              // ─── SUSPENDED ACCOUNT VIEW ───
+              <>
+                <div className="mb-8">
+                  <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-5 ${isDark ? 'bg-amber-500/10 text-amber-400' : 'bg-amber-50 text-amber-700 border border-amber-200'}`}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    Account suspended
+                  </div>
+                  <h1 className={`text-2xl sm:text-3xl font-bold font-[Poltawski_Nowy,serif] mb-3 ${text}`}>
+                    Your account has been suspended
+                  </h1>
+                  <p className={`text-sm leading-relaxed ${sub}`}>
+                    We noticed activity on your account that doesn't align with ScanMyFrame's <a href="/terms" className="underline hover:opacity-70 transition-opacity">rules and guidelines</a>. As a result, access to your dashboard has been temporarily suspended.
+                  </p>
+                  <p className={`text-sm leading-relaxed mt-3 ${sub}`}>
+                    Your frames and data are safe. If you believe this was a mistake, please fill in the form below and our team will review your case promptly.
+                  </p>
+                </div>
+
+                {/* Appeal form */}
+                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className={labelCls}>Full name <span className="text-red-400">*</span></label>
@@ -207,7 +272,9 @@ export default function Suspended() {
                   </span>
                 ) : 'Submit appeal'}
               </button>
-            </form>
+              </form>
+              </>
+            )}
           </>
         )}
 

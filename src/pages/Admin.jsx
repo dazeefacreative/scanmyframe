@@ -3,7 +3,7 @@ import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import {
   adminGetAllPosts, adminCreatePost, adminUpdatePost, adminDeletePost,
-  adminGetAllUsers, adminDeleteUser, adminSuspendUser, adminUnsuspendUser, adminGetNewsletter, uploadBlogImage, adminPushNotification,
+  adminGetAllUsers, adminDeleteUser, adminDisableUser, adminSuspendUser, adminUnsuspendUser, adminGetNewsletter, uploadBlogImage, adminPushNotification,
   adminGetFeaturedLogos, adminUploadFeaturedLogo, adminDeleteFeaturedLogo,
   adminAdjustQRCredits,
 } from '../services/supabaseHelpers';
@@ -654,19 +654,21 @@ function UsersTab() {
   const [query, setQuery]       = useState('');
   const [deleting, setDeleting]       = useState(null);
   const [suspending, setSuspending]   = useState(null);
-  const [confirmUser, setConfirmUser] = useState(null);
+  const [disabling, setDisabling]     = useState(null);
 
   useEffect(() => {
     adminGetAllUsers().then(({ users: data }) => { setUsers(data); setLoad(false); });
   }, []);
 
-  async function doDelete(user) {
-    setDeleting(user.id);
-    setConfirmUser(null);
-    const { error } = await adminDeleteUser(user.id);
-    if (error) { alert('Delete failed: ' + error); }
-    else { setUsers(prev => prev.filter(u => u.id !== user.id)); }
-    setDeleting(null);
+  async function doDisable(user) {
+    setDisabling(user.id);
+    const { error } = await adminDisableUser(user.id);
+    if (error) {
+      alert('Disable failed: ' + error);
+    } else {
+      setUsers(prev => prev.map(u => u.id === user.id ? { ...u, is_suspended: true, is_disabled: true } : u));
+    }
+    setDisabling(null);
   }
 
   async function toggleSuspend(user) {
@@ -770,14 +772,14 @@ function UsersTab() {
                         <td style={{ padding: '14px 20px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                           <button
                             onClick={() => toggleSuspend(u)}
-                            disabled={suspending === u.id}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: u.is_suspended ? '#16a34a' : '#ca8a04', fontWeight: 600, fontSize: 12, marginRight: 12, opacity: suspending === u.id ? 0.4 : 1 }}
-                          >{suspending === u.id ? '…' : u.is_suspended ? 'Unsuspend' : 'Suspend'}</button>
+                            disabled={suspending === u.id || u.is_disabled}
+                            style={{ background: 'none', border: 'none', cursor: u.is_disabled || suspending === u.id ? 'not-allowed' : 'pointer', color: u.is_suspended ? '#16a34a' : '#ca8a04', fontWeight: 600, fontSize: 12, marginRight: 12, opacity: u.is_disabled ? 0.35 : suspending === u.id ? 0.4 : 1 }}
+                          >{suspending === u.id ? '…' : u.is_disabled ? 'Disabled' : u.is_suspended ? 'Unsuspend' : 'Suspend'}</button>
                           <button
-                            onClick={() => setConfirmUser(u)}
-                            disabled={deleting === u.id}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontWeight: 600, fontSize: 12, opacity: deleting === u.id ? 0.4 : 1 }}
-                          >{deleting === u.id ? '…' : 'Delete'}</button>
+                            onClick={() => doDisable(u)}
+                            disabled={disabling === u.id || u.is_disabled}
+                            style={{ background: 'none', border: 'none', cursor: u.is_disabled ? 'not-allowed' : 'pointer', color: 'var(--danger)', fontWeight: 600, fontSize: 12, opacity: u.is_disabled ? 0.35 : disabling === u.id ? 0.4 : 1 }}
+                          >{u.is_disabled ? 'Disabled' : disabling === u.id ? 'Disabling…' : 'Disable'}</button>
                         </td>
                       </tr>
                     );
@@ -812,14 +814,14 @@ function UsersTab() {
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button
                         onClick={() => toggleSuspend(u)}
-                        disabled={suspending === u.id}
-                        style={{ background: 'none', border: `1px solid ${u.is_suspended ? '#16a34a' : '#ca8a04'}`, borderRadius: 8, cursor: 'pointer', color: u.is_suspended ? '#16a34a' : '#ca8a04', fontWeight: 600, fontSize: 12, padding: '5px 12px', opacity: suspending === u.id ? 0.4 : 1 }}
-                      >{suspending === u.id ? '…' : u.is_suspended ? 'Unsuspend' : 'Suspend'}</button>
+                        disabled={suspending === u.id || u.is_disabled}
+                        style={{ background: 'none', border: `1px solid ${u.is_suspended ? '#16a34a' : '#ca8a04'}`, borderRadius: 8, cursor: u.is_disabled || suspending === u.id ? 'not-allowed' : 'pointer', color: u.is_suspended ? '#16a34a' : '#ca8a04', fontWeight: 600, fontSize: 12, padding: '5px 12px', opacity: u.is_disabled ? 0.35 : suspending === u.id ? 0.4 : 1 }}
+                      >{suspending === u.id ? '…' : u.is_disabled ? 'Disabled' : u.is_suspended ? 'Unsuspend' : 'Suspend'}</button>
                       <button
-                        onClick={() => setConfirmUser(u)}
-                        disabled={deleting === u.id}
-                        style={{ background: 'none', border: '1px solid var(--danger)', borderRadius: 8, cursor: 'pointer', color: 'var(--danger)', fontWeight: 600, fontSize: 12, padding: '5px 12px', opacity: deleting === u.id ? 0.4 : 1 }}
-                      >{deleting === u.id ? 'Deleting…' : 'Delete'}</button>
+                        onClick={() => doDisable(u)}
+                        disabled={disabling === u.id || u.is_disabled}
+                        style={{ background: 'none', border: '1px solid var(--danger)', borderRadius: 8, cursor: u.is_disabled ? 'not-allowed' : 'pointer', color: 'var(--danger)', fontWeight: 600, fontSize: 12, padding: '5px 12px', opacity: u.is_disabled ? 0.35 : disabling === u.id ? 0.4 : 1 }}
+                      >{u.is_disabled ? 'Disabled' : disabling === u.id ? 'Disabling…' : 'Disable'}</button>
                     </div>
                   </div>
                 );
@@ -829,25 +831,7 @@ function UsersTab() {
         )}
       </div>
 
-      {/* Confirm delete modal */}
-      {confirmUser && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(10,46,34,0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px 16px' }}>
-          <div style={{ background: 'var(--bg)', borderRadius: 16, padding: '28px 28px', width: '100%', maxWidth: 400, border: '1px solid var(--border)', boxShadow: '0 24px 60px rgba(0,0,0,0.2)' }}>
-            <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--danger)' }}>Permanent action</p>
-            <h2 style={{ margin: '0 0 12px', fontSize: 18, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--fg-body)' }}>Delete this user?</h2>
-            <p style={{ margin: '0 0 6px', fontSize: 13, color: 'var(--fg-sub)' }}>
-              <strong style={{ color: 'var(--fg-body)' }}>{confirmUser.business_name || confirmUser.full_name || confirmUser.email}</strong>
-            </p>
-            <p style={{ margin: '0 0 24px', fontSize: 13, color: 'var(--fg-muted)', lineHeight: 1.6 }}>
-              This permanently deletes their account and all associated data. Their frames will remain public but unmanaged. This cannot be undone.
-            </p>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-              <button onClick={() => setConfirmUser(null)} style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', fontSize: 13, fontWeight: 600, color: 'var(--fg-sub)', cursor: 'pointer' }}>Cancel</button>
-              <button onClick={() => doDelete(confirmUser)} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: 'var(--danger)', fontSize: 13, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>Yes, delete</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Permanent disable now handled directly via the Disable button. */}
     </>
   );
 }

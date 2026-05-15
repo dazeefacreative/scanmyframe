@@ -898,6 +898,16 @@ export const adminUnsuspendUser = async (userId) => {
   }
 };
 
+/** Admin: permanently disable a user while preserving their data */
+export const adminDisableUser = async (userId) => {
+  try {
+    await adminDataFetch({ resource: 'disable_user', user_id: userId });
+    return { error: null };
+  } catch (error) {
+    return { error: error.message };
+  }
+};
+
 /** Admin: permanently delete a user and all their data */
 export const adminDeleteUser = async (userId) => {
   try {
