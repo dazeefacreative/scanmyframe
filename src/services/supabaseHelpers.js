@@ -878,6 +878,36 @@ async function adminFetch(resource) {
   return data;
 }
 
+/** Admin: suspend a user (blocks login, data preserved) */
+export const adminSuspendUser = async (userId) => {
+  try {
+    await adminDataFetch({ resource: 'suspend_user', user_id: userId });
+    return { error: null };
+  } catch (error) {
+    return { error: error.message };
+  }
+};
+
+/** Admin: unsuspend a user (restores login access) */
+export const adminUnsuspendUser = async (userId) => {
+  try {
+    await adminDataFetch({ resource: 'unsuspend_user', user_id: userId });
+    return { error: null };
+  } catch (error) {
+    return { error: error.message };
+  }
+};
+
+/** Admin: permanently delete a user and all their data */
+export const adminDeleteUser = async (userId) => {
+  try {
+    const data = await adminDataFetch({ resource: 'delete_user', user_id: userId });
+    return { error: null };
+  } catch (error) {
+    return { error: error.message };
+  }
+};
+
 /** Admin: get all users with subscription info (via edge function to bypass RLS) */
 export const adminGetAllUsers = async () => {
   try {

@@ -23,7 +23,7 @@ import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
 
 export default function OnboardingGuard() {
-  const [status, setStatus] = useState('loading'); // 'loading' | 'unauthenticated' | 'needs_onboarding' | 'ready'
+  const [status, setStatus] = useState('loading'); // 'loading' | 'unauthenticated' | 'needs_onboarding' | 'suspended' | 'ready'
   const location = useLocation();
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export default function OnboardingGuard() {
     async function checkUser(userId, authCreatedAt) {
       const { data: profile, error } = await supabase
         .from('users')
-        .select('onboarding_completed')
+        .select('onboarding_completed, is_suspended')
         .eq('id', userId)
         .single();
 
@@ -58,7 +58,9 @@ export default function OnboardingGuard() {
         return;
       }
 
-      if (!profile.onboarding_completed) {
+      if (profile.is_suspended) {
+        setStatus('suspended');
+      } else if (!profile.onboarding_completed) {
         setStatus('needs_onboarding');
       } else {
         setStatus('ready');
@@ -110,6 +112,10 @@ export default function OnboardingGuard() {
 
   if (status === 'unauthenticated') {
     return <Navigate to="/signin" state={{ from: location }} replace />;
+  }
+
+  if (status === 'suspended') {
+    return <Navigate to="/suspended" replace />;
   }
 
   if (status === 'needs_onboarding') {

@@ -3,7 +3,7 @@ import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import {
   adminGetAllPosts, adminCreatePost, adminUpdatePost, adminDeletePost,
-  adminGetAllUsers, adminGetNewsletter, uploadBlogImage, adminPushNotification,
+  adminGetAllUsers, adminDeleteUser, adminSuspendUser, adminUnsuspendUser, adminGetNewsletter, uploadBlogImage, adminPushNotification,
   adminGetFeaturedLogos, adminUploadFeaturedLogo, adminDeleteFeaturedLogo,
   adminAdjustQRCredits,
 } from '../services/supabaseHelpers';
@@ -397,10 +397,10 @@ function SEOModal({ post, onClose, onSaved }) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(10,46,34,0.55)', backdropFilter: 'blur(4px)', overflowY: 'auto', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '20px 12px' }}>
       <div className="sf-admin-modal-inner" style={{ maxWidth: 520 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28 }}>
           <div>
             <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-muted)' }}>SEO Settings</p>
-            <h2 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, color: 'var(--sf-primary)', maxWidth: 380, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{post.title}</h2>
+            <h2 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, color: 'var(--sf-primary)', maxWidth: 380, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'wrap' }}>{post.title}</h2>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: 'var(--fg-muted)', lineHeight: 1 }}>×</button>
         </div>
@@ -649,13 +649,34 @@ function PostsTab() {
 
 // ─── Tab: Users ───────────────────────────────────────────────────────────────
 function UsersTab() {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoad] = useState(true);
-  const [query, setQuery]  = useState('');
+  const [users, setUsers]       = useState([]);
+  const [loading, setLoad]      = useState(true);
+  const [query, setQuery]       = useState('');
+  const [deleting, setDeleting]       = useState(null);
+  const [suspending, setSuspending]   = useState(null);
+  const [confirmUser, setConfirmUser] = useState(null);
 
   useEffect(() => {
     adminGetAllUsers().then(({ users: data }) => { setUsers(data); setLoad(false); });
   }, []);
+
+  async function doDelete(user) {
+    setDeleting(user.id);
+    setConfirmUser(null);
+    const { error } = await adminDeleteUser(user.id);
+    if (error) { alert('Delete failed: ' + error); }
+    else { setUsers(prev => prev.filter(u => u.id !== user.id)); }
+    setDeleting(null);
+  }
+
+  async function toggleSuspend(user) {
+    setSuspending(user.id);
+    const isSuspended = user.is_suspended;
+    const { error } = isSuspended ? await adminUnsuspendUser(user.id) : await adminSuspendUser(user.id);
+    if (error) { alert(`Failed: ${error}`); }
+    else { setUsers(prev => prev.map(u => u.id === user.id ? { ...u, is_suspended: !isSuspended } : u)); }
+    setSuspending(null);
+  }
 
   const q = query.trim().toLowerCase();
   const filtered = q ? users.filter(u => u.full_name?.toLowerCase().includes(q) || u.business_name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q)) : users;
@@ -699,7 +720,7 @@ function UsersTab() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: 'var(--bg-subtle)' }}>
-                    {['Vendor', 'Plan', 'QR usage', 'Status', 'Renews', 'Joined', 'User ID'].map(h => (
+                    {['Vendor', 'Plan', 'QR usage', 'Status', 'Renews', 'Joined', 'User ID', ''].map(h => (
                       <th key={h} style={{ textAlign: 'left', padding: '12px 20px', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-muted)' }}>{h}</th>
                     ))}
                   </tr>
@@ -746,6 +767,18 @@ function UsersTab() {
                         <td style={{ padding: '14px 20px' }}>
                           <CopyIdButton id={u.id} />
                         </td>
+                        <td style={{ padding: '14px 20px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                          <button
+                            onClick={() => toggleSuspend(u)}
+                            disabled={suspending === u.id}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: u.is_suspended ? '#16a34a' : '#ca8a04', fontWeight: 600, fontSize: 12, marginRight: 12, opacity: suspending === u.id ? 0.4 : 1 }}
+                          >{suspending === u.id ? '…' : u.is_suspended ? 'Unsuspend' : 'Suspend'}</button>
+                          <button
+                            onClick={() => setConfirmUser(u)}
+                            disabled={deleting === u.id}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontWeight: 600, fontSize: 12, opacity: deleting === u.id ? 0.4 : 1 }}
+                          >{deleting === u.id ? '…' : 'Delete'}</button>
+                        </td>
                       </tr>
                     );
                   })}
@@ -770,11 +803,23 @@ function UsersTab() {
                       </div>
                       {sub.status && <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 99, textTransform: 'uppercase', background: sub.status === 'active' ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)', color: sub.status === 'active' ? '#16a34a' : 'var(--danger)', flexShrink: 0 }}>{sub.status === 'past_due' ? 'past due' : sub.status}</span>}
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 12px', fontSize: 11 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 12px', fontSize: 11, marginBottom: 10 }}>
                       <div><span style={{ color: 'var(--fg-muted)' }}>Plan: </span><span style={{ fontWeight: 700, color: pColor }}>{sub.plan_id || '—'}</span>{sub.billing_cycle && <span style={{ color: 'var(--fg-muted)' }}> · {sub.billing_cycle}</span>}</div>
                       <div><span style={{ color: 'var(--fg-muted)' }}>QR: </span><span style={{ fontFamily: 'var(--font-mono)' }}>{sub.qr_used != null ? `${sub.qr_used} / ${sub.qr_allocated === -1 ? '∞' : sub.qr_allocated}` : '—'}</span></div>
                       <div><span style={{ color: 'var(--fg-muted)' }}>Renews: </span><span style={{ fontFamily: 'var(--font-mono)' }}>{fmtDateShort(sub.current_period_end)}</span></div>
                       <div><span style={{ color: 'var(--fg-muted)' }}>Joined: </span><span style={{ fontFamily: 'var(--font-mono)' }}>{fmtDateShort(u.created_at)}</span></div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button
+                        onClick={() => toggleSuspend(u)}
+                        disabled={suspending === u.id}
+                        style={{ background: 'none', border: `1px solid ${u.is_suspended ? '#16a34a' : '#ca8a04'}`, borderRadius: 8, cursor: 'pointer', color: u.is_suspended ? '#16a34a' : '#ca8a04', fontWeight: 600, fontSize: 12, padding: '5px 12px', opacity: suspending === u.id ? 0.4 : 1 }}
+                      >{suspending === u.id ? '…' : u.is_suspended ? 'Unsuspend' : 'Suspend'}</button>
+                      <button
+                        onClick={() => setConfirmUser(u)}
+                        disabled={deleting === u.id}
+                        style={{ background: 'none', border: '1px solid var(--danger)', borderRadius: 8, cursor: 'pointer', color: 'var(--danger)', fontWeight: 600, fontSize: 12, padding: '5px 12px', opacity: deleting === u.id ? 0.4 : 1 }}
+                      >{deleting === u.id ? 'Deleting…' : 'Delete'}</button>
                     </div>
                   </div>
                 );
@@ -783,6 +828,26 @@ function UsersTab() {
           </div>
         )}
       </div>
+
+      {/* Confirm delete modal */}
+      {confirmUser && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(10,46,34,0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px 16px' }}>
+          <div style={{ background: 'var(--bg)', borderRadius: 16, padding: '28px 28px', width: '100%', maxWidth: 400, border: '1px solid var(--border)', boxShadow: '0 24px 60px rgba(0,0,0,0.2)' }}>
+            <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--danger)' }}>Permanent action</p>
+            <h2 style={{ margin: '0 0 12px', fontSize: 18, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--fg-body)' }}>Delete this user?</h2>
+            <p style={{ margin: '0 0 6px', fontSize: 13, color: 'var(--fg-sub)' }}>
+              <strong style={{ color: 'var(--fg-body)' }}>{confirmUser.business_name || confirmUser.full_name || confirmUser.email}</strong>
+            </p>
+            <p style={{ margin: '0 0 24px', fontSize: 13, color: 'var(--fg-muted)', lineHeight: 1.6 }}>
+              This permanently deletes their account and all associated data. Their frames will remain public but unmanaged. This cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button onClick={() => setConfirmUser(null)} style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', fontSize: 13, fontWeight: 600, color: 'var(--fg-sub)', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => doDelete(confirmUser)} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: 'var(--danger)', fontSize: 13, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>Yes, delete</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

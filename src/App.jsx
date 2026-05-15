@@ -21,6 +21,7 @@ import Admin from "./pages/Admin";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import Contact from "./pages/Contact";
+import Suspended from "./pages/Suspended";
 
 import SigninFooter from "./components/SigninFooter";
 import Pricing from "./pages/Pricing";
@@ -58,6 +59,7 @@ function App() {
 
           {/* Support */}
           <Route path="/contact" element={<Contact />} />
+          <Route path="/suspended" element={<Suspended />} />
 
           {/* Legal */}
           <Route path="/privacy"   element={<PrivacyPolicy />} />
