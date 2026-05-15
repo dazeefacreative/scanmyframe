@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { supabase } from '../services/supabaseClient';
 
-import logo from '../assets/images/scanframe.png';
+import logo from '../assets/images/Scanframe.png';
 
 const APPEAL_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-appeal`;
 const ANON_KEY   = import.meta.env.VITE_SUPABASE_ANON_KEY;
