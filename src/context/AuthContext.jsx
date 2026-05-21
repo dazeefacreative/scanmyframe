@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../services/supabaseClient';
 import {
   requestPasswordReset,
@@ -9,11 +9,14 @@ import {
 
 const AuthContext = createContext();
 
+const INACTIVITY_TIMEOUT = 4 * 60 * 60 * 1000; // 4 hours
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const inactivityTimer = useRef(null);
 
   useEffect(() => {
     // Use getUser() not getSession() — getSession reads localStorage without
@@ -59,6 +62,29 @@ export const AuthProvider = ({ children }) => {
       subscription?.unsubscribe();
     };
   }, []);
+
+  const resetInactivityTimer = useCallback(() => {
+    if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
+    inactivityTimer.current = setTimeout(async () => {
+      await supabase.auth.signOut({ scope: 'local' });
+      setSession(null);
+      setUser(null);
+    }, INACTIVITY_TIMEOUT);
+  }, []);
+
+  useEffect(() => {
+    if (!user) {
+      if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
+      return;
+    }
+    const events = ['mousemove', 'keydown', 'click', 'touchstart', 'scroll'];
+    events.forEach(e => document.addEventListener(e, resetInactivityTimer, { passive: true }));
+    resetInactivityTimer();
+    return () => {
+      events.forEach(e => document.removeEventListener(e, resetInactivityTimer));
+      if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
+    };
+  }, [user, resetInactivityTimer]);
 
   const signUp = async (email, password, fullName) => {
     setLoading(true);

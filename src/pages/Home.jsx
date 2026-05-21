@@ -275,22 +275,6 @@ export default function Home() {
                 See It Live
               </button>
             </div>
-            <motion.a
-              href="https://www.producthunt.com/products/scanmyframe?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-scanmyframe"
-              target="_blank"
-              rel="noopener noreferrer"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="mt-5"
-            >
-              <img
-                alt="ScanMyFrame - Turn frames into interactive digital memories | Product Hunt"
-                width="250"
-                height="54"
-                src={`https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1142708&theme=${isDark ? 'dark' : 'light'}&t=1778370270369`}
-              />
-            </motion.a>
           </div>
           <div className="w-[1000px] h-auto ml-5 md:ml-0 md:h-full md:w-full">
             <img src={frameScanning} alt="ScanMyFrame Feature" className="w-full md:mt-0" />
