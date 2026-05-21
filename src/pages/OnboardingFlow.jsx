@@ -90,6 +90,22 @@ function StepProfile({ data, onChange, onNext, onSkip, loading, error, isDark })
         This helps us personalise your experience. You can update this anytime.
       </p>
 
+      {/* Username */}
+      <div className="mb-4">
+        <label className={`block text-sm font-medium mb-1.5 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+          Username <span className="text-red-400">*</span>
+        </label>
+        <input
+          className={inputCls}
+          placeholder="e.g. dazeefa_studio"
+          value={data.full_name}
+          onChange={e => onChange('full_name', e.target.value)}
+        />
+        <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+          This is how we'll address you across the platform.
+        </p>
+      </div>
+
       {/* Business Logo */}
       <div className="mb-4">
         <label className={`block text-sm font-medium mb-1.5 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -449,20 +465,24 @@ export default function OnboardingFlow() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Pre-fill newsletter preference from DB (set during email signup)
+  // Pre-fill name and newsletter from DB
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
-      supabase.from('users').select('newsletter_opt_in').eq('id', user.id).single()
+      supabase.from('users').select('newsletter_opt_in, full_name').eq('id', user.id).single()
         .then(({ data }) => {
-          if (data?.newsletter_opt_in) {
-            setProfile(prev => ({ ...prev, newsletter_opt_in: true }));
-          }
+          if (!data) return;
+          setProfile(prev => ({
+            ...prev,
+            newsletter_opt_in: data.newsletter_opt_in ?? false,
+            full_name: data.full_name ?? '',
+          }));
         });
     });
   }, []);
 
   const [profile, setProfile] = useState({
+    full_name: '',
     business_name: '',
     business_email: '',
     business_type: '',
@@ -496,11 +516,17 @@ export default function OnboardingFlow() {
       const updates = { onboarding_step: 1, newsletter_opt_in: profile.newsletter_opt_in, updated_at: new Date().toISOString() };
 
       if (!skip) {
+        if (!profile.full_name?.trim()) {
+          setError('Please enter a username.');
+          setLoading(false);
+          return;
+        }
         if (!profile.business_name.trim()) {
           setError('Please enter your business name.');
           setLoading(false);
           return;
         }
+        updates.full_name      = profile.full_name.trim();
         updates.business_name  = profile.business_name;
         updates.business_type  = profile.business_type  || null;
         updates.business_email = profile.business_email || null;

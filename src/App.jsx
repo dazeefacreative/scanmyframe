@@ -32,7 +32,7 @@ import CookieConsent from "./components/CookieConsent";
 
 function App() {
   const location = useLocation();
-  const authPages = ["/signin", "/verify-email-pending", "/verify-email", "/reset-password", "/forgot-password", "/auth/callback", "/onboarding"];
+  const authPages = ["/verify-email-pending", "/verify-email", "/reset-password", "/forgot-password", "/auth/callback", "/onboarding"];
   const shortFooter = authPages.includes(location.pathname);
 
   // Scroll to top on every route change

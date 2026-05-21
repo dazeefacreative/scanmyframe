@@ -11,6 +11,13 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+// Suppress browser's native install UI everywhere; Dashboard will show it on its own terms
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  window.__pwaInstallPrompt = e;
+  window.dispatchEvent(new Event('pwainstallready'));
+});
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <HelmetProvider>

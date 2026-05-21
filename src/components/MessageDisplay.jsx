@@ -56,7 +56,7 @@ let style = {
   if (!message) return null;
 
   return (
-    <div style={style}>
+    <div style={style} className='text-sm font-medium'>
       {message.err && <p>{message.err}</p>}
       {message.success && <p>{message.success}</p>}
       {message.normal && <p>{message.normal}</p>}

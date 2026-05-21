@@ -1,19 +1,35 @@
 import { supabase } from '../services/supabaseClient';
 
-// Signup with Email
-export async function handleEmailSignup(name, email, password, newsletterOptIn = false) {
+// Signup with Email — username is collected during onboarding, stored empty for now
+export async function handleEmailSignup(email, password) {
   try {
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: name, newsletter_opt_in: newsletterOptIn },
+        data: { full_name: '' },
         emailRedirectTo: `${window.location.origin}/verify-email`,
       },
     });
 
     if (authError) throw authError;
-    localStorage.setItem('pendingEmail', email); // save email
+
+    // Manually create the users profile row.
+    // Some DB triggers may not fire until email is confirmed, so we insert
+    // directly to guarantee the row exists before onboarding runs.
+    const { error: profileError } = await supabase
+      .from('users')
+      .insert([{
+        id: authData.user.id,
+        email,
+        full_name: '',
+        is_vendor: true,
+      }]);
+
+    // 23505 = unique_violation: row already created by a trigger — safe to ignore
+    if (profileError && profileError.code !== '23505') throw profileError;
+
+    localStorage.setItem('pendingEmail', email);
     return authData.user;
   } catch (err) {
     throw err;
@@ -43,6 +59,25 @@ export async function handleGoogleLogin() {
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) throw error;
+
+    return data.user;
+  } catch (err) {
+    throw err;
+  }
+}
+
+// Microsoft Login
+export async function handleMicrosoftLogin() {
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'azure',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        scopes: 'email profile openid',
       },
     });
 

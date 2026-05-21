@@ -17,7 +17,7 @@ import scanFrameLogoAlt from '../assets/images/Scanframe alt.png';
 import NotificationDropdown from '../components/NotificationDropDown';
 import { sendLoginAlertEmail, checkAndUpdateKnownDevices, buildDeviceInfo, sendDeletionRequestEmail } from '../services/supabaseHelpers';
 
-// ─── Icon primitive ───────────────────────────────────────────────────────────
+// ?"??"??"? Icon primitive ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
 const Icon = ({ path, size = 20, className = '', style }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
     strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
@@ -59,14 +59,13 @@ const NAV = [
 
 const SETTINGS_SECTIONS = [
   { id: 'profile',       label: 'Profile',       icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0' },
-  { id: 'business',      label: 'Business',      icon: 'M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6' },
   { id: 'branding',      label: 'QR Branding',   icon: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM17 17h3v3h-3z', plans: ['business', 'trial'] },
   { id: 'notifications', label: 'Notifications', icon: 'M18 16v-5a6 6 0 10-12 0v5l-2 3h16l-2-3zM10 22a2 2 0 004 0' },
   { id: 'security',      label: 'Security',      icon: 'M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z' },
   { id: 'danger',        label: 'Danger zone',   icon: 'M12 2L1 21h22L12 2zM12 9v5M12 18v.01' },
 ];
 
-// ─── Theme-aware colour tokens (no Tailwind gray) ────────────────────────────
+// ?"??"??"? Theme-aware colour tokens (no Tailwind gray) ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
 // All colours are explicit hex values so Tailwind's gray override never bites.
 const t = {
   // backgrounds
@@ -88,7 +87,7 @@ const t = {
   headerBg:    (d) => d ? '#0d0d0d' : '#f5f5f0',
 };
 
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
+// ?"??"??"? Skeleton ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
 const Skeleton = ({ isDark, style }) => (
   <div style={{
     borderRadius: 12,
@@ -98,8 +97,8 @@ const Skeleton = ({ isDark, style }) => (
   }} />
 );
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-const trunc = (str, n = 20) => str && str.length > n ? str.slice(0, n) + '…' : (str ?? '');
+// ?"??"??"? Helpers ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
+const trunc = (str, n = 20) => str && str.length > n ? str.slice(0, n) + '...' : (str ?? '');
 
 function TitleTooltip({ full, children }) {
   const [show, setShow] = useState(false);
@@ -201,7 +200,7 @@ function StatCard({ label, value, sub, icon, accentBg, delay, isDark, onClick, a
   );
 }
 
-// ─── Frame card ───────────────────────────────────────────────────────────────
+// ?"??"??"? Frame card ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
 function FrameCard({ frame, isDark, onEdit, onDelete }) {
   const [copied, setCopied] = useState(false);
 
@@ -250,7 +249,7 @@ function FrameCard({ frame, isDark, onEdit, onDelete }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: t.textMuted(isDark), marginBottom: 12 }}>
           <Icon path={icons.scan} size={11} />
           {frame.total_scans ?? 0} scans
-          <span style={{ margin: '0 2px' }}>·</span>
+          <span style={{ margin: '0 2px' }}>&middot;</span>
           {new Date(frame.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
@@ -271,7 +270,7 @@ function FrameCard({ frame, isDark, onEdit, onDelete }) {
   );
 }
 
-// ─── Empty state ──────────────────────────────────────────────────────────────
+// ?"??"??"? Empty state ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
 function EmptyFrames({ onCreateFrame, isDark }) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
@@ -295,7 +294,7 @@ function EmptyFrames({ onCreateFrame, isDark }) {
   );
 }
 
-// ─── Delete modal ─────────────────────────────────────────────────────────────
+// ?"??"??"? Delete modal ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
 function DeleteModal({ frame, onConfirm, onCancel, isDark }) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
@@ -320,7 +319,7 @@ function DeleteModal({ frame, onConfirm, onCancel, isDark }) {
   );
 }
 
-// ─── Overview tab ─────────────────────────────────────────────────────────────
+// ?"??"??"? Overview tab ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
@@ -517,7 +516,7 @@ function OverviewTab({ stats, frames, isDark, onNavigate, canViewAnalytics, noti
       <div className="db-stat-grid">
         <StatCard label="Total Scans"   value={totalScansNum.toLocaleString()} sub="all-time QR scans"          icon="scan"    accentBg="#D4AF37"  delay={0.05} isDark={isDark} />
         <StatCard label="Active Frames" value={stats.activeFrames}             sub={`of ${stats.totalFrames} created`} icon="frame"   accentBg="#0F4C3A"  delay={0.10} isDark={isDark} />
-        <StatCard label="Top Frame"     value={trunc(topFrame?.title) || '—'}  sub={`${(topFrame?.total_scans ?? 0).toLocaleString()} scans`} icon="chart" accentBg="#7c3aed" delay={0.15} isDark={isDark} valueTooltip={topFrame?.title} />
+        <StatCard label="Top Frame"     value={trunc(topFrame?.title) || '-'}  sub={`${(topFrame?.total_scans ?? 0).toLocaleString()} scans`} icon="chart" accentBg="#7c3aed" delay={0.15} isDark={isDark} valueTooltip={topFrame?.title} />
         <StatCard label="Current Plan"  value={stats.plan}                     sub={stats.plan === 'Business' ? 'Unlimited QR credits' : stats.plan === 'Free' ? (stats.qrCodeLeft > 0 ? `${stats.qrCodeLeft} QR locked` : 'Upgrade to create frames') : `${stats.qrCodeLeft} QR left`} icon="billing" accentBg="#162722" delay={0.20} isDark={isDark} />
       </div>
 
@@ -532,7 +531,7 @@ function OverviewTab({ stats, frames, isDark, onNavigate, canViewAnalytics, noti
               </p>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
                 <h2 style={{ margin: 0, fontFamily: 'Poltawski Nowy, serif', fontSize: 22, color: t.textPrimary(isDark), fontWeight: 700, lineHeight: 1 }}>
-                  {chartLoading ? '…' : periodTotal.toLocaleString()}
+                  {chartLoading ? '...' : periodTotal.toLocaleString()}
                 </h2>
                 {/* 7-day comparison badge */}
                 {scanPeriod === '7d' && !chartLoading && comparison !== null && (
@@ -543,7 +542,7 @@ function OverviewTab({ stats, frames, isDark, onNavigate, canViewAnalytics, noti
                     border:     `1px solid ${comparison.up ? 'rgba(74,222,128,0.3)' : 'rgba(239,68,68,0.3)'}`,
                     whiteSpace: 'nowrap',
                   }}>
-                    {comparison.up ? '↑' : '↓'} {comparison.pct}% vs last week
+                    {comparison.up ? '+' : '-'}{comparison.pct}% vs last week
                   </span>
                 )}
               </div>
@@ -588,15 +587,15 @@ function OverviewTab({ stats, frames, isDark, onNavigate, canViewAnalytics, noti
           <p style={{ margin: '0 0 4px', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.textMuted(isDark) }}>Recent activity</p>
           <h3 style={{ margin: '0 0 14px', fontFamily: 'Poltawski Nowy, serif', fontSize: 16, color: t.textPrimary(isDark), fontWeight: 700 }}>What's happening</h3>
           {activityLoading ? (
-            <p style={{ fontSize: 11, color: t.textMuted(isDark) }}>Loading…</p>
+            <p style={{ fontSize: 11, color: t.textMuted(isDark) }}>Loading...</p>
           ) : displayActivity.length === 0 ? (
             <p style={{ fontSize: 11, color: t.textMuted(isDark) }}>No activity yet.</p>
           ) : displayActivity.map((a, i) => {
             const isNotif = a.type === 'notification';
             const suffix =
-              a.type === 'comment'   ? ` · new comment from ${a.name || 'a visitor'}` :
-              a.type === 'milestone' ? ` · reached ${a.scans.toLocaleString()} scans` :
-              a.type === 'inactive'  ? ' · is inactive' :
+              a.type === 'comment'   ? ` - new comment from ${a.name || 'a visitor'}` :
+              a.type === 'milestone' ? ` - reached ${a.scans.toLocaleString()} scans` :
+              a.type === 'inactive'  ? ' - is inactive' :
                                        '';
             const dot =
               a.type === 'comment'      ? '#D4AF37'  :
@@ -663,7 +662,7 @@ function OverviewTab({ stats, frames, isDark, onNavigate, canViewAnalytics, noti
                     View all activity
                   </span>
                   <span style={{ fontSize: 11, color: t.textMuted(isDark), display: 'flex', alignItems: 'center', gap: 4 }}>
-                    {canViewAnalytics ? '→' : (
+                    {canViewAnalytics ? '>' : (
                       <>
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                           <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
@@ -711,7 +710,7 @@ function OverviewTab({ stats, frames, isDark, onNavigate, canViewAnalytics, noti
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
           <h2 style={{ margin: 0, fontFamily: 'Poltawski Nowy, serif', fontSize: 20, color: t.textPrimary(isDark), fontWeight: 700 }}>Recent frames</h2>
           <button onClick={() => onNavigate('frames')} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: t.textPrimary(isDark), fontWeight: 600, fontSize: 12 }}>
-            View all →
+            View all
           </button>
         </div>
         {frames.length === 0
@@ -727,7 +726,7 @@ function OverviewTab({ stats, frames, isDark, onNavigate, canViewAnalytics, noti
   );
 }
 
-// ─── Frames tab ───────────────────────────────────────────────────────────────
+// ?"??"??"? Frames tab ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
 function FramesTab({ frames, isDark, onCreateFrame, onEdit, onDelete }) {
   const [search, setSearch]           = useState('');
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -751,7 +750,7 @@ function FramesTab({ frames, isDark, onCreateFrame, onEdit, onDelete }) {
           <p style={{ fontSize: 13, color: t.textSub(isDark), marginTop: 2 }}>{frames.length} frame{frames.length !== 1 ? 's' : ''} total</p>
         </div>
         <div className="db-search-row">
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search frames…"
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search frames..."
             className="db-search-input"
             style={{ padding: '8px 14px', borderRadius: 10, border: `1px solid ${t.border(isDark)}`, background: t.inputBg(isDark), color: t.textPrimary(isDark), fontSize: 13, outline: 'none' }} />
           <button onClick={onCreateFrame}
@@ -780,7 +779,7 @@ function FramesTab({ frames, isDark, onCreateFrame, onEdit, onDelete }) {
   );
 }
 
-// ─── Create / Edit tab ────────────────────────────────────────────────────────
+// ?"??"??"? Create / Edit tab ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
 function CreateTab({ editingFrame, onSaved, onCreated, isDark, onNavigateToBilling, planId }) {
   const isEdit = !!editingFrame;
   return (
@@ -805,7 +804,7 @@ function CreateTab({ editingFrame, onSaved, onCreated, isDark, onNavigateToBilli
   );
 }
 
-// ─── Analytics tab ────────────────────────────────────────────────────────────
+// ?"??"??"? Analytics tab ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
 function AnalyticsTab({ frames, isDark, planId, notificationData }) {
   const [chartPeriod,  setChartPeriod]  = useState(30);
   const [chartData,    setChartData]    = useState([]); // [{date, total, unique}]
@@ -1059,7 +1058,7 @@ function AnalyticsTab({ frames, isDark, planId, notificationData }) {
               {periodTotal.toLocaleString()}
               {growthPct !== null && (
                 <span style={{ fontSize: 13, fontWeight: 600, marginLeft: 10, color: Number(growthPct) >= 0 ? '#4ade80' : '#f87171' }}>
-                  {Number(growthPct) >= 0 ? '↑' : '↓'} {Math.abs(Number(growthPct))}%
+                  {Number(growthPct) >= 0 ? '+' : '-'}{Math.abs(Number(growthPct))}%
                 </span>
               )}
             </h2>
@@ -1088,7 +1087,7 @@ function AnalyticsTab({ frames, isDark, planId, notificationData }) {
         </div>
         {chartLoading ? (
           <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: 13, color: t.textMuted(isDark) }}>Loading…</span>
+            <span style={{ fontSize: 13, color: t.textMuted(isDark) }}>Loading...</span>
           </div>
         ) : chartData.every(d => d.total === 0) ? (
           <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1139,7 +1138,7 @@ function AnalyticsTab({ frames, isDark, planId, notificationData }) {
           <h3 style={{ margin: '0 0 20px', fontFamily: 'Poltawski Nowy, serif', fontSize: 18, fontWeight: 700 }}
               className={`${isDark? 'text-white' : 'text-primary'}`}>Top locations</h3>
           {geoLoading ? (
-            <p style={{ fontSize: 13, color: t.textMuted(isDark) }}>Loading…</p>
+            <p style={{ fontSize: 13, color: t.textMuted(isDark) }}>Loading...</p>
           ) : allLocations.length === 0 ? (
             <p style={{ fontSize: 13, color: t.textMuted(isDark) }}>No location data yet.</p>
           ) : allLocations.map((loc, i) => {
@@ -1149,7 +1148,7 @@ function AnalyticsTab({ frames, isDark, planId, notificationData }) {
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                   <span style={{ fontSize: 13, color: t.textPrimary(isDark) }}>
                     <span style={{ fontWeight: 600 }}>{loc.city}</span>
-                    {loc.country && <span style={{ color: t.textMuted(isDark), marginLeft: 6 }}>· {loc.country}</span>}
+                    {loc.country && <span style={{ color: t.textMuted(isDark), marginLeft: 6 }}>{loc.country}</span>}
                   </span>
                   <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12, color: t.textSub(isDark) }}>{loc.count.toLocaleString()}</span>
                 </div>
@@ -1207,7 +1206,7 @@ function AnalyticsTab({ frames, isDark, planId, notificationData }) {
                   <div key={name} style={{ marginBottom: i < devEntries.length - 1 ? 16 : 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: t.textPrimary(isDark) }}>{name}</span>
-                      <span style={{ fontSize: 12, color: t.textSub(isDark), fontFamily: 'ui-monospace, monospace' }}>{pct}% · {count.toLocaleString()}</span>
+                      <span style={{ fontSize: 12, color: t.textSub(isDark), fontFamily: 'ui-monospace, monospace' }}>{pct}% / {count.toLocaleString()}</span>
                     </div>
                     <div style={{ height: 6, background: isDark ? '#2a2a2a' : '#e8e8e4', borderRadius: 99, overflow: 'hidden' }}>
                       <div style={{ width: `${pct}%`, height: '100%', background: devColors[i] || '#9CA3AF', borderRadius: 99 }} />
@@ -1228,7 +1227,7 @@ function AnalyticsTab({ frames, isDark, planId, notificationData }) {
                   <div key={name} style={{ marginBottom: i < brEntries.length - 1 ? 16 : 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: t.textPrimary(isDark) }}>{name}</span>
-                      <span style={{ fontSize: 12, color: t.textSub(isDark), fontFamily: 'ui-monospace, monospace' }}>{pct}% · {count.toLocaleString()}</span>
+                      <span style={{ fontSize: 12, color: t.textSub(isDark), fontFamily: 'ui-monospace, monospace' }}>{pct}% / {count.toLocaleString()}</span>
                     </div>
                     <div style={{ height: 6, background: isDark ? '#2a2a2a' : '#e8e8e4', borderRadius: 99, overflow: 'hidden' }}>
                       <div style={{ width: `${pct}%`, height: '100%', background: brColors[i] || '#9CA3AF', borderRadius: 99 }} />
@@ -1254,7 +1253,7 @@ function AnalyticsTab({ frames, isDark, planId, notificationData }) {
         </div>
 
         {activityLoading ? (
-          <p style={{ fontSize: 13, color: t.textMuted(isDark) }}>Loading…</p>
+          <p style={{ fontSize: 13, color: t.textMuted(isDark) }}>Loading...</p>
         ) : displayActivity.length === 0 ? (
           <p style={{ fontSize: 13, color: t.textMuted(isDark) }}>No activity yet. Share your QR codes to start tracking.</p>
         ) : (
@@ -1262,9 +1261,9 @@ function AnalyticsTab({ frames, isDark, planId, notificationData }) {
             {displayActivity.map((a, i) => {
               const isNotif = a.type === 'notification';
               const suffix =
-                a.type === 'comment'   ? ` · comment from ${a.name || 'a visitor'}` :
-                a.type === 'milestone' ? ` · reached ${a.scans.toLocaleString()} scans` :
-                a.type === 'inactive'  ? ' · is inactive' :
+                a.type === 'comment'   ? ` - comment from ${a.name || 'a visitor'}` :
+                a.type === 'milestone' ? ` - reached ${a.scans.toLocaleString()} scans` :
+                a.type === 'inactive'  ? ' - is inactive' :
                                          '';
               const dot =
                 a.type === 'comment'      ? '#D4AF37'  :
@@ -1305,12 +1304,12 @@ function AnalyticsTab({ frames, isDark, planId, notificationData }) {
   );
 }
 
-// ─── Billing tab ──────────────────────────────────────────────────────────────
+// ?"??"??"? Billing tab ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
 // function BillingTab({ userProfile, isDark, onNavigateToPricing }) {
 //   const plan      = userProfile?.plan || 'Trial Plan';
 //   const qrCodeLeft  = userProfile?.qr_codes_remaining ?? 10;
 //   const LABELS    = { free: 'Trial Plan', basic: 'Basic', pro: 'Pro', business: 'Business' };
-//   const PRICES    = { free: '₦0/mo', basic: '₦3,000/mo', pro: '₦15,000/mo', business: '₦50,000/mo' };
+//   const PRICES    = { free: '?,?0/mo', basic: '?,?3,000/mo', pro: '?,?15,000/mo', business: '?,?50,000/mo' };
 
 //   const actionBtn = {
 //     display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px',
@@ -1368,7 +1367,7 @@ function AnalyticsTab({ frames, isDark, planId, notificationData }) {
 //   );
 // }
 
-// ─── Settings tab ─────────────────────────────────────────────────────────────
+// ?"??"??"? Settings tab ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
 function AccountIdField({ userId, isDark, labelStyle }) {
   const [copied, setCopied] = useState(false);
   function copy() {
@@ -1383,7 +1382,7 @@ function AccountIdField({ userId, isDark, labelStyle }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 8}}>
         <div style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: `1px solid ${t.border(isDark)}`, background: t.inputBg(isDark), fontSize: 11, fontFamily: 'monospace', color: t.textMuted(isDark), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
         className='max-w-[220px] sm:max-w-full' >
-          {userId || '—'}
+          {userId || '-'}
           
         </div>
         <button onClick={copy} style={{ flexShrink: 0, padding: '9px 14px', borderRadius: 10, border: `1px solid ${t.border(isDark)}`, background: copied ? '#0F4C3A' : 'transparent', color: copied ? '#FAF5DD' : t.textSub(isDark), fontSize: 11, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -1407,7 +1406,7 @@ async function compressQRLogo(file) {
         resolve(e.target.result); // SVG: use as data URI directly
         return;
       }
-      // PNG: resize to max 80×80 to hit ~10-15 KB
+      // PNG: resize to max 80?-80 to hit ~10-15 KB
       const img = new Image();
       img.onload = () => {
         const MAX = 80;
@@ -1752,13 +1751,12 @@ function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccou
 
   const saveBtn = (
     <button onClick={handleSaveClick} disabled={saving} style={{ background: isRestricted?(isDark?'#2a2a2a':'#e8e8e4'):'#0F4C3A', color: isRestricted?t.textMuted(isDark):'#FAF5DD', fontWeight:700, padding:'9px 20px', borderRadius:10, fontSize:12, border:'none', cursor: isRestricted?'not-allowed':'pointer', display:'flex', alignItems:'center', gap:6 }}>
-      {saved ? <><Icon path={icons.check} size={12} style={{ color:'#FAF5DD' }} /> Saved!</> : saving ? 'Saving…' : 'Save changes'}
+      {saved ? <><Icon path={icons.check} size={12} style={{ color:'#FAF5DD' }} /> Saved!</> : saving ? 'Saving...' : 'Save changes'}
     </button>
   );
 
   const navSections = [
     { id:'profile',       label:'Profile',       icon:'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0' },
-    { id:'business',      label:'Business',      icon:'M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6' },
     { id:'branding',      label:'QR Branding',   icon:'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM17 17h3v3h-3z' },
     { id:'notifications', label:'Notifications', icon:'M18 16v-5a6 6 0 10-12 0v5l-2 3h16l-2-3zM10 22a2 2 0 004 0' },
     { id:'security',      label:'Security',      icon:'M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z' },
@@ -1774,55 +1772,76 @@ function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccou
           {/* Profile */}
           {section === 'profile' && (
             <>
-              <SCard isDark={isDark} title="Your profile" eyebrow="Public details" footer={saveBtn}>
-                <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-                  <AccountIdField userId={user?.id} isDark={isDark} labelStyle={labelStyle} />
-                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }} className="db-2col">
-                    <div><label style={labelStyle}>Full name</label><input style={inputStyle} value={name} onChange={e => setName(e.target.value)} placeholder="Your name" /></div>
-                    <div><label style={labelStyle}>Phone</label><input style={inputStyle} type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+234 800 000 0000" /></div>
-                  </div>
-                  <div><label style={labelStyle}>Account email</label><input style={{ ...inputStyle, opacity:0.5 }} value={user?.email||''} disabled /></div>
-                  {saveError && <p style={{ fontSize:12, color:'#ef4444', padding:'8px 12px', background:'rgba(239,68,68,0.08)', borderRadius:8, border:'1px solid rgba(239,68,68,0.2)', margin:0 }}>{saveError}</p>}
-                  {lastUpdated && !isRestricted && <p style={{ fontSize:11, color:t.textMuted(isDark), margin:0 }}>Last updated {lastUpdated.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}.</p>}
-                </div>
-              </SCard>
-              <SCard isDark={isDark} title="Profile photo" eyebrow="Brand identity">
-                <div style={{ display:'flex', alignItems:'center', gap:16 }}>
-                  <div style={{ width:64, height:64, borderRadius:12, background: isDark?'#2a2a2a':'#f0efe9', border:`1px solid ${t.border(isDark)}`, display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden', flexShrink:0 }}>
-                    {logoUrl ? <img src={logoUrl} alt="logo" style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : <Icon path={icons.frame} size={22} style={{ color:t.textMuted(isDark), opacity:0.4 }} />}
-                  </div>
-                  <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                    <p style={{ margin:0, fontSize:12, color:t.textSub(isDark) }}>Appears on public frame pages. JPG only, max 500kb.</p>
-                    <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-                      <input ref={logoInputRef} type="file" accept=".jpg,.jpeg" onChange={handleLogoChange} style={{ display:'none' }} />
-                      <button onClick={() => logoInputRef.current?.click()} disabled={logoUploading} style={{ background:'#0F4C3A', color:'#FAF5DD', fontWeight:700, padding:'7px 16px', borderRadius:9, fontSize:12, border:'none', cursor: logoUploading?'not-allowed':'pointer', opacity: logoUploading?0.6:1 }}>
-                        {logoUploading ? 'Uploading…' : logoUrl ? 'Change' : 'Upload'}
-                      </button>
-                      {logoUrl && !logoUploading && (
-                        <button onClick={async () => { await supabase.from('users').update({ business_logo:null, updated_at:new Date().toISOString() }).eq('id',user.id); setLogoUrl(null); onProfileUpdated?.(prev=>({...prev,business_logo:null})); }} style={{ background:'transparent', border:'1px solid rgba(239,68,68,0.35)', color:'#ef4444', fontWeight:600, padding:'6px 14px', borderRadius:9, fontSize:12, cursor:'pointer' }}>Remove</button>
-                      )}
+              <SCard isDark={isDark} title="Your profile" eyebrow="Personal details" footer={saveBtn}>
+                <div className="db-profile-row" style={{ display:'flex', gap:32, alignItems:'flex-start' }}>
+
+                  {/* Fields */}
+                  <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:12 }}>
+                    <AccountIdField userId={user?.id} isDark={isDark} labelStyle={labelStyle} />
+                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }} className="db-2col">
+                      <div><label style={labelStyle}>Username</label><input style={inputStyle} value={name} onChange={e => setName(e.target.value)} placeholder="e.g. dazeefa_studio" /></div>
+                      <div><label style={labelStyle}>Account email</label><input style={{ ...inputStyle, opacity:0.5 }} value={user?.email||''} disabled /></div>
                     </div>
-                    {logoError && <p style={{ margin:0, fontSize:12, color:'#ef4444' }}>{logoError}</p>}
+
+                    <div style={{ height:1, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)', margin:'4px 0 2px' }} />
+                    <p style={{ margin:0, fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.1em', color:t.textMuted(isDark) }}>Business details</p>
+                    <p className={`font-poltawski text-md ${isDark? 'text-white' : 'text-[#444]'}`}>Your contact card</p>
+
+                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }} className="db-2col">
+                      <div><label style={labelStyle}>Business name</label><input style={inputStyle} value={bizName} onChange={e => setBizName(e.target.value)} placeholder="Your business name" /></div>
+                      <div><label style={labelStyle}>Phone</label><input style={inputStyle} type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+234 800 000 0000" /></div>
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Business email</label>
+                      <input style={inputStyle} type="email" value={bizEmail} onChange={e => setBizEmail(e.target.value)} placeholder="contact@yourbusiness.com" />
+                      <p style={{ fontSize:11, color:t.textMuted(isDark), marginTop:4 }}>Shown publicly on your frame pages.</p>
+                    </div>
+                    {saveError && <p style={{ fontSize:12, color:'#ef4444', padding:'8px 12px', background:'rgba(239,68,68,0.08)', borderRadius:8, border:'1px solid rgba(239,68,68,0.2)', margin:0 }}>{saveError}</p>}
+                    {lastUpdated && !isRestricted && <p style={{ fontSize:11, color:t.textMuted(isDark), margin:0 }}>Last updated {lastUpdated.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}.</p>}
                   </div>
+
+                  {/* Logo upload ??" fills empty right space */}
+                  <div className="db-profile-photo" style={{ flexShrink:0, display:'flex', flexDirection:'column', alignItems:'center', gap:10, paddingTop:2 }}>
+                    {/* Image box */}
+                    <div
+                      onClick={() => logoInputRef.current?.click()}
+                      style={{ width:110, height:110, borderRadius:14, background: isDark?'#1e1e1e':'#f0efe9', border:`1.5px dashed ${t.border(isDark)}`, display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden', cursor:'pointer', flexShrink:0, transition:'border-color 0.2s' }}
+                    >
+                      {logoUrl
+                        ? <img src={logoUrl} alt="logo" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                        : <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
+                            <Icon path={icons.frame} size={22} style={{ color:t.textMuted(isDark), opacity:0.4 }} />
+                          </div>
+                      }
+                    </div>
+                    <input ref={logoInputRef} type="file" accept=".jpg,.jpeg" onChange={handleLogoChange} style={{ display:'none' }} />
+
+                    {/* Controls + label */}
+                    <div className="db-profile-info" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
+                      {logoUploading
+                        ? <p style={{ margin:0, fontSize:11, color:t.textMuted(isDark) }}>Uploading...</p>
+                        : logoUrl
+                          ? <button onClick={async () => { await supabase.from('users').update({ business_logo:null, updated_at:new Date().toISOString() }).eq('id',user.id); setLogoUrl(null); onProfileUpdated?.(prev=>({...prev,business_logo:null})); }} style={{ background:'transparent', border:'1px solid rgba(239,68,68,0.35)', color:'#ef4444', fontWeight:600, padding:'5px 14px', borderRadius:8, fontSize:11, cursor:'pointer' }}>Remove</button>
+                          : <button onClick={() => logoInputRef.current?.click()} style={{ background:'#0F4C3A', color:'#FAF5DD', fontWeight:600, padding:'5px 14px', borderRadius:8, fontSize:11, border:'none', cursor:'pointer' }}>Upload</button>
+                      }
+                      <label style={{ ...labelStyle, margin:0 }}>Profile photo</label>
+                      <p style={{ margin:0, fontSize:10, color:t.textMuted(isDark), textAlign:'center', lineHeight:1.4 }}>JPG only &middot; max 500kb</p>
+                      {logoError && <p style={{ margin:0, fontSize:11, color:'#ef4444', textAlign:'center' }}>{logoError}</p>}
+                    </div>
+                  </div>
+
                 </div>
-                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+                <style>{`
+                  @keyframes spin { to { transform: rotate(360deg); } }
+                  @media(max-width:639px) {
+                    .db-profile-row { flex-direction: column !important; }
+                    .db-profile-photo { flex-direction: row !important; align-items: flex-start !important; width: 100% !important; padding-top: 0 !important; gap: 14px !important; }
+                    .db-profile-info { align-items: flex-start !important; }
+                    .db-2col { grid-template-columns: 1fr !important; }
+                  }
+                `}</style>
               </SCard>
             </>
-          )}
-
-          {/* Business */}
-          {section === 'business' && (
-            <SCard isDark={isDark} title="Business profile" eyebrow="Customer-facing" footer={saveBtn}>
-              <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-                <div><label style={labelStyle}>Business name</label><input style={inputStyle} value={bizName} onChange={e => setBizName(e.target.value)} placeholder="Your business name" /></div>
-                <div>
-                  <label style={labelStyle}>Business email</label>
-                  <input style={inputStyle} type="email" value={bizEmail} onChange={e => setBizEmail(e.target.value)} placeholder="contact@yourbusiness.com" />
-                  <p style={{ fontSize:11, color:t.textMuted(isDark), marginTop:5 }}>Shown publicly on your frame pages as a contact address.</p>
-                </div>
-                {saveError && <p style={{ fontSize:12, color:'#ef4444', padding:'8px 12px', background:'rgba(239,68,68,0.08)', borderRadius:8, border:'1px solid rgba(239,68,68,0.2)', margin:0 }}>{saveError}</p>}
-              </div>
-            </SCard>
           )}
 
           {/* QR Branding */}
@@ -1868,7 +1887,7 @@ function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccou
 
                   {/* Brand logo */}
                   <div>
-                    <label style={labelStyle}>Brand logo <span style={{ textTransform:'none', fontWeight:400, letterSpacing:0 }}>· RECOMMENDED · Type: SVG or PNG, Size: 24px by 24px, max 100 KB </span></label>
+                    <label style={labelStyle}>Brand logo <span style={{ textTransform:'none', fontWeight:400, letterSpacing:0 }}>(recommended) - Type: SVG or PNG, Size: 24px by 24px, max 100 KB </span></label>
                     <div style={{ display:'flex', alignItems:'center', gap:12 }}>
                       {/* Current logo preview */}
                       <div style={{ width:60, height:60, borderRadius:10, background: isDark?'#2a2a2a':'#f0efe9', border:`1px solid ${t.border(isDark)}`, display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden', flexShrink:0 }}>
@@ -1882,7 +1901,7 @@ function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccou
                         <div style={{ display:'flex', gap:8 }}>
                           <input ref={qrLogoInputRef} type="file" accept=".svg,.png,image/svg+xml,image/png" onChange={handleQrLogoUpload} style={{ display:'none' }} />
                           <button onClick={() => qrLogoInputRef.current?.click()} disabled={qrLogoLoading} style={{ background:'#0F4C3A', color:'#FAF5DD', fontWeight:700, padding:'6px 14px', borderRadius:8, fontSize:11, border:'none', cursor: qrLogoLoading?'not-allowed':'pointer', opacity: qrLogoLoading?0.6:1 }}>
-                            {qrLogoLoading ? 'Processing…' : qrLogo ? 'Change' : 'Upload'}
+                            {qrLogoLoading ? 'Processing...' : qrLogo ? 'Change' : 'Upload'}
                           </button>
                           {qrLogo && <button onClick={() => { setQrLogo(null); setQrLogoError(''); }} style={{ background:'transparent', border:'1px solid rgba(239,68,68,0.35)', color:'#ef4444', fontWeight:600, padding:'5px 12px', borderRadius:8, fontSize:11, cursor:'pointer' }}>Remove</button>}
                         </div>
@@ -2023,7 +2042,7 @@ function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccou
   );
 }
 
-// ─── Main Dashboard ───────────────────────────────────────────────────────────
+// ?"??"??"? Main Dashboard ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
 export default function Dashboard() {
   const navigate               = useNavigate();
   const { user, signOut, }      = useAuth();
@@ -2041,6 +2060,7 @@ export default function Dashboard() {
   const [notificationData, setNotificationData] = useState([])
   const [activeTab,      setActiveTab]      = useState('overview');
   const [settingsSection, setSettingsSection] = useState('profile');
+  const [settingsExpanded, setSettingsExpanded] = useState(false);
   const loginAlertSent    = useRef(false);
   const notifContainerRef = useRef(null);
   const [guideActive,  setGuideActive]  = useState(false);
@@ -2058,7 +2078,29 @@ export default function Dashboard() {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [notification]);
+
+  // Pick up the PWA install prompt captured globally in main.jsx
+  useEffect(() => {
+    if (window.__pwaInstallPrompt) setDeferredPrompt(window.__pwaInstallPrompt);
+    const onReady     = () => setDeferredPrompt(window.__pwaInstallPrompt);
+    const onInstalled = () => { setDeferredPrompt(null); window.__pwaInstallPrompt = null; };
+    window.addEventListener('pwainstallready', onReady);
+    window.addEventListener('appinstalled', onInstalled);
+    return () => {
+      window.removeEventListener('pwainstallready', onReady);
+      window.removeEventListener('appinstalled', onInstalled);
+    };
+  }, []);
   const [sidebarOpen,  setSidebarOpen]  = useState(false);
+  const [deferredPrompt,    setDeferredPrompt]    = useState(null);
+  const [installDismissed,  setInstallDismissed]  = useState(() => {
+    try {
+      const raw = localStorage.getItem('pwa_install_dismissed');
+      if (!raw) return false;
+      const { ts } = JSON.parse(raw);
+      return Date.now() - ts < 30 * 24 * 60 * 60 * 1000; // re-show after 30 days
+    } catch { return false; }
+  });
   const [frames,       setFrames]       = useState([]);
 
   const [userProfile,  setUserProfile]  = useState(null);
@@ -2088,14 +2130,14 @@ export default function Dashboard() {
       if (profileRes.data) {
         setUserProfile(profileRes.data);
 
-        // ── Frame creation guide for new users ────────────────────────────
+        // ?"??"? Frame creation guide for new users ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
         const guideDone      = !!profileRes.data.frame_guide_done;
         const guideSavedStep = parseInt(localStorage.getItem('sf_frame_guide_step') || '0', 10);
         const guideResuming  = !guideDone && guideSavedStep > 0;
         const guideNewUser   = !guideDone && !framesRes.data?.length;
         if (guideNewUser || guideResuming) setGuideActive(true);
 
-        // ── Login-from-new-device alert ────────────────────────────────────
+        // ?"??"? Login-from-new-device alert ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
         if (!loginAlertSent.current) {
           loginAlertSent.current = true;
           (async () => {
@@ -2196,7 +2238,7 @@ export default function Dashboard() {
     : 0;
 
   const stats = {
-    name:         userProfile?.business_name || userProfile?.full_name?.split(' ')[0] || '',
+    name:         userProfile?.business_name || userProfile?.full_name || '',
     totalFrames:  frames.length,
     totalScans:   frames.reduce((s, f) => s + (f.total_scans || 0), 0),
     activeFrames: frames.filter(f => (f.status || 'active') === 'active').length,
@@ -2209,11 +2251,13 @@ export default function Dashboard() {
       if (tab !== 'create') setEditingFrame(null);
       setActiveTab('analytics');
       setSidebarOpen(false);
+      setSettingsExpanded(false);
       return;
     }
     if (tab !== 'create') setEditingFrame(null);
     setActiveTab(tab);
     setSidebarOpen(false);
+    setSettingsExpanded(tab === 'settings');
     if (tab === 'frames') refetchFrames();
   };
 
@@ -2262,7 +2306,7 @@ export default function Dashboard() {
     }
   };
 
-  const handleSignOut = () => { signOut(); navigate('/'); };
+  const handleSignOut = () => { signOut(); navigate('/signin'); };
 
   const handleMarkNotificationRead = async (id, isRead) => {
     setNotificationData(prev => prev.map(n => n.id === id ? { ...n, is_read: isRead } : n));
@@ -2308,7 +2352,7 @@ export default function Dashboard() {
     setActiveTab('frames');
   };
 
-  // ── Sidebar content ────────────────────────────────────────────────────────
+  // ?"??"? Sidebar content ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
   const SidebarContent = () => (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Logo */}
@@ -2325,15 +2369,15 @@ export default function Dashboard() {
           if (isSettings) {
             return (
               <div key="settings">
-                <button onClick={() => navTo('settings')}
+                <button onClick={() => { if (activeTab === 'settings') { setSettingsExpanded(prev => !prev); } else { navTo('settings'); } }}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, marginBottom: 2, fontSize: 13, fontWeight: 500, border: 'none', cursor: 'pointer', background: active ? '#0F4C3A' : 'transparent', color: active ? '#FAF5DD' : t.textSub(isDark), transition: 'all 0.15s' }}>
                   <Icon path={icons.settings} size={15} />
                   Settings
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 'auto', transition: 'transform 0.2s', transform: active ? 'rotate(180deg)' : 'rotate(0deg)', opacity: 0.6 }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 'auto', transition: 'transform 0.2s', transform: settingsExpanded ? 'rotate(180deg)' : 'rotate(0deg)', opacity: 0.6 }}>
                     <polyline points="6 9 12 15 18 9"/>
                   </svg>
                 </button>
-                {active && (
+                {settingsExpanded && (
                   <div style={{ paddingLeft: 10, marginBottom: 4 }}>
                     {SETTINGS_SECTIONS.map(sub => {
                       const isPlanLocked = sub.plans && !sub.plans.includes(currentPlanId);
@@ -2384,7 +2428,7 @@ export default function Dashboard() {
 
       {/* Bottom */}
       <div className="db-sidebar-bottom" style={{ padding: '10px 10px 16px', borderTop: `1px solid ${t.border(isDark)}`, marginTop: 8 }}>
-        {/* User chip → Settings */}
+        {/* User chip ??' Settings */}
         <button onClick={() => navTo('settings')}
           style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 10, background: t.chipBg(isDark), marginBottom: 6, border: 'none', cursor: 'pointer', textAlign: 'left', transition: 'opacity 0.15s' }}
           onMouseEnter={e => e.currentTarget.style.opacity = '0.75'}
@@ -2417,6 +2461,29 @@ export default function Dashboard() {
           </svg>
           Help &amp; Support
         </Link>
+
+        {/* Install app - shows when browser has a deferred prompt */}
+        {deferredPrompt && (
+          <button
+            onClick={async () => {
+              deferredPrompt.prompt();
+              const { outcome } = await deferredPrompt.userChoice;
+              setDeferredPrompt(null);
+              if (outcome === 'dismissed') {
+                setInstallDismissed(true);
+                localStorage.setItem('pwa_install_dismissed', JSON.stringify({ ts: Date.now() }));
+              }
+            }}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 9, fontSize: 11, border: `1px solid ${t.border(isDark)}`, background: 'transparent', color: t.textSub(isDark), cursor: 'pointer', marginBottom: 6 }}
+            onMouseEnter={e => e.currentTarget.style.opacity = '0.7'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>
+            </svg>
+            Install app
+          </button>
+        )}
 
         {/* Theme + signout */}
         <div style={{ display: 'flex', gap: 6 }}>
@@ -2475,7 +2542,7 @@ export default function Dashboard() {
           .db-sidebar-h { position:fixed; top:0; bottom:0; }
           @media(max-width:1023px){.db-sidebar-bottom{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))!important;}}
 
-          /* ── Responsive grid systems ── */
+          /* ?"??"? Responsive grid systems ?"??"? */
           .db-stat-grid      { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; }
           .db-stat-value     { font-size:26px; margin:0; }
           .db-actions-grid   { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
@@ -2485,7 +2552,7 @@ export default function Dashboard() {
           .db-brand-grid     { display:grid; grid-template-columns:1fr auto; gap:24px; align-items:flex-start; }
           .db-2col           { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
 
-          /* ── Responsive layout helpers ── */
+          /* ?"??"? Responsive layout helpers ?"??"? */
           .db-main     { padding:24px 20px; }
           .db-card     { padding:24px; }
           .db-tab-h2   { font-size:22px; }
@@ -2495,13 +2562,13 @@ export default function Dashboard() {
           .db-logo-row     { display:flex; align-items:center; gap:14px; }
           .db-overview-frame-right { display:flex; align-items:center; gap:10px; flex-shrink:0; padding-left:16px; }
 
-          /* ── Tablet (≤ 768px) ── */
+          /* ?"??"? Tablet (... 768px) ?"??"? */
           @media(max-width:768px){
             .db-main           { padding:20px 16px; }
             .db-overview-twoup { grid-template-columns:1fr; }
           }
 
-          /* ── Mobile (≤ 600px) ── */
+          /* ?"??"? Mobile (... 600px) ?"??"? */
           @media(max-width:600px){
             .db-main          { padding:16px 12px; }
             .db-card          { padding:16px; }
@@ -2521,7 +2588,7 @@ export default function Dashboard() {
             .db-overview-frame-right { padding-left:8px; gap:6px; }
           }
 
-          /* ── Tiny (≤ 380px) ── */
+          /* ?"??"? Tiny (... 380px) ?"??"? */
           @media(max-width:380px){
             .db-stat-grid     { grid-template-columns:1fr; gap:8px; }
             .db-main          { padding:12px 10px; }
@@ -2563,7 +2630,7 @@ export default function Dashboard() {
                 style={{ background: 'rgba(212,175,55,0.12)', color: '#D4AF37', fontWeight: 700, padding: '7px 14px', borderRadius: 10, fontSize: 12, border: '1px solid rgba(212,175,55,0.35)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}
                 title={currentPlanId === 'pro' ? 'Upgrade to Business' : 'Upgrade to Pro'}
                                 className='hidden sm:flex'>
-                ✦ <span className="hide-label-mobile">{currentPlanId === 'pro' ? 'Upgrade to Business' : 'Upgrade to Pro'}</span>
+                <span className="hide-label-mobile">{currentPlanId === 'pro' ? 'Upgrade to Business' : 'Upgrade to Pro'}</span>
                 <style>{`@media(max-width:639px){.hide-label-mobile{display:none}}`}</style>
               </button>
             )}
@@ -2586,7 +2653,7 @@ export default function Dashboard() {
             justifyContent: 'center', gap: 12, flexWrap: 'wrap',
           }}>
             <span style={{ fontSize: 13, color: '#ef4444', lineHeight: 1.5 }}>
-              ⚠️ Your account is scheduled for deletion on{' '}
+              Your account is scheduled for deletion on{' '}
               <strong>
                 {new Date(new Date(userProfile.deletion_requested_at).getTime() + 30 * 24 * 60 * 60 * 1000)
                   .toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
@@ -2603,6 +2670,39 @@ export default function Dashboard() {
             >
               Cancel deletion
             </button>
+          </div>
+        )}
+
+        {/* PWA Install Banner */}
+        {deferredPrompt && !installDismissed && (
+          <div style={{ background: isDark ? 'rgba(15,76,58,0.18)' : 'rgba(15,76,58,0.07)', borderBottom: `1px solid rgba(15,76,58,0.2)`, padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 13, color: isDark ? '#6ee7b7' : '#0F4C3A', display: 'flex', alignItems: 'center', gap: 8, lineHeight: 1.5 }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>
+              </svg>
+              Install ScanMyFrame for quick access to your dashboard
+            </span>
+            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              <button
+                onClick={async () => {
+                  deferredPrompt.prompt();
+                  const { outcome } = await deferredPrompt.userChoice;
+                  setDeferredPrompt(null);
+                  if (outcome === 'dismissed') {
+                    setInstallDismissed(true);
+                    localStorage.setItem('pwa_install_dismissed', JSON.stringify({ ts: Date.now() }));
+                  }
+                }}
+                style={{ padding: '5px 14px', borderRadius: 8, border: 'none', background: '#0F4C3A', color: '#FAF5DD', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                Install app
+              </button>
+              <button
+                onClick={() => { setInstallDismissed(true); localStorage.setItem('pwa_install_dismissed', JSON.stringify({ ts: Date.now() })); }}
+                style={{ padding: '5px 10px', borderRadius: 8, border: `1px solid ${t.border(isDark)}`, background: 'transparent', color: t.textSub(isDark), fontSize: 12, cursor: 'pointer' }}
+                aria-label="Dismiss">
+                x
+              </button>
+            </div>
           </div>
         )}
 
@@ -2643,7 +2743,7 @@ export default function Dashboard() {
         </main>
       </div>
 
-      {/* ── Request Account Deletion Modal ──────────────────────────────────── */}
+      {/* ?"??"? Request Account Deletion Modal ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"? */}
       <AnimatePresence>
         {showDeleteModal && (
           <>
@@ -2697,7 +2797,7 @@ export default function Dashboard() {
                   </button>
                   <button onClick={confirmDeleteAccount} disabled={deleting}
                     style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: 'none', background: '#ef4444', color: '#fff', fontSize: 13, fontWeight: 700, cursor: deleting ? 'not-allowed' : 'pointer', opacity: deleting ? 0.7 : 1, transition: 'opacity 0.15s' }}>
-                    {deleting ? 'Scheduling…' : 'Schedule deletion'}
+                    {deleting ? 'Scheduling...' : 'Schedule deletion'}
                   </button>
                 </div>
               </motion.div>
@@ -2706,7 +2806,7 @@ export default function Dashboard() {
         )}
       </AnimatePresence>
 
-      {/* ── First-frame creation guide ──────────────────────────────────────── */}
+      {/* ?"??"? First-frame creation guide ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"? */}
       {guideActive && (
         <FrameGuide
           onNavToCreate={() => { navTo('create'); setEditingFrame(null); }}
