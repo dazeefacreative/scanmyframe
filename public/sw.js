@@ -1,4 +1,4 @@
-const CACHE_NAME = 'scanmyframe-v1';
+const CACHE_NAME = 'scanmyframe-v2';
 const PRECACHE = ['/'];
 
 self.addEventListener('install', (event) => {
