@@ -7,8 +7,14 @@
 @tailwind utilities;
 
 /* Apply fonts globally */
+html {
+  overscroll-behavior: none;
+  touch-action: pan-y;
+}
+
 body {
   @apply font-montserrat;
+  overscroll-behavior: none;
 }
 
 h1, h2, h3, h4, h5, h6 {
