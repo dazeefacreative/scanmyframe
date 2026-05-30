@@ -1,5 +1,21 @@
 import { supabase } from '../services/supabaseClient';
 
+// Check if an email already exists and which provider it belongs to.
+// Uses a SECURITY DEFINER RPC to bypass RLS on auth.identities.
+// Returns 'google' | 'email' | null (not found)
+export async function checkEmailProvider(email) {
+  try {
+    const { data, error } = await supabase.rpc('get_email_provider', {
+      p_email: email.toLowerCase().trim(),
+    });
+
+    if (error || data === undefined) return null;
+    return data || null; // 'google', 'email', or null
+  } catch {
+    return null;
+  }
+}
+
 // Signup with Email — username is collected during onboarding, stored empty for now
 export async function handleEmailSignup(email, password) {
   try {
