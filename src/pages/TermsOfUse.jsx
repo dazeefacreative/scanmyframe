@@ -68,8 +68,9 @@ const SECTIONS = [
     content: [
       'ScanMyFrame generates unique QR codes that link to digital content pages ("frame pages") you create on the platform.',
       'You are solely responsible for the accuracy, legality, and appropriateness of any content you attach to a frame, including artwork stories, descriptions, images, and videos.',
-      'QR codes remain active as long as your account and subscription are in good standing. If your subscription lapses or your account is terminated, your frame pages and QR codes may become inaccessible. We will provide reasonable notice before deactivation.',
+      'Your frame pages and QR codes remain accessible even if your subscription lapses, your account is terminated, or you close your account. We do not automatically deactivate them. See below for how to request a takedown.',
       'We reserve the right to remove any frame page that violates these Terms or is reported as infringing.',
+      'If you wish to take down all frame pages and QR codes associated with your account, please contact us at ' + CONTACT_EMAIL + ' with your account details and request. We will process takedown requests within a reasonable timeframe.',
     ],
   },
   {

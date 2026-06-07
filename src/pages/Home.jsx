@@ -844,7 +844,7 @@ export default function Home() {
       </section>
 
       {/* ── 12. MARKETPLACE ──────────────────────────────────────────────── */}
-      <section id="marketplace" className="overflow-hidden py-12 md:py-16 px-4">
+      <section id="marketplace" className="overflow-hidden py-12 sm:px-4 md:py-16">
         <div className="min-w-[300px] max-w-6xl mx-auto px-4 py-10 md:py-16">
           <div className="flex flex-col items-center max-w-3xl mx-auto text-center">
             <span className={`inline-block text-xs font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full mb-4 ${isDark ? 'bg-white/5 text-gold border border-white/10' : 'bg-[#0F4C3A]/5 text-[#0F4C3A] border border-[#0F4C3A]/20'}`}>
@@ -865,7 +865,7 @@ export default function Home() {
           </div>
         </div>
         <div className="overflow-x-auto">
-          <div className="w-[250vw] md:w-full md:max-w-6xl md:mx-auto px-4 md:px-0 pb-4 md:pb-16">
+          <div className="w-[250vw] md:w-full md:max-w-6xl md:mx-auto md:px-0 pb-4 md:pb-16">
             <img src={marketPlace} alt="ScanMyFrame Marketplace" className="w-full rounded-3xl shadow-lg" />
           </div>
         </div>

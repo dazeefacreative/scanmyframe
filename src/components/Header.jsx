@@ -92,27 +92,17 @@ export default function Header() {
           {user ? (
             <button
               onClick={handleSignOut}
-              className={`hidden md:block text-[13px] font-semibold transition-colors hover:text-gold ${isDark ? 'text-white' : 'text-primary'}`}
+              className={`hidden md:block text-[13px] font-semibold transition-colors hover:text-gold px-4 py-1 rounded border ${isDark ? 'border-white text-white' : 'border-primary text-primary'}`}
             >
               Sign Out
             </button>
           ) : (
-            <div className="hidden md:flex items-center gap-2">
-              <a
-                href="/signin"
-                className={`text-[13px] font-semibold transition-colors hover:text-gold ${isDark ? 'text-white' : 'text-primary'}`}
+              <button
+                onClick={() => navigate('/signin')}
+                className={`hidden md:block text-[13px] font-semibold transition-colors hover:text-gold px-4 py-1 rounded ${isDark ? 'bg-white text-dark' : 'bg-primary text-white'}`}
               >
                 Sign In
-              </a>
-              <a
-                href="/signin?mode=register"
-                className={`text-[13px] font-semibold px-4 py-1.5 rounded-md transition-opacity hover:opacity-80 ${
-                  isDark ? 'bg-gold text-primary' : 'bg-primary text-white'
-                }`}
-              >
-                Get Started Free
-              </a>
-            </div>
+              </button>
           )}
 
           {/* Mobile Menu Toggle */}
@@ -142,7 +132,7 @@ export default function Header() {
             </a>
           ))}
 
-          <div className={`my-1 h-px ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
+          <div className={`my-1 h-px ${isDark ? 'bg-white/20' : 'bg-black/20'}`} />
 
           {user ? (
             <button
@@ -158,14 +148,6 @@ export default function Header() {
                 className={`text-left text-sm font-semibold py-1.5 transition-colors hover:text-gold ${isDark ? 'text-white' : 'text-primary'}`}
               >
                 Sign In
-              </button>
-              <button
-                onClick={() => { navigate('/signin?mode=register'); setMobileMenuOpen(false); }}
-                className={`text-[13px] font-semibold px-4 py-2 rounded-md transition-opacity hover:opacity-80 text-center ${
-                  isDark ? 'bg-gold text-primary' : 'bg-primary text-white'
-                }`}
-              >
-                Get Started Free
               </button>
             </>
           )}
