@@ -1,5 +1,5 @@
 """One-off script: render Terms of Use & Privacy Policy content to PDF for record-keeping."""
-from fpdf import FPDF
+from fpdf import FPDF, FontFace
 
 CONTACT_EMAIL = 'legal@scanmyframe.com'
 SITE = 'https://scanmyframe.com'
@@ -87,27 +87,23 @@ def render_sections(pdf, sections):
             pdf.ln(2)
 
         if 'rows' in sec:
-            pdf.set_font('Helvetica', 'B', 9.5)
-            pdf.set_text_color(*GREEN)
-            col_w = [55, 50, 0]
-            col_w[2] = pdf.w - pdf.l_margin - pdf.r_margin - col_w[0] - col_w[1]
-            pdf.cell(col_w[0], 6, 'Purpose', border='B')
-            pdf.cell(col_w[1], 6, 'Legal basis', border='B')
-            pdf.cell(col_w[2], 6, 'Details', border='B', new_x='LMARGIN', new_y='NEXT')
             pdf.set_font('Helvetica', '', 9)
             pdf.set_text_color(50, 50, 50)
-            for row in sec['rows']:
-                start_y = pdf.get_y()
-                x0 = pdf.get_x()
-                pdf.multi_cell(col_w[0], 5, row['purpose'])
-                y1 = pdf.get_y()
-                pdf.set_xy(x0 + col_w[0], start_y)
-                pdf.multi_cell(col_w[1], 5, row['basis'])
-                y2 = pdf.get_y()
-                pdf.set_xy(x0 + col_w[0] + col_w[1], start_y)
-                pdf.multi_cell(col_w[2], 5, row['detail'])
-                y3 = pdf.get_y()
-                pdf.set_y(max(y1, y2, y3))
+            with pdf.table(
+                col_widths=(30, 38, 55),
+                text_align='LEFT',
+                line_height=4.6,
+                borders_layout='HORIZONTAL_LINES',
+                headings_style=FontFace(emphasis='BOLD', color=GREEN, size_pt=9.5),
+            ) as table:
+                header = table.row()
+                for col in ('Purpose', 'Legal basis', 'Details'):
+                    header.cell(col)
+                for row_data in sec['rows']:
+                    row = table.row()
+                    row.cell(row_data['purpose'])
+                    row.cell(row_data['basis'])
+                    row.cell(row_data['detail'])
             pdf.ln(2)
 
         for b in sec.get('bullets', []):

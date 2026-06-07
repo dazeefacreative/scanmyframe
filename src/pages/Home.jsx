@@ -170,6 +170,7 @@ export default function Home() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [ctaIndex, setCtaIndex] = useState(0);
   const [logos, setLogos] = useState([]);
+  const [logoCopies, setLogoCopies] = useState(2);
   const scrollRef = useRef(null);
   const logoRef   = useRef(null);
   const trackRef  = useRef(null);
@@ -208,24 +209,64 @@ export default function Home() {
   // JS-driven marquee - CSS animations inside overflow:hidden are unreliable on iOS Safari
   useEffect(() => {
     const el = trackRef.current;
-    if (!el || logos.length === 0) return;
+    const wrapper = logoRef.current;
+    if (!el || !wrapper || logos.length === 0) return;
 
     const DURATION = 24000; // ms for one full loop
     let start = null;
     let animId = null;
+    let setW = 0; // width of ONE copy of the logo set (the distance we translate per loop)
+    let cancelled = false;
 
     function tick(ts) {
       if (!start) start = ts;
-      const halfW = el.scrollWidth / 2; // width of one copy
-      if (halfW === 0) { animId = requestAnimationFrame(tick); return; }
+      if (setW === 0) { animId = requestAnimationFrame(tick); return; }
       const progress = ((ts - start) % DURATION) / DURATION;
-      el.style.transform = `translateX(${-progress * halfW}px)`;
+      el.style.transform = `translateX(${-progress * setW}px)`;
       animId = requestAnimationFrame(tick);
     }
 
-    animId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(animId);
-  }, [logos]);
+    const imgs = Array.from(el.querySelectorAll('img'));
+    const settled = imgs.map((img) => img.complete
+      ? Promise.resolve()
+      : new Promise((resolve) => {
+          img.addEventListener('load', resolve, { once: true });
+          img.addEventListener('error', resolve, { once: true });
+        })
+    );
+
+    Promise.all(settled).then(() => {
+      if (cancelled) return;
+
+      const measuredSetW = el.scrollWidth / logoCopies;
+
+      // The track must always have at least one full extra set's worth of content
+      // past the point it scrolls back to, otherwise the right edge of the track
+      // runs out before the loop wraps - opening a blank gap that then "snaps"
+      // shut the instant the loop resets. Make sure (copies - 1) sets cover the
+      // visible width, so there's always content filling the viewport.
+      const needed = Math.max(2, Math.ceil(wrapper.clientWidth / measuredSetW) + 1);
+      if (needed > logoCopies) {
+        setLogoCopies(needed);
+        return; // re-render with more copies; this effect re-runs and re-measures
+      }
+
+      setW = measuredSetW;
+      animId = requestAnimationFrame(tick);
+    });
+
+    const handleResize = () => {
+      start = null;
+      setW = el.scrollWidth / logoCopies;
+    };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [logos, logoCopies]);
 
   useEffect(() => {
     const t = setInterval(() => setCtaIndex(prev => (prev + 1) % 3), 3000);
@@ -305,7 +346,7 @@ export default function Home() {
         </p>
         <div ref={logoRef} className="logo-wrapper w-full overflow-hidden">
           <div ref={trackRef} className="logo-track">
-            {logos.length > 0 && [...logos, ...logos].map((logo, idx) => (
+            {logos.length > 0 && Array.from({ length: logoCopies }, () => logos).flat().map((logo, idx) => (
               <img
                 key={idx}
                 src={logo.logo_url}
