@@ -63,8 +63,10 @@ export default function NotificationDropdown({ notification, notificationData, s
                 >
                   <button
                     onClick={() => handleClick(alert)}
-                    className="flex items-start gap-3 w-full text-left"
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                    className={`flex items-start gap-3 w-full text-left rounded-lg p-1.5 -m-1.5 bg-transparent transition-colors ${
+                      isDark ? 'hover:bg-white/5' : 'hover:bg-black/5'
+                    }`}
+                    style={{ border: 'none', cursor: 'pointer' }}
                   >
                     {/* Type badge */}
                     <span className={`min-w-[70px] text-center text-[10px] font-semibold px-2 py-1 rounded-md capitalize tracking-wide flex-shrink-0 ${typeStyles[alert.type] || typeStyles.info}`}>

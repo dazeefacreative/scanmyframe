@@ -42,7 +42,7 @@ const STORY_QUILL_STYLES = `
   .sf-story-quill .ql-toolbar .ql-picker-label { padding: 0 6px !important; height: 26px !important; display: flex !important; align-items: center !important; white-space: nowrap !important; }
   .sf-story-quill .ql-container { border: 1px solid #d1d5db !important; border-top: none !important; border-radius: 0 0 12px 12px !important; max-width: 100% !important; overflow: hidden !important; }
   .sf-story-quill .ql-container.ql-snow { font-family: inherit !important; }
-  .sf-story-quill .ql-editor { min-height: 180px !important; font-size: 14px !important; line-height: 1.65 !important; color: #111827 !important; padding: 14px 16px !important; overflow-x: hidden !important; word-break: break-word !important; }
+  .sf-story-quill .ql-editor { min-height: 180px !important; font-size: 14px !important; line-height: 1.65 !important; color: #111827 !important; padding: 14px 16px !important; overflow-wrap: break-word !important; word-break: normal !important; }
   .sf-story-quill .ql-editor.ql-blank::before { color: #9ca3af !important; font-style: italic !important; }
   .sf-story-quill .ql-editor h2 { font-size: 20px !important; font-weight: 700 !important; color: #0F4C3A !important; margin: 12px 0 6px !important; }
   .sf-story-quill .ql-editor h3 { font-size: 16px !important; font-weight: 700 !important; color: #0F4C3A !important; margin: 10px 0 4px !important; }
@@ -234,6 +234,7 @@ export default function FrameEditor({ editingFrame, onSaved }) {
   const [form,             setForm]             = useState({ title: '', story: '', frameOwner: '', width: '', height: '' });
   const [featureTags,      setFeatureTags]      = useState([]);
   const [artworkFile,      setArtworkFile]      = useState(null);
+  const [existingArtworkUrl, setExistingArtworkUrl] = useState(null);
   const [newExtraFiles,    setNewExtraFiles]     = useState([]);
   const [existingExtras,   setExistingExtras]   = useState([]);
   const [videoFile,        setVideoFile]        = useState(null);
@@ -266,6 +267,7 @@ export default function FrameEditor({ editingFrame, onSaved }) {
     setSaveError('');
     setErrors({});
     setArtworkFile(null);
+    setExistingArtworkUrl(null);
     setNewExtraFiles([]);
     setDeletedExtraIds([]);
     setVideoFile(null);
@@ -276,8 +278,11 @@ export default function FrameEditor({ editingFrame, onSaved }) {
         .from('media')
         .select('id, media_url, media_type')
         .eq('frame_id', editingFrame.id)
-        .eq('media_type', 'extra_image');
-      if (data) setExistingExtras(data);
+        .in('media_type', ['extra_image', 'image']);
+      if (data) {
+        setExistingExtras(data.filter(m => m.media_type === 'extra_image'));
+        setExistingArtworkUrl(data.find(m => m.media_type === 'image')?.media_url || null);
+      }
     }
     loadMedia();
   }, [editingFrame?.id]);
@@ -498,8 +503,17 @@ export default function FrameEditor({ editingFrame, onSaved }) {
         {step === 1 && (
           <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
             <div className="border border-[#d1d5db] rounded-xl p-3 sm:p-4 mb-3">
-              <label className={labelCls}>Artwork</label>
+              <label className={labelCls}>Main Artwork</label>
               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                {(artworkFile || existingArtworkUrl) && (
+                  <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-[#d1d5db] flex-shrink-0">
+                    <img
+                      src={artworkFile ? URL.createObjectURL(artworkFile) : existingArtworkUrl}
+                      alt="Artwork preview"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
                 <label className="inline-block bg-[#e5e7eb] text-[#374151] px-4 py-2 rounded-lg text-sm font-medium cursor-pointer whitespace-nowrap hover:bg-[#d1d5db] transition-colors text-center">
                   {artworkFile ? 'Change artwork' : 'Replace artwork'}
                   <input type="file" accept="image/jpeg,image/png" onChange={handleArtworkChange} className="hidden" />
@@ -678,7 +692,7 @@ export default function FrameEditor({ editingFrame, onSaved }) {
       </div>
     </motion.div>
       <div className="hidden lg:block flex-shrink-0">
-        <FramePreview form={form} />
+        <FramePreview form={form} artworkFile={artworkFile} existingArtworkUrl={existingArtworkUrl} />
       </div>
     </div>
   );

@@ -46,6 +46,7 @@ const icons = {
   check:    'M5 13l4 4L19 7',
   empty:    'M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
   close:    'M18 6L6 18M6 6l12 12',
+  gift:     'M20 12v10H4V12 M2 7h20v5H2z M12 22V7 M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z',
 };
 
 const NAV = [
@@ -253,10 +254,14 @@ function FrameCard({ frame, isDark, onEdit, onDelete }) {
           {new Date(frame.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
-          <button style={btnBase} onClick={() => onEdit(frame)}>
+          <button style={btnBase} onClick={() => onEdit(frame)}
+            onMouseEnter={e => e.currentTarget.style.background = t.hoverBg(isDark)}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
             <Icon path={icons.edit} size={11} /> Edit
           </button>
-          <button style={{ ...btnBase, ...(copied ? { borderColor: '#4ade80', color: '#4ade80' } : {}) }} onClick={handleCopy}>
+          <button style={{ ...btnBase, ...(copied ? { borderColor: '#4ade80', color: '#4ade80' } : {}) }} onClick={handleCopy}
+            onMouseEnter={e => { if (!copied) e.currentTarget.style.background = t.hoverBg(isDark); }}
+            onMouseLeave={e => { if (!copied) e.currentTarget.style.background = 'transparent'; }}>
             <Icon path={copied ? icons.check : icons.copy} size={11} />
             {copied ? 'Copied' : 'Link'}
           </button>
@@ -287,7 +292,9 @@ function EmptyFrames({ onCreateFrame, isDark }) {
         Every great story starts somewhere. Create your first frame and generate a QR code.
       </p>
       <button onClick={onCreateFrame}
-        style={{ background: '#0F4C3A', color: '#FAF5DD', fontWeight: 700, padding: '10px 22px', borderRadius: 24, fontSize: 13, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+        style={{ background: '#0F4C3A', color: '#FAF5DD', fontWeight: 700, padding: '10px 22px', borderRadius: 24, fontSize: 13, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'opacity 0.15s' }}
+        onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+        onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
         <Icon path={icons.plus} size={13} style={{ color: '#FAF5DD' }} /> Create my first frame
       </button>
     </motion.div>
@@ -306,11 +313,15 @@ function DeleteModal({ frame, onConfirm, onCancel, isDark }) {
         </p>
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={onCancel}
-            style={{ flex: 1, padding: '10px 0', borderRadius: 12, fontSize: 13, fontWeight: 600, border: `1px solid ${t.border(isDark)}`, background: 'transparent', color: t.textSub(isDark), cursor: 'pointer' }}>
+            style={{ flex: 1, padding: '10px 0', borderRadius: 12, fontSize: 13, fontWeight: 600, border: `1px solid ${t.border(isDark)}`, background: 'transparent', color: t.textSub(isDark), cursor: 'pointer', transition: 'background 0.15s' }}
+            onMouseEnter={e => e.currentTarget.style.background = t.hoverBg(isDark)}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
             Cancel
           </button>
           <button onClick={onConfirm}
-            style={{ flex: 1, padding: '10px 0', borderRadius: 12, fontSize: 13, fontWeight: 600, background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer' }}>
+            style={{ flex: 1, padding: '10px 0', borderRadius: 12, fontSize: 13, fontWeight: 600, background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', transition: 'opacity 0.15s' }}
+            onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
             Delete
           </button>
         </div>
@@ -557,7 +568,9 @@ function OverviewTab({ stats, frames, isDark, onNavigate, canViewAnalytics, noti
                   color:      r === scanPeriod ? t.textPrimary(isDark) : t.textMuted(isDark),
                   fontWeight: 600, cursor: 'pointer', fontSize: 11, fontFamily: 'inherit',
                   transition: 'background 0.15s, color 0.15s',
-                }}>{r}</button>
+                }}
+                  onMouseEnter={e => { if (r !== scanPeriod) e.currentTarget.style.background = t.hoverBg(isDark); }}
+                  onMouseLeave={e => { if (r !== scanPeriod) e.currentTarget.style.background = 'transparent'; }}>{r}</button>
               ))}
             </div>
           </div>
@@ -644,12 +657,16 @@ function OverviewTab({ stats, frames, isDark, onNavigate, canViewAnalytics, noti
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button
                       onClick={() => onNavigate('billing')}
-                      style={{ flex: 1, padding: '6px 0', borderRadius: 8, background: '#0F4C3A', color: '#FAF5DD', fontSize: 11, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
+                      style={{ flex: 1, padding: '6px 0', borderRadius: 8, background: '#0F4C3A', color: '#FAF5DD', fontSize: 11, fontWeight: 700, border: 'none', cursor: 'pointer', transition: 'opacity 0.15s' }}
+                      onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+                      onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
                       Upgrade now
                     </button>
                     <button
                       onClick={() => setShowUpgradeNudge(false)}
-                      style={{ padding: '6px 10px', borderRadius: 8, background: 'transparent', color: t.textMuted(isDark), fontSize: 11, border: `1px solid ${t.border(isDark)}`, cursor: 'pointer' }}>
+                      style={{ padding: '6px 10px', borderRadius: 8, background: 'transparent', color: t.textMuted(isDark), fontSize: 11, border: `1px solid ${t.border(isDark)}`, cursor: 'pointer', transition: 'background 0.15s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = t.hoverBg(isDark)}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                       Dismiss
                     </button>
                   </div>
@@ -657,7 +674,9 @@ function OverviewTab({ stats, frames, isDark, onNavigate, canViewAnalytics, noti
               ) : (
                 <button
                   onClick={() => canViewAnalytics ? onNavigate('analytics') : setShowUpgradeNudge(true)}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, transition: 'opacity 0.15s' }}
+                  onMouseEnter={e => e.currentTarget.style.opacity = '0.7'}
+                  onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
                   <span style={{ fontSize: 11, fontWeight: 600, color: isDark ? '#D4AF37' : '#0F4C3A' }}>
                     View all activity
                   </span>
@@ -692,7 +711,9 @@ function OverviewTab({ stats, frames, isDark, onNavigate, canViewAnalytics, noti
                 display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px',
                 borderRadius: 14, border: `1px solid ${t.border(isDark)}`, background: t.cardBg(isDark),
                 cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s',
-              }}>
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = t.hoverBg(isDark)}
+              onMouseLeave={e => e.currentTarget.style.background = t.cardBg(isDark)}>
               <div style={{ width: 38, height: 38, borderRadius: 10, background: isDark ? 'rgba(212,175,55,0.18)' : 'rgba(15,76,58,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: isDark ? '#D4AF37' : '#0F4C3A' }}>
                 <Icon path={icons[item.icon]} size={16} />
               </div>
@@ -709,7 +730,9 @@ function OverviewTab({ stats, frames, isDark, onNavigate, canViewAnalytics, noti
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
           <h2 style={{ margin: 0, fontFamily: 'Poltawski Nowy, serif', fontSize: 20, color: t.textPrimary(isDark), fontWeight: 700 }}>Recent frames</h2>
-          <button onClick={() => onNavigate('frames')} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: t.textPrimary(isDark), fontWeight: 600, fontSize: 12 }}>
+          <button onClick={() => onNavigate('frames')} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: t.textPrimary(isDark), fontWeight: 600, fontSize: 12, transition: 'opacity 0.15s' }}
+            onMouseEnter={e => e.currentTarget.style.opacity = '0.7'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
             View all
           </button>
         </div>
@@ -754,7 +777,9 @@ function FramesTab({ frames, isDark, onCreateFrame, onEdit, onDelete }) {
             className="db-search-input"
             style={{ padding: '8px 14px', borderRadius: 10, border: `1px solid ${t.border(isDark)}`, background: t.inputBg(isDark), color: t.textPrimary(isDark), fontSize: 13, outline: 'none' }} />
           <button onClick={onCreateFrame}
-            style={{ background: '#0F4C3A', color: '#FAF5DD', fontWeight: 700, padding: '8px 18px', borderRadius: 10, fontSize: 13, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
+            style={{ background: '#0F4C3A', color: '#FAF5DD', fontWeight: 700, padding: '8px 18px', borderRadius: 10, fontSize: 13, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', transition: 'opacity 0.15s' }}
+            onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
             <Icon path={icons.plus} size={13} style={{ color: '#FAF5DD' }} /> New Frame
           </button>
         </div>
@@ -1080,7 +1105,9 @@ function AnalyticsTab({ frames, isDark, planId, notificationData }) {
                   color:      chartPeriod === p ? t.textPrimary(isDark) : t.textMuted(isDark),
                   boxShadow:  chartPeriod === p ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
                   transition: 'background 0.15s, color 0.15s',
-                }}>{p}d</button>
+                }}
+                  onMouseEnter={e => { if (chartPeriod !== p) e.currentTarget.style.background = t.hoverBg(isDark); }}
+                  onMouseLeave={e => { if (chartPeriod !== p) e.currentTarget.style.background = 'transparent'; }}>{p}d</button>
               ))}
             </div>
           </div>
@@ -1304,68 +1331,6 @@ function AnalyticsTab({ frames, isDark, planId, notificationData }) {
   );
 }
 
-// ?"??"??"? Billing tab ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
-// function BillingTab({ userProfile, isDark, onNavigateToPricing }) {
-//   const plan      = userProfile?.plan || 'Trial Plan';
-//   const qrCodeLeft  = userProfile?.qr_codes_remaining ?? 10;
-//   const LABELS    = { free: 'Trial Plan', basic: 'Basic', pro: 'Pro', business: 'Business' };
-//   const PRICES    = { free: '?,?0/mo', basic: '?,?3,000/mo', pro: '?,?15,000/mo', business: '?,?50,000/mo' };
-
-//   const actionBtn = {
-//     display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px',
-//     borderRadius: 14, border: `1px solid ${t.border(isDark)}`, background: t.cardBg(isDark),
-//     cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s',
-//   };
-
-//   return (
-//     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-//       <h2 style={{ fontSize: 22, fontWeight: 700, color: t.textPrimary(isDark), fontFamily: 'Poltawski Nowy, serif' }}>Billing</h2>
-
-//       <div style={{ background: t.cardBg(isDark), border: `1px solid ${t.border(isDark)}`, borderRadius: 16, padding: 24 }}>
-//         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14 }}>
-//           <div>
-//             <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: t.textMuted(isDark), marginBottom: 4 }}>Current plan</p>
-//             <h3 style={{ fontSize: 24, fontWeight: 700, color: t.textPrimary(isDark), fontFamily: 'Poltawski Nowy, serif' }}>{LABELS[plan]}</h3>
-//             <p style={{ fontSize: 13, color: t.textSub(isDark), marginTop: 3 }}>{PRICES[plan]}</p>
-//           </div>
-//           <button onClick={onNavigateToPricing}
-//             style={{ background: '#0F4C3A', color: '#FAF5DD', fontWeight: 700, padding: '10px 22px', borderRadius: 12, fontSize: 13, border: 'none', cursor: 'pointer' }}>
-//             Upgrade plan
-//           </button>
-//         </div>
-//         {/* Quota bar */}
-//         <div style={{ marginTop: 20 }}>
-//           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 6 }}>
-//             <span style={{ color: t.textSub(isDark) }}>QR codes remaining</span>
-//             <span style={{ fontWeight: 700, color: t.textPrimary(isDark) }}>{qrCodeLeft} left</span>
-//           </div>
-//           <div style={{ height: 7, borderRadius: 99, background: isDark ? '#2a2a2a' : '#e8e8e4', overflow: 'hidden' }}>
-//             <div style={{ height: '100%', width: `${Math.min(100, (qrCodeLeft / 10) * 100)}%`, background: qrCodeLeft <= 2 ? '#ef4444' : '#D4AF37', borderRadius: 99, transition: 'width 0.4s' }} />
-//           </div>
-//         </div>
-//       </div>
-
-//       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
-//         {[
-//           { label: 'Update payment method', desc: 'Change your card on file', icon: 'billing', action: () => {} },
-//           { label: 'Billing history',        desc: 'View past invoices',       icon: 'eye',     action: () => {} },
-//           { label: 'Cancel subscription',    desc: 'Downgrade to free',        icon: 'close',   action: () => {} },
-//           { label: 'Upgrade plan',           desc: 'Get more QR codes',        icon: 'chart',   action: onNavigateToPricing },
-//         ].map(item => (
-//           <button key={item.label} onClick={item.action} style={actionBtn}>
-//             <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(15,76,58,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-//               <Icon path={icons[item.icon]} size={15} style={{ color: '#0F4C3A' }} />
-//             </div>
-//             <div>
-//               <p style={{ fontSize: 13, fontWeight: 600, color: t.textPrimary(isDark) }}>{item.label}</p>
-//               <p style={{ fontSize: 11, color: t.textSub(isDark), marginTop: 1 }}>{item.desc}</p>
-//             </div>
-//           </button>
-//         ))}
-//       </div>
-//     </div>
-//   );
-// }
 
 // ?"??"??"? Settings tab ?"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"??"?
 function AccountIdField({ userId, isDark, labelStyle }) {
@@ -1385,7 +1350,9 @@ function AccountIdField({ userId, isDark, labelStyle }) {
           {userId || '-'}
           
         </div>
-        <button onClick={copy} style={{ flexShrink: 0, padding: '9px 14px', borderRadius: 10, border: `1px solid ${t.border(isDark)}`, background: copied ? '#0F4C3A' : 'transparent', color: copied ? '#FAF5DD' : t.textSub(isDark), fontSize: 11, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 5 }}>
+        <button onClick={copy} style={{ flexShrink: 0, padding: '9px 14px', borderRadius: 10, border: `1px solid ${t.border(isDark)}`, background: copied ? '#0F4C3A' : 'transparent', color: copied ? '#FAF5DD' : t.textSub(isDark), fontSize: 11, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 5 }}
+          onMouseEnter={e => { if (!copied) e.currentTarget.style.background = t.hoverBg(isDark); }}
+          onMouseLeave={e => { if (!copied) e.currentTarget.style.background = 'transparent'; }}>
           {copied ? (
             <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7"/></svg> Copied</>
           ) : (
@@ -1520,7 +1487,9 @@ function QRPreview({ fg, bg, stroke, logoUrl }) {
 
 function Tog({ isDark, on, fn, dis }) {
   return (
-    <button onClick={() => !dis && fn(!on)} style={{ flexShrink:0, width:44, height:24, borderRadius:12, border:'none', cursor: dis?'not-allowed':'pointer', background: on?'#0F4C3A':t.border(isDark), position:'relative', transition:'background 0.2s', opacity: dis?0.6:1 }}>
+    <button onClick={() => !dis && fn(!on)} style={{ flexShrink:0, width:44, height:24, borderRadius:12, border:'none', cursor: dis?'not-allowed':'pointer', background: on?'#0F4C3A':t.border(isDark), position:'relative', transition:'background 0.2s, opacity 0.15s', opacity: dis?0.6:1 }}
+      onMouseEnter={e => { if (!dis) e.currentTarget.style.opacity = '0.8'; }}
+      onMouseLeave={e => { e.currentTarget.style.opacity = dis ? '0.6' : '1'; }}>
       <span style={{ position:'absolute', top:3, left: on?23:3, width:18, height:18, borderRadius:9, background:'#fff', transition:'left 0.2s', boxShadow:'0 1px 4px rgba(0,0,0,0.2)' }} />
     </button>
   );
@@ -1554,7 +1523,9 @@ function LockedAnalyticsTab({ isDark, onUpgrade }) {
           <p style={{ margin: '0 0 20px', fontSize: 13, color: t.textSub(isDark), lineHeight: 1.6 }}>
             Detailed scan analytics, location, browser and device reports are available on Pro & Business plans.
           </p>
-          <button onClick={onUpgrade} style={{ background: '#D4AF37', color: '#0F4C3A', fontWeight: 700, padding: '10px 24px', borderRadius: 12, fontSize: 13, border: 'none', cursor: 'pointer' }}>
+          <button onClick={onUpgrade} style={{ background: '#D4AF37', color: '#0F4C3A', fontWeight: 700, padding: '10px 24px', borderRadius: 12, fontSize: 13, border: 'none', cursor: 'pointer', transition: 'opacity 0.15s' }}
+            onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
             View upgrade plans
           </button>
         </div>
@@ -1734,7 +1705,9 @@ function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccou
   );
 
   const Toggle = ({ on, onChange, disabled }) => (
-    <button onClick={() => !disabled && onChange(!on)} style={{ flexShrink: 0, width: 44, height: 24, borderRadius: 12, border: 'none', cursor: disabled ? 'not-allowed' : 'pointer', background: on ? '#0F4C3A' : t.border(isDark), position: 'relative', transition: 'background 0.2s', opacity: disabled ? 0.6 : 1 }}>
+    <button onClick={() => !disabled && onChange(!on)} style={{ flexShrink: 0, width: 44, height: 24, borderRadius: 12, border: 'none', cursor: disabled ? 'not-allowed' : 'pointer', background: on ? '#0F4C3A' : t.border(isDark), position: 'relative', transition: 'background 0.2s, opacity 0.15s', opacity: disabled ? 0.6 : 1 }}
+      onMouseEnter={e => { if (!disabled) e.currentTarget.style.opacity = '0.8'; }}
+      onMouseLeave={e => { e.currentTarget.style.opacity = disabled ? '0.6' : '1'; }}>
       <span style={{ position: 'absolute', top: 3, left: on ? 23 : 3, width: 18, height: 18, borderRadius: 9, background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }} />
     </button>
   );
@@ -1750,7 +1723,9 @@ function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccou
   );
 
   const saveBtn = (
-    <button onClick={handleSaveClick} disabled={saving} style={{ background: isRestricted?(isDark?'#2a2a2a':'#e8e8e4'):'#0F4C3A', color: isRestricted?t.textMuted(isDark):'#FAF5DD', fontWeight:700, padding:'9px 20px', borderRadius:10, fontSize:12, border:'none', cursor: isRestricted?'not-allowed':'pointer', display:'flex', alignItems:'center', gap:6 }}>
+    <button onClick={handleSaveClick} disabled={saving} style={{ background: isRestricted?(isDark?'#2a2a2a':'#e8e8e4'):'#0F4C3A', color: isRestricted?t.textMuted(isDark):'#FAF5DD', fontWeight:700, padding:'9px 20px', borderRadius:10, fontSize:12, border:'none', cursor: isRestricted?'not-allowed':'pointer', display:'flex', alignItems:'center', gap:6, transition:'opacity 0.15s' }}
+      onMouseEnter={e => { if (!isRestricted) e.currentTarget.style.opacity = '0.85'; }}
+      onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
       {saved ? <><Icon path={icons.check} size={12} style={{ color:'#FAF5DD' }} /> Saved!</> : saving ? 'Saving...' : 'Save changes'}
     </button>
   );
@@ -1806,6 +1781,8 @@ function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccou
                     <div
                       onClick={() => logoInputRef.current?.click()}
                       style={{ width:110, height:110, borderRadius:14, background: isDark?'#1e1e1e':'#f0efe9', border:`1.5px dashed ${t.border(isDark)}`, display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden', cursor:'pointer', flexShrink:0, transition:'border-color 0.2s' }}
+                      onMouseEnter={e => e.currentTarget.style.borderColor = '#D4AF37'}
+                      onMouseLeave={e => e.currentTarget.style.borderColor = t.border(isDark)}
                     >
                       {logoUrl
                         ? <img src={logoUrl} alt="logo" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
@@ -1821,8 +1798,12 @@ function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccou
                       {logoUploading
                         ? <p style={{ margin:0, fontSize:11, color:t.textMuted(isDark) }}>Uploading...</p>
                         : logoUrl
-                          ? <button onClick={async () => { await supabase.from('users').update({ business_logo:null, updated_at:new Date().toISOString() }).eq('id',user.id); setLogoUrl(null); onProfileUpdated?.(prev=>({...prev,business_logo:null})); }} style={{ background:'transparent', border:'1px solid rgba(239,68,68,0.35)', color:'#ef4444', fontWeight:600, padding:'5px 14px', borderRadius:8, fontSize:11, cursor:'pointer' }}>Remove</button>
-                          : <button onClick={() => logoInputRef.current?.click()} style={{ background:'#0F4C3A', color:'#FAF5DD', fontWeight:600, padding:'5px 14px', borderRadius:8, fontSize:11, border:'none', cursor:'pointer' }}>Upload</button>
+                          ? <button onClick={async () => { await supabase.from('users').update({ business_logo:null, updated_at:new Date().toISOString() }).eq('id',user.id); setLogoUrl(null); onProfileUpdated?.(prev=>({...prev,business_logo:null})); }} style={{ background:'transparent', border:'1px solid rgba(239,68,68,0.35)', color:'#ef4444', fontWeight:600, padding:'5px 14px', borderRadius:8, fontSize:11, cursor:'pointer', transition:'background 0.15s' }}
+                              onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}
+                              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>Remove</button>
+                          : <button onClick={() => logoInputRef.current?.click()} style={{ background:'#0F4C3A', color:'#FAF5DD', fontWeight:600, padding:'5px 14px', borderRadius:8, fontSize:11, border:'none', cursor:'pointer', transition:'opacity 0.15s' }}
+                              onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+                              onMouseLeave={e => e.currentTarget.style.opacity = '1'}>Upload</button>
                       }
                       <label style={{ ...labelStyle, margin:0 }}>Profile photo</label>
                       <p style={{ margin:0, fontSize:10, color:t.textMuted(isDark), textAlign:'center', lineHeight:1.4 }}>JPG only &middot; max 500kb</p>
@@ -1852,15 +1833,21 @@ function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccou
                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ display:'block', margin:'0 auto 14px' }}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
                 <p style={{ margin:'0 0 6px', fontSize:15, fontWeight:700, color:t.textPrimary(isDark), fontFamily:'Poltawski Nowy, serif' }}>Upgrade to unlock QR Branding</p>
                 <p style={{ margin:'0 0 20px', fontSize:13, color:t.textSub(isDark), lineHeight:1.6 }}>Customise your QR code colours, border and logo with a Business plan.</p>
-                <button onClick={() => {}} style={{ background:'#D4AF37', color:'#0F4C3A', fontWeight:700, padding:'10px 24px', borderRadius:12, fontSize:13, border:'none', cursor:'pointer' }}>View Business plan</button>
+                <button onClick={() => {}} style={{ background:'#D4AF37', color:'#0F4C3A', fontWeight:700, padding:'10px 24px', borderRadius:12, fontSize:13, border:'none', cursor:'pointer', transition:'opacity 0.15s' }}
+                  onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+                  onMouseLeave={e => e.currentTarget.style.opacity = '1'}>View Business plan</button>
               </div>
             </SCard>
           )}
           {section === 'branding' && canQRBrand && (
             <SCard isDark={isDark} title="QR code branding" eyebrow="Customise your code"
               footer={<>
-                <button onClick={() => { setQrFg('#000000'); setQrBg('#ffffff'); setQrStroke('#0F4C3A'); setQrLogo(null); setQrLogoError(''); }} style={{ padding:'9px 16px', borderRadius:10, border:`1px solid ${t.border(isDark)}`, background:'transparent', color:t.textSub(isDark), fontSize:12, fontWeight:600, cursor:'pointer' }}>Reset to default</button>
-                <button onClick={saveQRBrand} style={{ background:'#0F4C3A', color:'#FAF5DD', fontWeight:700, padding:'9px 20px', borderRadius:10, fontSize:12, border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
+                <button onClick={() => { setQrFg('#000000'); setQrBg('#ffffff'); setQrStroke('#0F4C3A'); setQrLogo(null); setQrLogoError(''); }} style={{ padding:'9px 16px', borderRadius:10, border:`1px solid ${t.border(isDark)}`, background:'transparent', color:t.textSub(isDark), fontSize:12, fontWeight:600, cursor:'pointer', transition:'background 0.15s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = t.hoverBg(isDark)}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>Reset to default</button>
+                <button onClick={saveQRBrand} style={{ background:'#0F4C3A', color:'#FAF5DD', fontWeight:700, padding:'9px 20px', borderRadius:10, fontSize:12, border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6, transition:'opacity 0.15s' }}
+                  onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+                  onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
                   {brandSaved ? <><Icon path={icons.check} size={12} style={{ color:'#FAF5DD' }} /> Saved!</> : 'Save branding'}
                 </button>
               </>}>
@@ -1900,10 +1887,14 @@ function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccou
                         <p style={{ margin:0, fontSize:12, color:t.textSub(isDark) }}>{qrLogo ? 'Custom logo active' : 'ScanMyFrame logo (default)'}</p>
                         <div style={{ display:'flex', gap:8 }}>
                           <input ref={qrLogoInputRef} type="file" accept=".svg,.png,image/svg+xml,image/png" onChange={handleQrLogoUpload} style={{ display:'none' }} />
-                          <button onClick={() => qrLogoInputRef.current?.click()} disabled={qrLogoLoading} style={{ background:'#0F4C3A', color:'#FAF5DD', fontWeight:700, padding:'6px 14px', borderRadius:8, fontSize:11, border:'none', cursor: qrLogoLoading?'not-allowed':'pointer', opacity: qrLogoLoading?0.6:1 }}>
+                          <button onClick={() => qrLogoInputRef.current?.click()} disabled={qrLogoLoading} style={{ background:'#0F4C3A', color:'#FAF5DD', fontWeight:700, padding:'6px 14px', borderRadius:8, fontSize:11, border:'none', cursor: qrLogoLoading?'not-allowed':'pointer', opacity: qrLogoLoading?0.6:1, transition:'opacity 0.15s' }}
+                            onMouseEnter={e => { if (!qrLogoLoading) e.currentTarget.style.opacity = '0.85'; }}
+                            onMouseLeave={e => { e.currentTarget.style.opacity = qrLogoLoading ? '0.6' : '1'; }}>
                             {qrLogoLoading ? 'Processing...' : qrLogo ? 'Change' : 'Upload'}
                           </button>
-                          {qrLogo && <button onClick={() => { setQrLogo(null); setQrLogoError(''); }} style={{ background:'transparent', border:'1px solid rgba(239,68,68,0.35)', color:'#ef4444', fontWeight:600, padding:'5px 12px', borderRadius:8, fontSize:11, cursor:'pointer' }}>Remove</button>}
+                          {qrLogo && <button onClick={() => { setQrLogo(null); setQrLogoError(''); }} style={{ background:'transparent', border:'1px solid rgba(239,68,68,0.35)', color:'#ef4444', fontWeight:600, padding:'5px 12px', borderRadius:8, fontSize:11, cursor:'pointer', transition:'background 0.15s' }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>Remove</button>}
                         </div>
                         {qrLogoError && <p style={{ margin:0, fontSize:11, color:'#ef4444' }}>{qrLogoError}</p>}
                       </div>
@@ -1937,7 +1928,9 @@ function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccou
                 </div>
               </SCard>
               <SCard isDark={isDark} title="Notifications" eyebrow="Inbox"
-                footer={notificationData?.length > 0 ? <button onClick={onClearAllNotifications} style={{ fontSize:11, fontWeight:600, color:'#ef4444', background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:8, padding:'6px 14px', cursor:'pointer' }}>Clear all</button> : null}>
+                footer={notificationData?.length > 0 ? <button onClick={onClearAllNotifications} style={{ fontSize:11, fontWeight:600, color:'#ef4444', background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:8, padding:'6px 14px', cursor:'pointer', transition:'background 0.15s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.18)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}>Clear all</button> : null}>
                 {!notificationData || notificationData.length === 0 ? (
                   <p style={{ fontSize:13, color:t.textSub(isDark), textAlign:'center', padding:'16px 0', margin:0 }}>No notifications yet.</p>
                 ) : (
@@ -1950,10 +1943,16 @@ function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccou
                           <div style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'10px 12px' }}>
                             <span style={{ width:7, height:7, borderRadius:'50%', marginTop:5, flexShrink:0, background: n.is_read?'transparent':'#D4AF37', border: n.is_read?`1.5px solid ${t.border(isDark)}`:'none' }} />
                             <span style={{ flexShrink:0, fontSize:10, fontWeight:700, padding:'2px 8px', borderRadius:6, background:bc.bg, color:bc.color, textTransform:'capitalize' }}>{n.type}</span>
-                            <button onClick={() => { if(!n.is_read) onMarkNotificationRead(n.id,true); setExpandedNotifId(prev => prev===n.id?null:n.id); }} style={{ flex:1, textAlign:'left', background:'none', border:'none', cursor:'pointer', padding:0, fontSize:12, color:t.textPrimary(isDark), lineHeight:1.5 }}>{n.message}</button>
+                            <button onClick={() => { if(!n.is_read) onMarkNotificationRead(n.id,true); setExpandedNotifId(prev => prev===n.id?null:n.id); }} style={{ flex:1, textAlign:'left', background:'none', border:'none', cursor:'pointer', padding:0, fontSize:12, color:t.textPrimary(isDark), lineHeight:1.5, transition:'opacity 0.15s' }}
+                              onMouseEnter={e => e.currentTarget.style.opacity = '0.7'}
+                              onMouseLeave={e => e.currentTarget.style.opacity = '1'}>{n.message}</button>
                             <div style={{ display:'flex', gap:6, flexShrink:0 }}>
-                              <button onClick={() => onMarkNotificationRead(n.id,!n.is_read)} style={{ fontSize:10, fontWeight:600, padding:'2px 8px', borderRadius:6, background:'transparent', border:`1px solid ${t.border(isDark)}`, color:t.textMuted(isDark), cursor:'pointer', whiteSpace:'nowrap' }}>{n.is_read?'Unread':'Read'}</button>
-                              <button onClick={() => onDeleteNotification(n.id)} style={{ width:26, height:26, borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', background:'transparent', border:'1px solid rgba(239,68,68,0.25)', color:'#ef4444', cursor:'pointer' }}><Icon path={icons.trash} size={11} /></button>
+                              <button onClick={() => onMarkNotificationRead(n.id,!n.is_read)} style={{ fontSize:10, fontWeight:600, padding:'2px 8px', borderRadius:6, background:'transparent', border:`1px solid ${t.border(isDark)}`, color:t.textMuted(isDark), cursor:'pointer', whiteSpace:'nowrap', transition:'background 0.15s' }}
+                                onMouseEnter={e => e.currentTarget.style.background = t.hoverBg(isDark)}
+                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>{n.is_read?'Unread':'Read'}</button>
+                              <button onClick={() => onDeleteNotification(n.id)} style={{ width:26, height:26, borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', background:'transparent', border:'1px solid rgba(239,68,68,0.25)', color:'#ef4444', cursor:'pointer', transition:'background 0.15s' }}
+                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}
+                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}><Icon path={icons.trash} size={11} /></button>
                             </div>
                           </div>
                           <AnimatePresence>
@@ -1976,7 +1975,9 @@ function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccou
           {section === 'security' && (
             <SCard isDark={isDark} title="Password & access" eyebrow="Security">
               <p style={{ margin:'0 0 16px', fontSize:13, color:t.textSub(isDark) }}>We'll send a reset link to <strong style={{ color:t.textPrimary(isDark) }}>{user?.email}</strong>.</p>
-              <button onClick={onResetPassword} style={{ background:'#0F4C3A', color:'#FAF5DD', fontWeight:700, padding:'10px 22px', borderRadius:12, fontSize:13, border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>Request password reset</button>
+              <button onClick={onResetPassword} style={{ background:'#0F4C3A', color:'#FAF5DD', fontWeight:700, padding:'10px 22px', borderRadius:12, fontSize:13, border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6, transition:'opacity 0.15s' }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '1'}>Request password reset</button>
             </SCard>
           )}
 
@@ -1998,7 +1999,9 @@ function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccou
                       </strong>.
                       Your clients' QR codes will keep working after deletion.
                     </p>
-                    <button onClick={onCancelDeletion} style={{ display:'flex', alignItems:'center', gap:6, padding:'9px 18px', borderRadius:10, border:'1px solid rgba(15,76,58,0.4)', background:'transparent', color:'#0F4C3A', fontSize:13, fontWeight:600, cursor:'pointer' }}>
+                    <button onClick={onCancelDeletion} style={{ display:'flex', alignItems:'center', gap:6, padding:'9px 18px', borderRadius:10, border:'1px solid rgba(15,76,58,0.4)', background:'transparent', color:'#0F4C3A', fontSize:13, fontWeight:600, cursor:'pointer', transition:'background 0.15s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(15,76,58,0.08)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                       Cancel scheduled deletion
                     </button>
                   </div>
@@ -2007,7 +2010,9 @@ function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccou
                     <p style={{ fontSize:12, color:t.textSub(isDark), marginBottom:14, lineHeight:1.6 }}>
                       Your account will be permanently deleted after a 30-day grace period. You can cancel at any time before then. Your clients' QR codes will keep working - only your personal data is removed.
                     </p>
-                    <button onClick={onDeleteAccount} style={{ display:'flex', alignItems:'center', gap:6, padding:'9px 18px', borderRadius:10, border:'1px solid rgba(239,68,68,0.35)', background:'transparent', color:'#ef4444', fontSize:13, fontWeight:600, cursor:'pointer' }}>
+                    <button onClick={onDeleteAccount} style={{ display:'flex', alignItems:'center', gap:6, padding:'9px 18px', borderRadius:10, border:'1px solid rgba(239,68,68,0.35)', background:'transparent', color:'#ef4444', fontSize:13, fontWeight:600, cursor:'pointer', transition:'background 0.15s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                       <Icon path={icons.trash} size={13} style={{ color:'#ef4444' }} /> Request account deletion
                     </button>
                   </div>
@@ -2030,8 +2035,12 @@ function SettingsTab({ user, userProfile, isDark, onResetPassword, onDeleteAccou
                 <p style={{ fontSize:13, color: isDark?'#aaa':'#666', lineHeight:1.6, marginBottom:6 }}>After saving, your account settings will be <strong style={{ color:'#D4AF37' }}>locked for 14 days</strong>.</p>
                 <p style={{ fontSize:13, color: isDark?'#aaa':'#666', lineHeight:1.6, marginBottom:22 }}>Make sure everything looks correct before continuing.</p>
                 <div style={{ display:'flex', gap:10 }}>
-                  <button onClick={() => setShowSaveConfirm(false)} style={{ flex:1, padding:'10px 0', borderRadius:12, fontSize:13, fontWeight:600, border:`1px solid ${isDark?'#2a2a2a':'#e8e8e4'}`, background:'transparent', color: isDark?'#aaa':'#555', cursor:'pointer' }}>Cancel</button>
-                  <button onClick={handleSaveConfirm} style={{ flex:1, padding:'10px 0', borderRadius:12, fontSize:13, fontWeight:600, background:'#0F4C3A', color:'#FAF5DD', border:'none', cursor:'pointer' }}>Save &amp; lock</button>
+                  <button onClick={() => setShowSaveConfirm(false)} style={{ flex:1, padding:'10px 0', borderRadius:12, fontSize:13, fontWeight:600, border:`1px solid ${isDark?'#2a2a2a':'#e8e8e4'}`, background:'transparent', color: isDark?'#aaa':'#555', cursor:'pointer', transition:'background 0.15s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = t.hoverBg(isDark)}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>Cancel</button>
+                  <button onClick={handleSaveConfirm} style={{ flex:1, padding:'10px 0', borderRadius:12, fontSize:13, fontWeight:600, background:'#0F4C3A', color:'#FAF5DD', border:'none', cursor:'pointer', transition:'opacity 0.15s' }}
+                    onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+                    onMouseLeave={e => e.currentTarget.style.opacity = '1'}>Save &amp; lock</button>
                 </div>
               </motion.div>
             </div>
@@ -2179,7 +2188,7 @@ export default function Dashboard() {
                   user_id:          user.id,
                   type:             'alert',
                   message:          `We noticed a login to your ScanMyFrame account from a new device or location on ${loginAt}.`,
-                  full_description: `From ${deviceInfo} on ${loginAt}.\n\nIf this was you, no action is needed. If you don't recognise this activity, reset your password immediately -go to Settings and click "Request password reset".`,
+                  full_description: `From ${deviceInfo} on ${loginAt}.\n\nIf this was you, no action is needed. If you don't recognise this activity, reset your password immediately - go to Settings > Security and click "Request password reset".`,
                   is_read:          false,
                 }).select().single();
 
@@ -2370,6 +2379,8 @@ export default function Dashboard() {
             return (
               <div key="settings">
                 <button onClick={() => { if (activeTab === 'settings') { setSettingsExpanded(prev => !prev); } else { navTo('settings'); } }}
+                  onMouseEnter={e => { if (!active) e.currentTarget.style.background = t.hoverBg(isDark); }}
+                  onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent'; }}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, marginBottom: 2, fontSize: 13, fontWeight: 500, border: 'none', cursor: 'pointer', background: active ? '#0F4C3A' : 'transparent', color: active ? '#FAF5DD' : t.textSub(isDark), transition: 'all 0.15s' }}>
                   <Icon path={icons.settings} size={15} />
                   Settings
@@ -2385,6 +2396,8 @@ export default function Dashboard() {
                       return (
                         <button key={sub.id}
                           onClick={() => { setSettingsSection(sub.id); setSidebarOpen(false); }}
+                          onMouseEnter={e => { if (!subActive) e.currentTarget.style.background = t.hoverBg(isDark); }}
+                          onMouseLeave={e => { if (!subActive) e.currentTarget.style.background = 'transparent'; }}
                           style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '7px 12px', borderRadius: 8, marginBottom: 1, fontSize: 12, fontWeight: subActive ? 600 : 400, border: 'none', cursor: 'pointer', background: subActive ? 'rgba(212,175,55,0.12)' : 'transparent', color: sub.id === 'danger' ? '#ef4444' : subActive ? '#D4AF37' : t.textSub(isDark), transition: 'all 0.15s', textAlign: 'left' }}>
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                             <path d={sub.icon}/>
@@ -2409,6 +2422,8 @@ export default function Dashboard() {
               {...(item.id === 'create'    ? { 'data-guide': 'nav-create'    } : {})}
               {...(item.id === 'frames'    ? { 'data-guide': 'nav-frames'    } : {})}
               {...(item.id === 'analytics' ? { 'data-guide': 'nav-analytics' } : {})}
+              onMouseEnter={e => { if (!active) e.currentTarget.style.background = t.hoverBg(isDark); }}
+              onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent'; }}
               style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, marginBottom: 2, fontSize: 13, fontWeight: 500, border: 'none', cursor: 'pointer', background: active ? '#0F4C3A' : 'transparent', color: active ? '#FAF5DD' : t.textSub(isDark), transition: 'all 0.15s' }}>
               <Icon path={icons[item.icon]} size={15} />
               {item.label}
@@ -2462,6 +2477,17 @@ export default function Dashboard() {
           Help &amp; Support
         </Link>
 
+        {/* Referrals & Partnership */}
+        <Link
+          to="/referrals"
+          target='blank_'
+          style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 9, fontSize: 11, border: `1px solid ${t.border(isDark)}`, background: 'transparent', color: t.textSub(isDark), cursor: 'pointer', textDecoration: 'none', marginBottom: 6 }}
+          onMouseEnter={e => e.currentTarget.style.opacity = '0.7'}
+          onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
+          <Icon path={icons.gift} size={12} />
+          Referrals
+        </Link>
+
         {/* Install app - shows when browser has a deferred prompt */}
         {deferredPrompt && (
           <button
@@ -2492,6 +2518,8 @@ export default function Dashboard() {
             { label: 'Sign out', icon: 'signout', action: handleSignOut },
           ].map(btn => (
             <button key={btn.label} onClick={btn.action}
+              onMouseEnter={e => e.currentTarget.style.opacity = '0.7'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
               style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '7px 0', borderRadius: 9, fontSize: 11, border: `1px solid ${t.border(isDark)}`, background: 'transparent', color: t.textSub(isDark), cursor: 'pointer' }}>
               <Icon path={icons[btn.icon]} size={12} />
               {btn.label}
@@ -2599,6 +2627,8 @@ export default function Dashboard() {
         <header style={{ position: 'sticky', top: 0, zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: `1px solid ${t.border(isDark)}`, background: t.headerBg(isDark) }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <button onClick={() => setSidebarOpen(true)}
+              onMouseEnter={e => e.currentTarget.style.opacity = '0.7'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
               style={{ padding: 8, borderRadius: 10, border: 'none', background: 'transparent', color: t.textSub(isDark), cursor: 'pointer' }}
               className="lg-hidden">
               <style>{`@media(min-width:1024px){.lg-hidden{display:none!important}}`}</style>
@@ -2618,8 +2648,20 @@ export default function Dashboard() {
             )}
             <div ref={notifContainerRef} style={{ position: 'relative' }}>
               <NotificationDropdown notification={notification} notificationData={notificationData} setNotificationData={setNotificationData} isDark={isDark} user={user}/>
-              <button onClick={handleNotification} style={{ padding: 8, borderRadius: 10, border: 'none', background: 'transparent', color: t.textSub(isDark), cursor: 'pointer', position: 'relative' }}>
-                <Icon path={icons.bell} size={18} />
+              <button onClick={handleNotification}
+                className="db-bell-btn"
+                style={{ padding: 8, borderRadius: 10, border: 'none', background: 'transparent', color: t.textSub(isDark), cursor: 'pointer', position: 'relative' }}>
+                <style>{`
+                  @keyframes dbBellRing {
+                    0%, 100% { transform: rotate(0deg); }
+                    20%      { transform: rotate(15deg); }
+                    40%      { transform: rotate(-12deg); }
+                    60%      { transform: rotate(8deg); }
+                    80%      { transform: rotate(-4deg); }
+                  }
+                  .db-bell-btn:hover .db-bell-icon { animation: dbBellRing 0.5s ease; transform-origin: top center; }
+                `}</style>
+                <Icon path={icons.bell} size={18} className="db-bell-icon" />
                 {notificationData?.some(n => !n.is_read) &&
                 <span style={{ position: 'absolute', top: 8, right: 8, width: 6, height: 6, borderRadius: 3, background: '#D4AF37' }} />}
               </button>
@@ -2627,7 +2669,9 @@ export default function Dashboard() {
             {/* Upgrade button -hidden on Business plan */}
             {currentPlanId !== 'business' && (
               <button onClick={() => navTo('billing')}
-                style={{ background: 'rgba(212,175,55,0.12)', color: '#D4AF37', fontWeight: 700, padding: '7px 14px', borderRadius: 10, fontSize: 12, border: '1px solid rgba(212,175,55,0.35)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                style={{ background: 'rgba(212,175,55,0.12)', color: '#D4AF37', fontWeight: 700, padding: '7px 14px', borderRadius: 10, fontSize: 12, border: '1px solid rgba(212,175,55,0.35)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap', transition: 'opacity 0.15s' }}
                 title={currentPlanId === 'pro' ? 'Upgrade to Business' : 'Upgrade to Pro'}
                                 className='hidden sm:flex'>
                 <span className="hide-label-mobile">{currentPlanId === 'pro' ? 'Upgrade to Business' : 'Upgrade to Pro'}</span>
@@ -2635,15 +2679,21 @@ export default function Dashboard() {
               </button>
             )}
             <button onClick={() => {navTo('create'); setEditingFrame(null);}}
-              style={{background: '#0F4C3A', color: '#FAF5DD', fontWeight: 700, padding: '7px 16px', borderRadius: 10, fontSize: 12, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}
+              onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+              style={{background: '#0F4C3A', color: '#FAF5DD', fontWeight: 700, padding: '7px 16px', borderRadius: 10, fontSize: 12, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, transition: 'opacity 0.15s' }}
               >
               <Icon path={icons.plus} size={12} style={{ color: '#FAF5DD' }} /> <span className='hide-label-mobile'>New Frame</span>
             </button>
           </div>
         </header>
 
-        {/* AI Chat Widget -trial, pro, business only */}
-        {['trial', 'pro', 'business'].includes(currentPlanId) && <AIChatWidget userId={user?.id} />}
+        {/* AI Chat Widget - visible to everyone, usable on trial, pro & business */}
+        <AIChatWidget
+          userId={user?.id}
+          locked={!['trial', 'pro', 'business'].includes(currentPlanId) }
+          onUpgrade={() => navTo('billing')}
+        />
 
         {/* Deletion scheduled banner */}
         {userProfile?.deletion_requested_at && (
@@ -2666,7 +2716,10 @@ export default function Dashboard() {
                 padding: '5px 14px', borderRadius: 8, border: '1px solid #ef4444',
                 background: 'transparent', color: '#ef4444',
                 fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+                transition: 'background 0.15s',
               }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
               Cancel deletion
             </button>
@@ -2693,12 +2746,16 @@ export default function Dashboard() {
                     localStorage.setItem('pwa_install_dismissed', JSON.stringify({ ts: Date.now() }));
                   }
                 }}
-                style={{ padding: '5px 14px', borderRadius: 8, border: 'none', background: '#0F4C3A', color: '#FAF5DD', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                style={{ padding: '5px 14px', borderRadius: 8, border: 'none', background: '#0F4C3A', color: '#FAF5DD', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'opacity 0.15s' }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
                 Install app
               </button>
               <button
                 onClick={() => { setInstallDismissed(true); localStorage.setItem('pwa_install_dismissed', JSON.stringify({ ts: Date.now() })); }}
-                style={{ padding: '5px 10px', borderRadius: 8, border: `1px solid ${t.border(isDark)}`, background: 'transparent', color: t.textSub(isDark), fontSize: 12, cursor: 'pointer' }}
+                style={{ padding: '5px 10px', borderRadius: 8, border: `1px solid ${t.border(isDark)}`, background: 'transparent', color: t.textSub(isDark), fontSize: 12, cursor: 'pointer', transition: 'background 0.15s' }}
+                onMouseEnter={e => e.currentTarget.style.background = t.hoverBg(isDark)}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 aria-label="Dismiss">
                 x
               </button>
@@ -2792,11 +2849,15 @@ export default function Dashboard() {
 
                 <div style={{ display: 'flex', gap: 10 }}>
                   <button onClick={() => setShowDeleteModal(false)} disabled={deleting}
-                    style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: `1px solid ${isDark ? '#333' : '#e0e0e0'}`, background: 'transparent', color: isDark ? '#ccc' : '#555', fontSize: 13, fontWeight: 600, cursor: deleting ? 'not-allowed' : 'pointer', opacity: deleting ? 0.5 : 1 }}>
+                    style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: `1px solid ${isDark ? '#333' : '#e0e0e0'}`, background: 'transparent', color: isDark ? '#ccc' : '#555', fontSize: 13, fontWeight: 600, cursor: deleting ? 'not-allowed' : 'pointer', opacity: deleting ? 0.5 : 1, transition: 'background 0.15s' }}
+                    onMouseEnter={e => { if (!deleting) e.currentTarget.style.background = t.hoverBg(isDark); }}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                     Cancel
                   </button>
                   <button onClick={confirmDeleteAccount} disabled={deleting}
-                    style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: 'none', background: '#ef4444', color: '#fff', fontSize: 13, fontWeight: 700, cursor: deleting ? 'not-allowed' : 'pointer', opacity: deleting ? 0.7 : 1, transition: 'opacity 0.15s' }}>
+                    style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: 'none', background: '#ef4444', color: '#fff', fontSize: 13, fontWeight: 700, cursor: deleting ? 'not-allowed' : 'pointer', opacity: deleting ? 0.7 : 1, transition: 'opacity 0.15s' }}
+                    onMouseEnter={e => { if (!deleting) e.currentTarget.style.opacity = '0.85'; }}
+                    onMouseLeave={e => { e.currentTarget.style.opacity = deleting ? '0.7' : '1'; }}>
                     {deleting ? 'Scheduling...' : 'Schedule deletion'}
                   </button>
                 </div>

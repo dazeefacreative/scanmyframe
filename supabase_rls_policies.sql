@@ -200,3 +200,47 @@ USING (auth.uid() = vendor_id);
 
 -- System can update QR usage (via backend)
 -- We'll use service_role for this in backend functions
+
+-- ============================================
+-- REFERRAL PROGRAM TABLES
+-- ============================================
+
+ALTER TABLE partner_applications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE referral_commissions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE referral_payouts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE referral_payout_accounts ENABLE ROW LEVEL SECURITY;
+
+-- Applicants can view their own partnership application
+CREATE POLICY "Users can view own partner application"
+ON partner_applications FOR SELECT
+USING (auth.uid() = user_id);
+
+-- Referrers can view their own commission ledger
+CREATE POLICY "Referrers can view own commissions"
+ON referral_commissions FOR SELECT
+USING (auth.uid() = referrer_id);
+
+-- Referrers can view their own payout history
+CREATE POLICY "Referrers can view own payouts"
+ON referral_payouts FOR SELECT
+USING (auth.uid() = referrer_id);
+
+-- Referrers can view and manage their own payout bank account
+CREATE POLICY "Referrers can view own payout account"
+ON referral_payout_accounts FOR SELECT
+USING (auth.uid() = user_id);
+
+CREATE POLICY "Referrers can insert own payout account"
+ON referral_payout_accounts FOR INSERT
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Referrers can update own payout account"
+ON referral_payout_accounts FOR UPDATE
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+
+-- Note: users.referral_type / referral_code / commission_rate / commission_window_months /
+-- partner_status / referred_by / referred_at / first_paid_at are NOT directly editable by
+-- users via the existing "Users can update own profile" policy in practice — they are only
+-- changed via the SECURITY DEFINER RPC functions in supabase_referral_functions.sql or by
+-- service-role edge functions (admin-data, referral-payout).

@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT UNIQUE NOT NULL,
   full_name TEXT,
   profile_picture_url TEXT,
-  qr_codes_remaining INT DEFAULT 10,
+  qr_codes_remaining INT DEFAULT 5,
   onboarding_completed BOOLEAN DEFAULT FALSE,
   is_suspended BOOLEAN DEFAULT FALSE,
   is_disabled BOOLEAN DEFAULT FALSE,
@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS payment_records (
 CREATE TABLE IF NOT EXISTS qr_code_usage (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   vendor_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-  free_allocation INT DEFAULT 10,
+  free_allocation INT DEFAULT 5,
   free_used INT DEFAULT 0,
   paid_allocation INT DEFAULT 0,
   paid_used INT DEFAULT 0,

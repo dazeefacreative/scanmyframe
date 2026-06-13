@@ -15,7 +15,7 @@ function formatDate(dateStr) {
 
 // ─── Rich content block renderer ─────────────────────────────────────────────
 function BlockRenderer({ block, isDark }) {
-  const prose = isDark ? 'text-[#ccc]' : 'text-[#2d2d2d]';
+  const prose = isDark ? 'text-white' : 'text-[#2d2d2d]';
   const heading = isDark ? 'text-white' : 'text-[#0F4C3A]';
 
   switch (block.type) {
@@ -241,7 +241,7 @@ export default function BlogPost() {
         ) : (
           <div
             className={`sf-post-body ${isDark ? 'sf-post-body--dark' : ''}`}
-            dangerouslySetInnerHTML={{ __html: post.body || '' }}
+            dangerouslySetInnerHTML={{ __html: (post.body || '').replace(/&nbsp;| /g, ' ') }}
           />
         )}
 

@@ -15,12 +15,13 @@ function storageKey(userId) {
   return userId ? `sf_chat_history_${userId}` : null;
 }
 
-export default function AIChatWidget({ userId }) {
+export default function AIChatWidget({ userId, locked = false, onUpgrade }) {
   const { isDark } = useTheme();
   const [open,     setOpen]    = useState(false);
   const [messages, setMessages] = useState([]);
   const [input,    setInput]   = useState('');
   const [loading,  setLoading] = useState(false);
+  const [showLockBanner, setShowLockBanner] = useState(false);
   const bottomRef = useRef(null);
 
   // Load the correct history whenever the logged-in user changes
@@ -54,6 +55,11 @@ export default function AIChatWidget({ userId }) {
 
   async function sendMessage() {
     if (!input.trim() || loading) return;
+
+    if (locked) {
+      setShowLockBanner(true);
+      return;
+    }
 
     const userMsg = { role: 'user', content: input.trim() };
     const history = [...messages, userMsg];
@@ -260,6 +266,46 @@ export default function AIChatWidget({ userId }) {
               padding: '10px 14px 14px',
               borderTop: `1px solid ${border}`,
             }}>
+              {showLockBanner && (
+                <motion.div
+                  initial={{ x: 0 }}
+                  animate={{ x: [0, -6, 6, -6, 6, -3, 3, 0] }}
+                  transition={{ duration: 0.4 }}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    gap: 8, padding: '9px 12px', marginBottom: 8,
+                    borderRadius: 12, border: `1px solid ${isDark ? '#3a3320' : '#f0e2b6'}`,
+                    background: isDark ? 'rgba(212,175,55,0.08)' : '#fdf6e3',
+                  }}
+                >
+                  <p style={{ fontSize: 12, lineHeight: 1.4, color: isDark ? '#D4AF37' : '#8a6d1d', margin: 0 }}>
+                    AI Assistant is available on Pro &amp; Business plans.
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                    <button
+                      onClick={onUpgrade}
+                      style={{
+                        background: '#0F4C3A', color: '#FAF5DD', border: 'none',
+                        borderRadius: 8, padding: '5px 10px', fontSize: 11, fontWeight: 700,
+                        cursor: 'pointer', whiteSpace: 'nowrap',
+                      }}
+                    >
+                      Upgrade
+                    </button>
+                    <button
+                      onClick={() => setShowLockBanner(false)}
+                      title="Dismiss"
+                      style={{
+                        background: 'transparent', border: 'none', cursor: 'pointer',
+                        fontSize: 16, lineHeight: 1, padding: '2px 4px',
+                        color: isDark ? '#D4AF37' : '#8a6d1d',
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                </motion.div>
+              )}
               <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
                 <textarea
                   value={input}

@@ -33,7 +33,7 @@ export default function OnboardingGuard() {
     async function checkUser(userId, authCreatedAt) {
       const { data: profile, error } = await supabase
         .from('users')
-        .select('onboarding_completed, is_suspended')
+        .select('onboarding_completed, is_suspended, account_type, referral_type, partner_status')
         .eq('id', userId)
         .single();
 
@@ -53,7 +53,10 @@ export default function OnboardingGuard() {
             setStatus('unauthenticated');
           }
         } else {
-          setStatus('unauthenticated');
+          // Unexpected query error (e.g. a column not yet present on this
+          // environment's database). Fail open rather than locking a
+          // logged-in user out of their dashboard.
+          setStatus('ready');
         }
         return;
       }
@@ -62,6 +65,12 @@ export default function OnboardingGuard() {
         setStatus('suspended');
       } else if (!profile.onboarding_completed) {
         setStatus('needs_onboarding');
+      } else if (
+        profile.account_type === 'partner' &&
+        profile.referral_type === 'partner' &&
+        profile.partner_status !== 'rejected'
+      ) {
+        setStatus('partner');
       } else {
         setStatus('ready');
       }
@@ -118,8 +127,12 @@ export default function OnboardingGuard() {
     return <Navigate to="/suspended" replace />;
   }
 
-  if (status === 'needs_onboarding') {
+  if (status === 'needs_onboarding' && location.pathname !== '/referrals') {
     return <Navigate to="/onboarding" replace />;
+  }
+
+  if (status === 'partner' && location.pathname !== '/referrals') {
+    return <Navigate to="/referrals" replace />;
   }
 
   return <Outlet />;

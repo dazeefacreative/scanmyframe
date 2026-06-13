@@ -19,12 +19,20 @@ export default function AuthButtons({ setMessage }) {
   const [detectedMode,   setDetectedMode]   = useState(null); // 'login' | 'register'
   const [email,          setEmail]          = useState('');
   const [password,       setPassword]       = useState('');
+  const [promoCode,      setPromoCode]      = useState('');
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [showPassword,   setShowPassword]   = useState(false);
   const [agreedToTerms,  setAgreedToTerms]  = useState(false);
   const [checkingEmail,  setCheckingEmail]  = useState(false);
   const [submitting,     setSubmitting]     = useState(false);
   const [googleLoading,  setGoogleLoading]  = useState(false);
+  // Check both localStorage (set by App.jsx's ?ref= capture effect on an
+  // earlier page) and the current URL directly — covers the case where a
+  // ?ref= link lands straight on this page, before that effect has run.
+  const [hasPendingReferral] = useState(() =>
+    !!new URLSearchParams(window.location.search).get('ref') ||
+    !!localStorage.getItem('pending_referral_code')
+  );
   const passwordRef = useRef(null);
   const navigate = useNavigate();
   const { isDark } = useTheme();
@@ -81,7 +89,7 @@ export default function AuthButtons({ setMessage }) {
 
       setSubmitting(true);
       try {
-        const user = await handleEmailSignup(email.trim(), password);
+        const user = await handleEmailSignup(email.trim(), password, promoCode.trim());
         if (user) {
           setMessage({ success: 'Check your email to verify your account.' });
           setTimeout(() => navigate('/verify-email-pending', { state: { email } }), 1500);
@@ -100,7 +108,13 @@ export default function AuthButtons({ setMessage }) {
           setTimeout(() => navigate('/dashboard'), 800);
         }
       } catch (err) {
-        setMessage({ err: err.message.includes('Invalid login credentials') ? 'Wrong password. Try again.' : err.message });
+        let msg = err.message;
+        if (msg.includes('Invalid login credentials')) {
+          msg = 'Wrong password. Try again.';
+        } else if (msg.includes('Email not confirmed')) {
+          msg = 'Email not confirmed, check your mail box to verify ownership.';
+        }
+        setMessage({ err: msg });
       } finally {
         setSubmitting(false);
       }
@@ -214,7 +228,7 @@ export default function AuthButtons({ setMessage }) {
           {/* Email chip with back button */}
           <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm -mt-1 ${isDark ? 'bg-[#1e1e1e] border border-[#303030]' : 'bg-[#f7f7f7] border border-[#d0d0d0]'}`}>
             <Icon icon="ic:round-email" width="14" className={isDark ? 'text-[#666]' : 'text-[#999]'} />
-            <span className={`flex-1 truncate ${isDark ? 'text-white' : 'text-[#111]'}`}>{email}</span>
+            <span className={`flex-1 truncate pl-1 ${isDark ? 'text-white' : 'text-[#111]'}`}>{email}</span>
             <button
               type="button"
               onClick={goBack}
@@ -295,6 +309,23 @@ export default function AuthButtons({ setMessage }) {
             )}
           </div>
 
+          {/* Referral / promo code — register only, optional, hidden if already referred via link */}
+          {detectedMode === 'register' && !hasPendingReferral && (
+            <div className="-mt-1">
+              <input
+                type="text"
+                placeholder="Referral or promo code (optional)"
+                value={promoCode}
+                onChange={e => setPromoCode(e.target.value.toUpperCase())}
+                onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+                className={`w-full py-2.5 px-4 rounded-xl text-sm outline-none transition-all
+                  ${isDark
+                    ? 'bg-[#1e1e1e] border border-[#303030] text-white placeholder-[#555] focus:border-[#4a4a4a]'
+                    : 'bg-[#f7f7f7] border border-[#d0d0d0] text-[#111] placeholder-[#aaa] focus:border-primary focus:bg-white'}`}
+              />
+            </div>
+          )}
+
           {/* Terms — register only */}
           {detectedMode === 'register' && (
             <label className="flex items-start gap-2.5 cursor-pointer select-none -mt-1">
@@ -326,6 +357,16 @@ export default function AuthButtons({ setMessage }) {
               : detectedMode === 'register' ? 'Create Account' : 'Sign in'
             }
           </button>
+
+          {/* Partnership — register only */}
+          {detectedMode === 'register' && (
+            <p className={`text-center text-xs -mt-1 ${isDark ? 'text-[#666]' : 'text-[#999]'}`}>
+              Want a custom commission rate or longer-term deal?{' '}
+              <Link to="/partnership" className={`font-semibold underline underline-offset-2 ${isDark ? 'text-[#D4AF37]' : 'text-primary'}`}>
+                Apply as a partner
+              </Link>
+            </p>
+          )}
         </>
       )}
 

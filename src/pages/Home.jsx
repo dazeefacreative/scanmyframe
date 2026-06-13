@@ -303,7 +303,7 @@ export default function Home() {
             </p>
             <div className="flex gap-4">
               <a
-                href="/signin?mode=register"
+                href="/signin"
                 className="bg-primary text-secondary px-5 py-2 rounded-lg font-bold hover:bg-opacity-80 transition"
               >
                 Get Started Free
@@ -396,7 +396,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
                 viewport={{ once: true, amount: 0.3 }}
-                onClick={() => navigate('/signin?mode=register')}
+                onClick={() => navigate('/signin')}
                 className="bg-primary text-secondary px-6 py-2.5 rounded-lg font-bold hover:bg-opacity-80 transition text-sm"
               >
                 Start for free
@@ -677,7 +677,7 @@ export default function Home() {
                 className="mt-14 text-center"
               >
                 <a
-                  href="/signin?mode=register"
+                  href="/signin"
                   className="bg-gold text-primary font-bold px-8 py-3 rounded-lg hover:bg-opacity-90 transition text-sm"
                 >
                   Start for free, no credit card required
@@ -875,7 +875,7 @@ export default function Home() {
           <Price />
           <div className="text-center mt-10">
             <a
-              href="/signin?mode=register"
+              href="/signin"
               className="bg-primary text-secondary font-bold px-8 py-3 rounded-lg hover:bg-opacity-80 transition text-sm"
             >
               Get started free, no credit card required
@@ -932,7 +932,7 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
-              href="/signin?mode=register"
+              href="/signin"
               className="bg-gold text-primary font-bold px-8 py-3.5 rounded-lg hover:bg-opacity-90 transition text-sm"
             >
               Get Started Free

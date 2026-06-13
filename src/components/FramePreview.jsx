@@ -64,7 +64,7 @@ function renderStoryBlock(block, idx) {
   }
 }
 
-export default function FramePreview({ form, artworkFile }) {
+export default function FramePreview({ form, artworkFile, existingArtworkUrl }) {
   const PHONE_W  = 264;
   const PHONE_H  = 560;
   const FRAME_PX = 13;
@@ -75,7 +75,7 @@ export default function FramePreview({ form, artworkFile }) {
   const title      = form.title      || 'Art Title';
   const frameOwner = form.frameOwner || '';
   const story      = form.story      || '';
-  const artworkUrl = artworkFile ? URL.createObjectURL(artworkFile) : null;
+  const artworkUrl = artworkFile ? URL.createObjectURL(artworkFile) : (existingArtworkUrl || null);
   const frameSize  = form.width && form.height ? `${form.width}" × ${form.height}"` : '';
   
 
@@ -169,7 +169,7 @@ export default function FramePreview({ form, artworkFile }) {
                   <p style={{ margin: '0 0 6px', fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#D4AF37' }}>The Story</p>
                   <div style={{ fontSize: 12, color: '#4a7c6f', lineHeight: 1.6, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 8, WebkitBoxOrient: 'vertical' }}>
                     {story.trim().startsWith('<')
-                      ? <div className="sf-preview-story" dangerouslySetInnerHTML={{ __html: story }} />
+                      ? <div className="sf-preview-story" dangerouslySetInnerHTML={{ __html: story.replace(/&nbsp;| /g, ' ') }} />
                       : parseStoryContent(story).map(renderStoryBlock)
                     }
                   </div>

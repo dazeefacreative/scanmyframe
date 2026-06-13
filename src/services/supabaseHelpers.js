@@ -938,6 +938,62 @@ export const adminGetNewsletter = async () => {
   }
 };
 
+/** Admin: get all partner applications with applicant info (via edge function) */
+export const adminGetPartnerApplications = async () => {
+  try {
+    const data = await adminFetch('list_partner_applications');
+    return { applications: data.applications || [], error: null };
+  } catch (error) {
+    return { applications: [], error: error.message };
+  }
+};
+
+/** Admin: approve a partner application, setting the final commission rate */
+export const adminApprovePartner = async (applicationId, approvedCommissionRate, approvedContractYears, signupBonusQr) => {
+  try {
+    await adminDataFetch({
+      resource: 'approve_partner_application',
+      application_id: applicationId,
+      approved_commission_rate: approvedCommissionRate,
+      approved_contract_years: approvedContractYears,
+      signup_bonus_qr: signupBonusQr,
+    });
+    return { error: null };
+  } catch (error) {
+    return { error: error.message };
+  }
+};
+
+/** Admin: reject a partner application with optional reviewer notes */
+export const adminRejectPartner = async (applicationId, reviewerNotes) => {
+  try {
+    await adminDataFetch({
+      resource: 'reject_partner_application',
+      application_id: applicationId,
+      reviewer_notes: reviewerNotes,
+    });
+    return { error: null };
+  } catch (error) {
+    return { error: error.message };
+  }
+};
+
+/** Admin: get the monthly referral payout report (optionally for a specific period_month) */
+export const adminGetReferralPayoutReport = async (periodMonth) => {
+  try {
+    const data = await adminDataFetch({ resource: 'referral_payout_report', period_month: periodMonth || null });
+    return {
+      availableMonths: data.available_months || [],
+      periodMonth: data.period_month || null,
+      payouts: data.payouts || [],
+      totals: data.totals || null,
+      error: null,
+    };
+  } catch (error) {
+    return { availableMonths: [], periodMonth: null, payouts: [], totals: null, error: error.message };
+  }
+};
+
 // ============================================
 // QR EMAIL HELPERS
 // ============================================
@@ -1009,6 +1065,18 @@ async function adminDataFetch(payload) {
 }
 
 /**
+ * Notify the ScanMyFrame team by email that a new partnership application
+ * was submitted. Fire-and-forget safe - never throws.
+ */
+export const notifyPartnerApplication = async (application) => {
+  try {
+    await adminDataFetch({ resource: 'notify_partner_application', ...application });
+  } catch (_) {
+    // Silently ignore - notification is best-effort
+  }
+};
+
+/**
  * Push a notification to a targeted audience.
  * audience: 'all' | 'subscribers' | 'basic' | 'pro' | 'business'
  */
@@ -1023,7 +1091,7 @@ export const adminPushNotification = async ({ audience, user_id, type, message, 
 
 /**
  * Send a trial upgrade nudge (in-app notification + email) when a trial user
- * reaches 8 of their 10 free QR codes. Fire-and-forget safe - never throws.
+ * reaches 3 of their 5 free QR codes. Fire-and-forget safe - never throws.
  */
 export const sendTrialUpgradeNudge = async ({ userId, toEmail, userName }) => {
   const displayName = userName || 'there';
@@ -1033,7 +1101,7 @@ export const sendTrialUpgradeNudge = async ({ userId, toEmail, userName }) => {
     await supabase.from('notification').insert({
       user_id:          userId,
       type:             'alert',
-      message:          "You've used 8 of your 10 free QR codes.",
+      message:          "You've used 3 of your 5 free QR codes.",
       full_description: `You have 2 QR codes left on your free trial. Upgrade to a paid plan to keep creating frames without interruption - your existing frames and QR codes will remain active.`,
       is_read:          false,
     });
@@ -1087,8 +1155,11 @@ export const sendDeletionRequestEmail = async ({ toEmail, userName, deletionDate
  * Send a welcome email + insert an in-app notification after onboarding completes.
  * Fire-and-forget safe - never throws.
  */
-export const sendWelcomeNotification = async ({ userId, toEmail, userName }) => {
+export const sendWelcomeNotification = async ({ userId, toEmail, userName, bonusQr = 0 }) => {
   const displayName = userName || 'there';
+  const bonusLine = bonusQr > 0
+    ? ` Plus, you've got ${bonusQr} bonus QR code${bonusQr === 1 ? '' : 's'} from your referral.`
+    : '';
 
   // 1. In-app notification
   try {
@@ -1096,7 +1167,7 @@ export const sendWelcomeNotification = async ({ userId, toEmail, userName }) => 
       user_id:          userId,
       type:             'info',
       message:          'Welcome to ScanMyFrame!',
-      full_description: `Hi ${displayName}, your account is all set. You have 10 free QR codes ready to use. Create your first frame, generate a QR code, and let your work speak for itself. We are excited to have you.`,
+      full_description: `Hi ${displayName}, your account is all set. You have 5 free QR codes ready to use.${bonusLine} Create your first frame, generate a QR code, and let your work speak for itself. We are excited to have you.`,
       is_read:          false,
     });
   } catch (_) {}
@@ -1107,6 +1178,7 @@ export const sendWelcomeNotification = async ({ userId, toEmail, userName }) => 
       resource:  'send_welcome_email',
       to_email:  toEmail,
       name:      displayName,
+      bonus_qr:  bonusQr,
     });
   } catch (_) {
     // Silently ignore - email is best-effort

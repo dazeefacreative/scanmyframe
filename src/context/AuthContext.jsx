@@ -6,6 +6,7 @@ import {
   verifyEmailWithToken,
   resendVerificationEmail,
 } from '../services/supabaseHelpers';
+import { applyPendingReferralCode } from '../components/AuthService';
 
 const AuthContext = createContext();
 
@@ -62,6 +63,11 @@ export const AuthProvider = ({ children }) => {
       subscription?.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    if (!supabase || !session?.user) return;
+    applyPendingReferralCode().catch(() => {});
+  }, [session?.user?.id]);
 
   const resetInactivityTimer = useCallback(() => {
     if (inactivityTimer.current) clearTimeout(inactivityTimer.current);

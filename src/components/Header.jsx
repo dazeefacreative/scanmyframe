@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../services/supabaseClient';
 
 import logo from '../assets/images/Scanframe.png';
 import logoalt from '../assets/images/Scanframe alt.png';
@@ -12,10 +13,20 @@ export default function Header() {
   const { isDark, toggleTheme } = useTheme();
   const { user, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isPartner, setIsPartner] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      setIsPartner(false);
+      return;
+    }
+    supabase.from('users').select('account_type').eq('id', user.id).single()
+      .then(({ data }) => setIsPartner(data?.account_type === 'partner'));
+  }, [user]);
 
   const navLinks = [
-    ...(user ? [{ label: 'Dashboard', href: '/dashboard' }] : []),
-    { label: 'Generate Code', href: '/#create_frames' },
+    ...(user ? [{ label: isPartner ? 'Referrals' : 'Dashboard', href: isPartner ? '/referrals' : '/dashboard' }] : []),
+    ...(user && isPartner ?  [] : [{ label: 'Generate Code', href: '/#create_frames' }]),
     { label: 'Blog', href: '/blog' },
     { label: 'Pricing', href: '/pricing' },
     { label: 'About Us', href: '/about' },

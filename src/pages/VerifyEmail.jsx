@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import MessageDisplay from '../components/MessageDisplay';
 import { supabase } from '../services/supabaseClient';
+import { applyPendingPartnerApplication } from '../components/AuthService';
 
 export default function VerifyEmail() {
   const [redirectCountdown, setRedirectCountdown] = useState(5);
@@ -25,6 +26,8 @@ export default function VerifyEmail() {
             .eq('id', session.user.id);
           localStorage.removeItem('scanframe_newsletter_opt_in');
         }
+        // Submit any queued partnership application now that a session exists
+        await applyPendingPartnerApplication();
         setMessage({ success: 'Email verified successfully!' });
         setVerified(true);
         setTimeout(() => navigate('/dashboard'), 2000);

@@ -5,6 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import { supabase } from '../services/supabaseClient';
 import { initializePayment } from '../services/paystackService';
 import { sendWelcomeNotification } from '../services/supabaseHelpers';
+import { setStandardReferralCode, slugifyUsername, applyPromoCode, getMySignupBonus } from '../services/referralService';
 
 import scanframeLogo from '../assets/images/Scanframe.png';
 import scanframeLogoAlt from '../assets/images/Scanframe alt.png';
@@ -62,7 +63,7 @@ function StepBar({ current, isDark }) {
 }
 
 // ─── Step 1: Business Profile ─────────────────────────────────────────────────
-function StepProfile({ data, onChange, onNext, onSkip, loading, error, isDark }) {
+function StepProfile({ data, onChange, onNext, onSkip, loading, error, isDark, hidePromoCode }) {
   const [logoPreview, setLogoPreview] = useState(null);
 
   function handleLogoChange(e) {
@@ -97,7 +98,7 @@ function StepProfile({ data, onChange, onNext, onSkip, loading, error, isDark })
         </label>
         <input
           className={inputCls}
-          placeholder="e.g. dazeefa_studio"
+          placeholder="e.g. Frames Studio"
           value={data.full_name}
           onChange={e => onChange('full_name', e.target.value)}
         />
@@ -190,6 +191,23 @@ function StepProfile({ data, onChange, onNext, onSkip, loading, error, isDark })
         </div>
       </div>
 
+      {!hidePromoCode && (
+        <div className="mb-4">
+          <label className={`block text-sm font-medium mb-1.5 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+            Promo code <span className="text-gray-400 font-normal">(optional)</span>
+          </label>
+          <input
+            className={inputCls}
+            placeholder="e.g. FRAMES20"
+            value={data.promo_code}
+            onChange={e => onChange('promo_code', e.target.value.toUpperCase())}
+          />
+          <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+            Were you referred by someone? Enter their promo code here.
+          </p>
+        </div>
+      )}
+
       {/* Newsletter opt-in */}
       <label className={`flex items-start gap-3 cursor-pointer p-4 rounded-xl border mt-2 mb-1 transition-colors
         ${isDark ? 'border-white/10 hover:border-white/20' : 'border-gray-200 hover:border-gray-300'}`}>
@@ -204,6 +222,35 @@ function StepProfile({ data, onChange, onNext, onSkip, loading, error, isDark })
           <span className={`text-xs ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>You can unsubscribe anytime.</span>
         </span>
       </label>
+
+      <div className={`rounded-2xl border p-4 mt-4 mb-4 ${isDark ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-gray-50'}`}>
+        <label className={`flex items-start gap-3 cursor-pointer mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+          <input
+            type="checkbox"
+            checked={data.referral_opt_in}
+            onChange={e => onChange('referral_opt_in', e.target.checked)}
+            className="mt-0.5 w-4 h-4 accent-[#0F4C3A] flex-shrink-0 cursor-pointer"
+          />
+          <span className={`text-sm leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+            Would you love to refer ScanMyFrame to your colleagues in exchange for monthly cash reward?
+            If yes, your username becomes your referral link.
+          </span>
+        </label>
+
+        {data.referral_opt_in && (
+          <div>
+            <label className={`block text-sm font-medium mb-1.5 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+              Your referral link
+            </label>
+            <div className={`text-sm px-4 py-2.5 rounded-xl border font-mono ${isDark ? 'bg-[#111] border-white/10 text-white' : 'bg-white border-gray-200 text-primary'}`}>
+              {window.location.origin}/?ref={slugifyUsername(data.full_name) || '...'}
+            </div>
+            <p className={`text-xs mt-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+              Based on your username. Use at least 3 letters or numbers above so we can create your link.
+            </p>
+          </div>
+        )}
+      </div>
 
       {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
@@ -240,7 +287,7 @@ function StepPlan({ data, onChange, onNext, onBack, onSkip, loading, error, isDa
         Choose your plan
       </h2>
       <p className={`text-sm mb-6 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-        Start free. Scale when you're ready. Cancel anytime. You get 10 Free QR codes to try out all features. No credit card required.
+        Start free. Scale when you're ready. Cancel anytime. You get 5 Free QR codes to try out all features. No credit card required.
       </p>
 
       {/* Billing toggle - discount badge sits right beside the Yearly button */}
@@ -402,7 +449,7 @@ function StepPlan({ data, onChange, onNext, onBack, onSkip, loading, error, isDa
 }
 
 // ─── Step 3: Complete ─────────────────────────────────────────────────────────
-function StepComplete({ planName, onDashboard, onCreateFrame, onSkip, isDark }) {
+function StepComplete({ planName, bonusQr, onDashboard, onCreateFrame, onSkip, isDark }) {
   return (
     <div className="text-center">
       <div className="text-5xl mb-4">🎉</div>
@@ -415,7 +462,9 @@ function StepComplete({ planName, onDashboard, onCreateFrame, onSkip, isDark }) 
         Your <strong>{planName}</strong> subscription is active. Time to create your first frame.
       </p>
       : <p className={`text-sm mb-8 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-        You’ve got <strong>10 free QR codes</strong> added to your account. Start creating and exploring right away.
+        You’ve got <strong>5 free QR codes</strong>{bonusQr > 0 && (
+          <> plus a <strong>{bonusQr} bonus QR code{bonusQr === 1 ? '' : 's'}</strong> from your referral</>
+        )} added to your account. Start creating and exploring right away.
       </p>
       }
       <div className={`rounded-2xl p-6 mb-8 text-left ${isDark ? 'bg-[#1a1a1a] border border-white/10' : 'bg-gray-50 border border-gray-100'}`}>
@@ -464,12 +513,13 @@ export default function OnboardingFlow() {
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [hasReferrer, setHasReferrer] = useState(false);
 
   // Pre-fill name and newsletter from DB
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
-      supabase.from('users').select('newsletter_opt_in, full_name').eq('id', user.id).single()
+      supabase.from('users').select('newsletter_opt_in, full_name, referred_by').eq('id', user.id).single()
         .then(({ data }) => {
           if (!data) return;
           setProfile(prev => ({
@@ -477,6 +527,7 @@ export default function OnboardingFlow() {
             newsletter_opt_in: data.newsletter_opt_in ?? false,
             full_name: data.full_name ?? '',
           }));
+          setHasReferrer(!!data.referred_by);
         });
     });
   }, []);
@@ -490,12 +541,16 @@ export default function OnboardingFlow() {
     phone: '',
     business_logo_file: null,
     newsletter_opt_in: false,
+    referral_opt_in: false,
+    promo_code: '',
   });
 
   const [planData, setPlanData] = useState({
     plan: 'pro',
     billing_cycle: 'monthly',
   });
+
+  const [bonusQr, setBonusQr] = useState(0);
 
   function updateProfile(key, val) {
     setProfile(prev => ({ ...prev, [key]: val }));
@@ -548,6 +603,30 @@ export default function OnboardingFlow() {
 
       const { error: dbErr } = await supabase.from('users').update(updates).eq('id', user.id);
       if (dbErr) throw dbErr;
+
+      if (profile.promo_code.trim()) {
+        await applyPromoCode(profile.promo_code.trim());
+      }
+
+      const bonus = await getMySignupBonus();
+      setBonusQr(bonus);
+
+      if (profile.referral_opt_in) {
+        const code = slugifyUsername(profile.full_name);
+        if (!/^[a-z0-9-]{3,30}$/.test(code)) {
+          setError('Please use a username with at least 3 letters or numbers so we can create your referral link.');
+          setLoading(false);
+          return;
+        }
+
+        const { error: referralError } = await setStandardReferralCode(code);
+        if (referralError) {
+          setError(referralError);
+          setLoading(false);
+          return;
+        }
+      }
+
       setStep(1);
     } catch (err) {
       setError(err.message || 'Something went wrong.');
@@ -587,6 +666,7 @@ export default function OnboardingFlow() {
               userId:      user.id,
               toEmail:     user.email,
               userName:    profile.business_name || profile.business_email || user.email.split('@')[0],
+              bonusQr,
             });
             setStep(2);
             setLoading(false);
@@ -620,6 +700,7 @@ export default function OnboardingFlow() {
         userId:   user.id,
         toEmail:  user.email,
         userName: profile.business_name || user.email.split('@')[0],
+        bonusQr,
       });
       setPlanData({ plan: 'trial' });
       setStep(2);
@@ -657,6 +738,7 @@ export default function OnboardingFlow() {
             loading={loading}
             error={error}
             isDark={isDark}
+            hidePromoCode={hasReferrer}
           />
         )}
         {step === 1 && (
@@ -674,6 +756,7 @@ export default function OnboardingFlow() {
         {step === 2 && (
           <StepComplete
             planName={selectedPlan?.name || null}
+            bonusQr={bonusQr}
             onDashboard={() => navigate('/dashboard')}
             onCreateFrame={() => navigate('/dashboard')}
             isDark={isDark}

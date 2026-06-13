@@ -6,6 +6,8 @@ import {
   adminGetAllUsers, adminDeleteUser, adminDisableUser, adminSuspendUser, adminUnsuspendUser, adminGetNewsletter, uploadBlogImage, adminPushNotification,
   adminGetFeaturedLogos, adminUploadFeaturedLogo, adminDeleteFeaturedLogo,
   adminAdjustQRCredits,
+  adminGetPartnerApplications, adminApprovePartner, adminRejectPartner,
+  adminGetReferralPayoutReport,
 } from '../services/supabaseHelpers';
 import scanMyFrameLogo from '../assets/images/Scanframe alt.png';
 
@@ -93,6 +95,15 @@ function fmtDate(d) {
 function fmtDateShort(d) {
   if (!d) return '—';
   return new Date(d).toISOString().split('T')[0];
+}
+
+function fmtNaira(kobo) {
+  return `₦${((kobo || 0) / 100).toLocaleString('en-NG')}`;
+}
+
+function fmtMonth(periodMonth) {
+  if (!periodMonth) return '—';
+  return new Date(periodMonth).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 }
 
 function downloadCSV(rows, filename) {
@@ -1374,6 +1385,372 @@ function FeaturedLogosTab() {
   );
 }
 
+// ─── Tab: Partnerships ────────────────────────────────────────────────────────
+const PARTNER_STATUS_COLOR = { pending: '#ca8a04', approved: '#16a34a', rejected: '#ef4444' };
+
+function PartnershipsTab() {
+  const [apps, setApps]         = useState([]);
+  const [loading, setLoad]      = useState(true);
+  const [filter, setFilter]     = useState('pending');
+  const [reviewModal, setReviewModal] = useState(null); // { app, action: 'approve' | 'reject' }
+  const [rateInput, setRateInput]     = useState(10);
+  const [yearsInput, setYearsInput]   = useState(1);
+  const [bonusQrInput, setBonusQrInput] = useState(0);
+  const [notesInput, setNotesInput]   = useState('');
+  const [submitting, setSubmitting]   = useState(false);
+
+  async function load() {
+    setLoad(true);
+    const { applications } = await adminGetPartnerApplications();
+    setApps(applications);
+    setLoad(false);
+  }
+  useEffect(() => { load(); }, []);
+
+  const FILTERS = [['pending', 'Pending'], ['approved', 'Approved'], ['rejected', 'Rejected'], ['all', 'All']];
+  const filtered = filter === 'all' ? apps : apps.filter(a => a.status === filter);
+
+  const counts = apps.reduce((acc, a) => { acc[a.status] = (acc[a.status] || 0) + 1; return acc; }, {});
+
+  function openReview(app, action) {
+    setReviewModal({ app, action });
+    setRateInput(Math.round((app.requested_commission_rate || 0.10) * 100));
+    setYearsInput(app.contract_years || 1);
+    setBonusQrInput(app.users?.signup_bonus_qr || 0);
+    setNotesInput('');
+  }
+
+  async function submitReview() {
+    if (!reviewModal) return;
+    setSubmitting(true);
+    const { app, action } = reviewModal;
+    const { error } = action === 'approve'
+      ? await adminApprovePartner(app.id, rateInput / 100, yearsInput, bonusQrInput)
+      : await adminRejectPartner(app.id, notesInput);
+    setSubmitting(false);
+    if (error) { alert('Failed: ' + error); return; }
+    setReviewModal(null);
+    load();
+  }
+
+  const lbl = { display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--fg-sub)', marginBottom: 8 };
+
+  return (
+    <>
+      <AdminHeader
+        title="Partnerships"
+        eyebrow="Referral program"
+        kpis={[
+          { label: 'Pending',  value: counts.pending || 0,  sub: 'awaiting review' },
+          { label: 'Approved', value: counts.approved || 0, sub: 'active partners' },
+          { label: 'Rejected', value: counts.rejected || 0, sub: 'declined' },
+          { label: 'Total',    value: apps.length,          sub: 'all applications' },
+        ]}
+      />
+
+      <div className="sf-admin-content">
+        {/* Filter pills */}
+        <div style={{ display: 'flex', gap: 4, padding: 4, background: 'var(--bg-subtle)', borderRadius: 99, marginBottom: 16, flexWrap: 'wrap', width: 'fit-content' }}>
+          {FILTERS.map(([id, label]) => (
+            <button key={id} onClick={() => setFilter(id)} style={{ padding: '5px 14px', borderRadius: 99, border: 'none', background: filter === id ? 'var(--surface)' : 'transparent', color: filter === id ? 'var(--sf-primary)' : 'var(--fg-muted)', fontWeight: 600, fontSize: 11, cursor: 'pointer', boxShadow: filter === id ? '0 1px 4px rgba(0,0,0,0.08)' : 'none' }}>{label}</button>
+          ))}
+        </div>
+
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
+            <div style={{ width: 28, height: 28, border: '2.5px solid var(--sf-primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+          </div>
+        ) : filtered.length === 0 ? (
+          <p style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--fg-muted)', fontSize: 13 }}>No applications found.</p>
+        ) : (
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden' }}>
+            {/* Desktop */}
+            <div className="sf-admin-table" style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', minWidth: 920, borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: 'var(--bg-subtle)' }}>
+                    {['Applicant', 'Type', 'Contract', 'Requested', 'Confidence', 'Volume / mo', 'Code', 'Status', 'Applied', ''].map(h => (
+                      <th key={h} style={{ textAlign: 'left', padding: '12px 20px', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-muted)' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((a, i) => {
+                    const u = a.users || {};
+                    const name = u.business_name || u.full_name || '—';
+                    const sColor = PARTNER_STATUS_COLOR[a.status] || '#9aaea9';
+                    return (
+                      <tr key={a.id} style={{ borderTop: i > 0 ? '1px solid var(--border)' : 'none' }}>
+                        <td style={{ padding: '14px 20px' }}>
+                          <p style={{ margin: 0, fontWeight: 600, fontSize: 13, color: 'var(--sf-primary)' }}>{name}</p>
+                          <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--fg-muted)' }}>{u.email}</p>
+                        </td>
+                        <td style={{ padding: '14px 20px', fontSize: 12, color: 'var(--fg-sub)' }}>
+                          {a.applicant_type === 'team' ? `Team (${a.team_size})` : 'Individual'}
+                        </td>
+                        <td style={{ padding: '14px 20px', fontSize: 12, color: 'var(--fg-sub)' }}>{a.contract_years} yr{a.contract_years > 1 ? 's' : ''}</td>
+                        <td style={{ padding: '14px 20px', fontSize: 12, fontFamily: 'var(--font-mono)', color: 'var(--fg-sub)' }}>
+                          {(a.requested_commission_rate * 100).toFixed(0)}%
+                          {a.status === 'approved' && a.approved_commission_rate != null && (
+                            <span style={{ display: 'block', color: '#16a34a', fontWeight: 700 }}>→ {(a.approved_commission_rate * 100).toFixed(0)}%</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '14px 20px', fontSize: 12, color: 'var(--fg-sub)', textTransform: 'capitalize' }}>{a.confidence_level}</td>
+                        <td style={{ padding: '14px 20px', fontSize: 12, color: 'var(--fg-sub)' }}>{a.estimated_monthly_referrals}</td>
+                        <td style={{ padding: '14px 20px', fontSize: 12, fontFamily: 'var(--font-mono)', color: 'var(--fg-sub)' }}>
+                          {a.preferred_code_type === 'link' ? `?ref=${a.preferred_referral_code}` : a.preferred_referral_code}
+                          {a.status === 'approved' && a.users?.signup_bonus_qr > 0 && (
+                            <span style={{ display: 'block', color: '#16a34a', fontWeight: 700, fontFamily: 'var(--font-body)' }}>+{a.users.signup_bonus_qr} QR bonus</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '14px 20px' }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 99, textTransform: 'uppercase', letterSpacing: '0.06em', color: sColor, border: `1px solid ${sColor}`, background: `${sColor}18` }}>{a.status}</span>
+                        </td>
+                        <td style={{ padding: '14px 20px', fontSize: 12, color: 'var(--fg-sub)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>{fmtDateShort(a.created_at)}</td>
+                        <td style={{ padding: '14px 20px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                          {a.status === 'pending' ? (
+                            <>
+                              <button onClick={() => openReview(a, 'approve')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#16a34a', fontWeight: 600, fontSize: 12, marginRight: 12 }}>Approve</button>
+                              <button onClick={() => openReview(a, 'reject')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontWeight: 600, fontSize: 12 }}>Reject</button>
+                            </>
+                          ) : <span style={{ color: 'var(--fg-muted)', fontSize: 12 }}>—</span>}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile cards */}
+            <div className="sf-admin-cards">
+              {filtered.map((a, i) => {
+                const u = a.users || {};
+                const name = u.business_name || u.full_name || '—';
+                const sColor = PARTNER_STATUS_COLOR[a.status] || '#9aaea9';
+                return (
+                  <div key={a.id} style={{ padding: '16px 20px', borderTop: i > 0 ? '1px solid var(--border)' : 'none' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ margin: '0 0 2px', fontWeight: 600, fontSize: 13, color: 'var(--sf-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</p>
+                        <p style={{ margin: 0, fontSize: 11, color: 'var(--fg-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</p>
+                      </div>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 99, textTransform: 'uppercase', color: sColor, border: `1px solid ${sColor}`, background: `${sColor}18`, flexShrink: 0, marginLeft: 8 }}>{a.status}</span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 12px', fontSize: 11, marginBottom: 10 }}>
+                      <div><span style={{ color: 'var(--fg-muted)' }}>Type: </span><span style={{ fontWeight: 600 }}>{a.applicant_type === 'team' ? `Team (${a.team_size})` : 'Individual'}</span></div>
+                      <div><span style={{ color: 'var(--fg-muted)' }}>Contract: </span><span style={{ fontWeight: 600 }}>{a.contract_years} yr{a.contract_years > 1 ? 's' : ''}</span></div>
+                      <div><span style={{ color: 'var(--fg-muted)' }}>Requested: </span><span style={{ fontFamily: 'var(--font-mono)' }}>{(a.requested_commission_rate * 100).toFixed(0)}%</span></div>
+                      <div><span style={{ color: 'var(--fg-muted)' }}>Confidence: </span><span style={{ fontWeight: 600, textTransform: 'capitalize' }}>{a.confidence_level}</span></div>
+                      <div><span style={{ color: 'var(--fg-muted)' }}>Volume: </span><span>{a.estimated_monthly_referrals}/mo</span></div>
+                      <div style={{ gridColumn: '1 / -1' }}><span style={{ color: 'var(--fg-muted)' }}>Code: </span><span style={{ fontFamily: 'var(--font-mono)' }}>{a.preferred_code_type === 'link' ? `?ref=${a.preferred_referral_code}` : a.preferred_referral_code}</span></div>
+                      {a.status === 'approved' && a.users?.signup_bonus_qr > 0 && (
+                        <div style={{ gridColumn: '1 / -1' }}><span style={{ color: 'var(--fg-muted)' }}>Signup bonus: </span><span style={{ color: '#16a34a', fontWeight: 700 }}>+{a.users.signup_bonus_qr} QR code{a.users.signup_bonus_qr === 1 ? '' : 's'}</span></div>
+                      )}
+                    </div>
+                    {a.status === 'pending' && (
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button onClick={() => openReview(a, 'approve')} style={{ flex: 1, background: 'none', border: '1px solid #16a34a', borderRadius: 8, cursor: 'pointer', color: '#16a34a', fontWeight: 600, fontSize: 12, padding: '7px 0' }}>Approve</button>
+                        <button onClick={() => openReview(a, 'reject')} style={{ flex: 1, background: 'none', border: '1px solid var(--danger)', borderRadius: 8, cursor: 'pointer', color: 'var(--danger)', fontWeight: 600, fontSize: 12, padding: '7px 0' }}>Reject</button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Review modal */}
+      {reviewModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(10,46,34,0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px 12px' }}>
+          <div style={{ width: '100%', maxWidth: 440, background: 'var(--bg)', borderRadius: 20, padding: '32px 28px', border: '1px solid var(--border)', boxShadow: '0 24px 60px rgba(0,0,0,0.15)' }}>
+            <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-muted)' }}>
+              {reviewModal.action === 'approve' ? 'Approve application' : 'Reject application'}
+            </p>
+            <h2 style={{ margin: '0 0 6px', fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, color: 'var(--sf-primary)' }}>
+              {reviewModal.app.users?.business_name || reviewModal.app.users?.full_name || reviewModal.app.users?.email}
+            </h2>
+
+            {reviewModal.action === 'approve' ? (
+              <>
+                <p style={{ margin: '0 0 20px', fontSize: 12, color: 'var(--fg-muted)', lineHeight: 1.6 }}>
+                  {reviewModal.app.applicant_type === 'team' ? `Team of ${reviewModal.app.team_size}` : 'Individual'} applicant.
+                  {' '}Requested {(reviewModal.app.requested_commission_rate * 100).toFixed(0)}% for {reviewModal.app.contract_years} year{reviewModal.app.contract_years > 1 ? 's' : ''}
+                  {' '}({reviewModal.app.contract_years * 12} month commission window). Set the final approved commission rate.
+                </p>
+                <label style={lbl}>Approved commission rate</label>
+                <select className="sf-input" value={rateInput} onChange={e => setRateInput(Number(e.target.value))}>
+                  {[10, 15, 20].map(r => <option key={r} value={r}>{r}%</option>)}
+                </select>
+
+                <label style={{ ...lbl, marginTop: 16 }}>Approved contract length</label>
+                <select className="sf-input" value={yearsInput} onChange={e => setYearsInput(Number(e.target.value))}>
+                  {[1, 2, 3].map(y => <option key={y} value={y}>{y} year{y > 1 ? 's' : ''}</option>)}
+                </select>
+
+                <label style={{ ...lbl, marginTop: 16 }}>Signup bonus QR codes <span style={{ textTransform: 'none', fontWeight: 400, letterSpacing: 0 }}>· optional, given to each user who signs up through this partner</span></label>
+                <input
+                  type="number" min="0" max="50" step="1"
+                  className="sf-input" value={bonusQrInput}
+                  onChange={e => setBonusQrInput(Math.min(50, Math.max(0, Number(e.target.value) || 0)))}
+                  placeholder="0"
+                />
+              </>
+            ) : (
+              <>
+                <p style={{ margin: '0 0 20px', fontSize: 12, color: 'var(--fg-muted)', lineHeight: 1.6 }}>
+                  This will mark the application as rejected and notify the applicant by email.
+                </p>
+                <label style={lbl}>Reviewer notes <span style={{ textTransform: 'none', fontWeight: 400, letterSpacing: 0 }}>· optional, included in the email</span></label>
+                <textarea className="sf-input sf-textarea" rows={3} value={notesInput} onChange={e => setNotesInput(e.target.value)} placeholder="e.g. We're not currently accepting partners in this category." />
+              </>
+            )}
+
+            <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+              <button onClick={() => setReviewModal(null)} style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', fontSize: 13, fontWeight: 600, color: 'var(--fg-sub)', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={submitReview} disabled={submitting} className="sf-btn-primary" style={{ flex: 1 }}>
+                {submitting ? 'Saving…' : reviewModal.action === 'approve' ? 'Approve' : 'Reject'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ─── Tab: Referral Payout Report ───────────────────────────────────────────────
+const PAYOUT_STATUS_COLOR = { pending: '#ca8a04', processing: '#2563eb', paid: '#16a34a', failed: '#ef4444' };
+
+function ReferralReportTab() {
+  const [loading, setLoad]           = useState(true);
+  const [availableMonths, setMonths] = useState([]);
+  const [periodMonth, setPeriodMonth] = useState(null);
+  const [payouts, setPayouts]        = useState([]);
+  const [totals, setTotals]          = useState(null);
+
+  async function load(month) {
+    setLoad(true);
+    const { availableMonths: months, periodMonth: pm, payouts: rows, totals: t } = await adminGetReferralPayoutReport(month);
+    setMonths(months);
+    setPeriodMonth(pm);
+    setPayouts(rows);
+    setTotals(t);
+    setLoad(false);
+  }
+  useEffect(() => { load(); }, []);
+
+  return (
+    <>
+      <AdminHeader
+        title="Referral Payouts"
+        eyebrow="Referral program"
+        kpis={[
+          { label: 'Total payout',  value: fmtNaira(totals?.total_amount_kobo), sub: fmtMonth(periodMonth) },
+          { label: 'Paid',          value: totals?.paid_count || 0,    sub: 'transfers completed' },
+          { label: 'Pending',       value: totals?.pending_count || 0, sub: 'awaiting transfer' },
+          { label: 'Failed',        value: totals?.failed_count || 0,  sub: 'need attention' },
+        ]}
+      />
+
+      <div className="sf-admin-content">
+        {availableMonths.length > 0 && (
+          <div style={{ marginBottom: 16 }}>
+            <select
+              className="sf-input"
+              style={{ width: 'auto', minWidth: 200 }}
+              value={periodMonth || ''}
+              onChange={e => load(e.target.value)}
+            >
+              {availableMonths.map(m => (
+                <option key={m} value={m}>{fmtMonth(m)}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
+            <div style={{ width: 28, height: 28, border: '2.5px solid var(--sf-primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+          </div>
+        ) : payouts.length === 0 ? (
+          <p style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--fg-muted)', fontSize: 13 }}>No payouts recorded yet.</p>
+        ) : (
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden' }}>
+            {/* Desktop */}
+            <div className="sf-admin-table">
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: 'var(--bg-subtle)' }}>
+                    {['Referrer', 'Type', 'Code', 'Referred users', 'Amount', 'Status', 'Paid on'].map(h => (
+                      <th key={h} style={{ textAlign: 'left', padding: '12px 20px', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-muted)' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {payouts.map((p, i) => {
+                    const sColor = PAYOUT_STATUS_COLOR[p.status] || '#9aaea9';
+                    return (
+                      <tr key={p.id} style={{ borderTop: i > 0 ? '1px solid var(--border)' : 'none' }}>
+                        <td style={{ padding: '14px 20px' }}>
+                          <p style={{ margin: 0, fontWeight: 600, fontSize: 13, color: 'var(--sf-primary)' }}>{p.referrer_name}</p>
+                          <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--fg-muted)' }}>{p.referrer_email}</p>
+                        </td>
+                        <td style={{ padding: '14px 20px', fontSize: 12, color: 'var(--fg-sub)', textTransform: 'capitalize' }}>{p.account_type}</td>
+                        <td style={{ padding: '14px 20px', fontSize: 12, fontFamily: 'var(--font-mono)', color: 'var(--fg-sub)' }}>
+                          {p.referral_code ? (p.referral_code_type === 'link' ? `?ref=${p.referral_code}` : p.referral_code) : '—'}
+                        </td>
+                        <td style={{ padding: '14px 20px', fontSize: 12, color: 'var(--fg-sub)' }}>{p.referred_users}</td>
+                        <td style={{ padding: '14px 20px', fontSize: 12, fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--sf-primary)' }}>{fmtNaira(p.total_amount_kobo)}</td>
+                        <td style={{ padding: '14px 20px' }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 99, textTransform: 'uppercase', letterSpacing: '0.06em', color: sColor, border: `1px solid ${sColor}`, background: `${sColor}18` }}>{p.status}</span>
+                          {p.status === 'failed' && p.failure_reason && (
+                            <span style={{ display: 'block', marginTop: 4, fontSize: 10, color: 'var(--danger)' }}>{p.failure_reason}</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '14px 20px', fontSize: 12, color: 'var(--fg-sub)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>{fmtDateShort(p.paid_at)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile cards */}
+            <div className="sf-admin-cards">
+              {payouts.map((p, i) => {
+                const sColor = PAYOUT_STATUS_COLOR[p.status] || '#9aaea9';
+                return (
+                  <div key={p.id} style={{ padding: '16px 20px', borderTop: i > 0 ? '1px solid var(--border)' : 'none' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ margin: '0 0 2px', fontWeight: 600, fontSize: 13, color: 'var(--sf-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.referrer_name}</p>
+                        <p style={{ margin: 0, fontSize: 11, color: 'var(--fg-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.referrer_email}</p>
+                      </div>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 99, textTransform: 'uppercase', color: sColor, border: `1px solid ${sColor}`, background: `${sColor}18`, flexShrink: 0, marginLeft: 8 }}>{p.status}</span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 12px', fontSize: 11, marginBottom: 4 }}>
+                      <div><span style={{ color: 'var(--fg-muted)' }}>Amount: </span><span style={{ fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{fmtNaira(p.total_amount_kobo)}</span></div>
+                      <div><span style={{ color: 'var(--fg-muted)' }}>Referred: </span><span>{p.referred_users}</span></div>
+                      <div style={{ gridColumn: '1 / -1' }}><span style={{ color: 'var(--fg-muted)' }}>Code: </span><span style={{ fontFamily: 'var(--font-mono)' }}>{p.referral_code ? (p.referral_code_type === 'link' ? `?ref=${p.referral_code}` : p.referral_code) : '—'}</span></div>
+                      <div><span style={{ color: 'var(--fg-muted)' }}>Paid on: </span><span style={{ fontFamily: 'var(--font-mono)' }}>{fmtDateShort(p.paid_at)}</span></div>
+                    </div>
+                    {p.status === 'failed' && p.failure_reason && (
+                      <p style={{ margin: '4px 0 0', fontSize: 11, color: 'var(--danger)' }}>{p.failure_reason}</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
 // ─── Main Admin ───────────────────────────────────────────────────────────────
 export default function Admin() {
   const [authed, setAuthed]               = useState(() => sessionStorage.getItem('sf_admin') === '1');
@@ -1388,6 +1765,8 @@ export default function Admin() {
     { id: 'newsletter',    label: 'Newsletter',        icon: 'M3 7l9 6 9-6M3 7v10h18V7M3 7l9-4 9 4' },
     { id: 'notifications',  label: 'Push Notifications', icon: 'M18 16v-5a6 6 0 10-12 0v5l-2 3h16l-2-3zM10 22a2 2 0 004 0' },
     { id: 'subscriptions',  label: 'Subscriptions',      icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z' },
+    { id: 'partnerships',   label: 'Partnerships',       icon: 'M20 12v10H4V12 M2 7h20v5H2z M12 22V7 M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z' },
+    { id: 'referral-payouts', label: 'Referral Payouts', icon: 'M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6' },
     { id: 'logos',          label: 'Featured Logos',     icon: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' },
   ];
 
@@ -1470,6 +1849,8 @@ export default function Admin() {
           {tab === 'newsletter'    && <NewsletterTab />}
           {tab === 'notifications'  && <NotificationsTab />}
           {tab === 'subscriptions'  && <SubscriptionsTab />}
+          {tab === 'partnerships'   && <PartnershipsTab />}
+          {tab === 'referral-payouts' && <ReferralReportTab />}
           {tab === 'logos'          && <FeaturedLogosTab />}
         </main>
 

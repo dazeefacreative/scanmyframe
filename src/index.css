@@ -33,27 +33,29 @@ h1, h2, h3, h4, h5, h6 {
 .sf-preview-story blockquote { border-left: 2px solid #D4AF37; padding-left: 8px; font-style: italic; color: #4a7c6f; margin: 4px 0; }
 
 /* ── Frame story HTML body (from ReactQuill) ── */
-.sf-frame-story { color: inherit; overflow-wrap: break-word; word-break: break-word; }
+.sf-frame-story { color: inherit; overflow-wrap: normal; word-break: normal; max-width: 100%; }
 .sf-frame-story p { margin: 0 0 0.6em; display: block; }
-.sf-frame-story h2, .sf-frame-story h3 { display: block; }
+.sf-frame-story h2 { font-family: 'Poltawski Nowy', Georgia, serif; font-size: 1.25rem; font-weight: 700; color: #0F4C3A; margin: 1.2em 0 0.6em; }
+.sf-frame-story h3 { font-family: 'Poltawski Nowy', Georgia, serif; font-size: 1.1rem; font-weight: 600; color: #0F4C3A; margin: 1em 0 0.4em; }
 .sf-frame-story strong { font-weight: 700; }
 .sf-frame-story em { font-style: italic; }
-.sf-frame-story a { color: #0F4C3A; text-decoration: underline; }
+.sf-frame-story a { color: #0F4C3A; text-decoration: underline; overflow-wrap: anywhere; }
 .sf-frame-story ul, .sf-frame-story ol { padding-left: 1.4em; margin: 0.4em 0 0.6em; }
 .sf-frame-story li { margin-bottom: 0.2em; }
 .sf-frame-story img { max-width: 100%; display: block; margin: 0.8em 0; image-rendering: auto; }
 .sf-frame-story blockquote { border-left: 3px solid #D4AF37; padding: 8px 12px; margin: 8px 0; font-style: italic; color: #4a7c6f; background: rgba(15,76,58,0.04); border-radius: 0 6px 6px 0; }
+.sf-frame-story--dark { color: #ccc; }
 .sf-frame-story--dark a { color: #D4AF37; }
 .sf-frame-story--dark blockquote { color: #aaa; background: rgba(255,255,255,0.04); }
 
 /* ── Blog post HTML body (from ReactQuill) ── */
-.sf-post-body { color: #2d2d2d; font-size: 1rem; line-height: 1.75; overflow-wrap: break-word; word-break: break-word; }
+.sf-post-body { color: #2d2d2d; font-size: 1rem; line-height: 1.75; overflow-wrap: normal; word-break: normal; max-width: 100%; }
 .sf-post-body h1, .sf-post-body h2, .sf-post-body h3 { font-family: 'Poltawski Nowy', Georgia, serif; color: #0F4C3A; margin: 1.4em 0 0.4em; display: block; }
 .sf-post-body h1 { font-size: 1.75rem; }
 .sf-post-body h2 { font-size: 1.4rem; }
 .sf-post-body h3 { font-size: 1.15rem; }
 .sf-post-body p { margin: 0 0 1em; display: block; }
-.sf-post-body a { color: #0F4C3A; text-decoration: underline; text-underline-offset: 3px; }
+.sf-post-body a { color: #0F4C3A; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
 .sf-post-body a:hover { opacity: 0.7; }
 .sf-post-body blockquote { border-left: 4px solid #D4AF37; padding: 12px 16px; margin: 1.2em 0; color: #4a7c6f; font-style: italic; background: rgba(212,175,55,0.06); border-radius: 0 8px 8px 0; }
 .sf-post-body ul, .sf-post-body ol { padding-left: 1.5em; margin: 0 0 1em; }

@@ -16,8 +16,90 @@ export async function checkEmailProvider(email) {
   }
 }
 
+// Apply any referral/promo code (from a manually entered code or a stored
+// ?ref= link) to the just-created user. Best-effort — never blocks signup.
+export async function applyPendingReferralCode(promoCode) {
+  try {
+    const code = (promoCode || '').trim() || localStorage.getItem('pending_referral_code');
+    if (!code) return;
+
+    const { error } = await supabase.rpc('apply_referral_code', { p_code: code.trim() });
+    if (!error) localStorage.removeItem('pending_referral_code');
+  } catch {
+    // ignore — referral attribution is non-critical
+  }
+}
+
+// Apply a pending partnership application (stored at signup time) once a
+// session/auth.uid() is available — email confirmation may delay this.
+// Best-effort — never blocks signup or login.
+export async function applyPendingPartnerApplication() {
+  try {
+    const raw = localStorage.getItem('pending_partner_application');
+    if (!raw) return;
+    const a = JSON.parse(raw);
+
+    // Remove before submitting so a concurrent call (e.g. the auth state
+    // listener firing twice on email verification) can't double-submit.
+    localStorage.removeItem('pending_partner_application');
+
+    const { error } = await supabase.rpc('submit_partner_application', {
+      p_contract_years: a.contract_years,
+      p_requested_commission_rate: a.requested_commission_rate,
+      p_confidence_level: a.confidence_level,
+      p_estimated_monthly_referrals: a.estimated_monthly_referrals,
+      p_audience_fit: a.audience_fit,
+      p_preferred_code_type: a.preferred_code_type,
+      p_preferred_referral_code: a.preferred_referral_code,
+      p_applicant_type: a.applicant_type,
+      p_team_size: a.team_size ?? null,
+    });
+
+    // Submission failed (e.g. no session yet) - restore for a later retry.
+    if (error) localStorage.setItem('pending_partner_application', raw);
+  } catch {
+    // ignore — will retry after email verification
+  }
+}
+
+// Signup as a Partner — separate account type, agreement form data is
+// submitted (or queued) via submit_partner_application.
+export async function handlePartnerSignup(email, password, applicationData, fullName = '') {
+  try {
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: fullName },
+        emailRedirectTo: `${window.location.origin}/verify-email`,
+      },
+    });
+
+    if (authError) throw authError;
+
+    const { error: profileError } = await supabase
+      .from('users')
+      .insert([{
+        id: authData.user.id,
+        email,
+        full_name: fullName,
+        is_vendor: false,
+      }]);
+
+    if (profileError && profileError.code !== '23505') throw profileError;
+
+    localStorage.setItem('pending_partner_application', JSON.stringify(applicationData));
+    await applyPendingPartnerApplication();
+
+    localStorage.setItem('pendingEmail', email);
+    return authData.user;
+  } catch (err) {
+    throw err;
+  }
+}
+
 // Signup with Email — username is collected during onboarding, stored empty for now
-export async function handleEmailSignup(email, password) {
+export async function handleEmailSignup(email, password, referralCode = '') {
   try {
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
@@ -44,6 +126,8 @@ export async function handleEmailSignup(email, password) {
 
     // 23505 = unique_violation: row already created by a trigger — safe to ignore
     if (profileError && profileError.code !== '23505') throw profileError;
+
+    await applyPendingReferralCode(referralCode);
 
     localStorage.setItem('pendingEmail', email);
     return authData.user;
@@ -150,6 +234,8 @@ export async function handleOAuthUserProfile(user) {
         ]);
 
       if (insertError) throw insertError;
+
+      await applyPendingReferralCode();
     }
 
     return existingUser;

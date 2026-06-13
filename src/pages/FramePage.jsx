@@ -138,7 +138,7 @@ function StoryRenderer({ text, textPrim, textSub, isDark }) {
     return (
       <div
         className={`sf-frame-story text-sm leading-relaxed ${isDark ? 'sf-frame-story--dark' : ''}`}
-        dangerouslySetInnerHTML={{ __html: text }}
+        dangerouslySetInnerHTML={{ __html: text.replace(/&nbsp;| /g, ' ') }}
       />
     );
   }
@@ -929,7 +929,7 @@ export default function FramePage() {
       </header>
 
       {/* Content */}
-      <main className="max-w-3xl mx-auto px-6 py-10 flex flex-col gap-7">
+      <main className="max-w-6xl mx-auto px-6 py-10 flex flex-col gap-7">
         
         {/* Image gallery */}
         <ImageGallery images={allImages} title={frame.title} cardRing={cardRing} isDark={isDark} />
@@ -945,7 +945,7 @@ export default function FramePage() {
 
         {/* Story */}
         {frame.description && (
-          <div>
+          <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] mb-3">The Story</p>
             <StoryRenderer text={frame.description} textPrim={textPrim} textSub={textSub} isDark={isDark} />
           </div>

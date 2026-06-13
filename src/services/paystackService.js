@@ -196,6 +196,19 @@ async function activateSubscription(userId, planId, billingCycle, paystackRef, p
     throw new Error(subErr.message);
   }
 
+  // Anchor the referral commission window to the user's first ever paid subscription.
+  if (planId !== 'free' && planId !== 'trial') {
+    const { error: firstPaidErr } = await supabase
+      .from('users')
+      .update({ first_paid_at: now.toISOString() })
+      .eq('id', userId)
+      .is('first_paid_at', null);
+
+    if (firstPaidErr) {
+      console.warn('[Paystack] first_paid_at update failed (non-fatal):', firstPaidErr.message);
+    }
+  }
+
   // Mark payment record as success (non-fatal if it fails)
   if (paymentId) {
     const { error: payErr } = await supabase
@@ -210,6 +223,14 @@ async function activateSubscription(userId, planId, billingCycle, paystackRef, p
 
     if (payErr) {
       console.warn('[Paystack] payment record update failed (non-fatal):', payErr.message);
+    } else {
+      // Generate referral commission rows for this payment (non-fatal).
+      const { error: commErr } = await supabase.rpc('generate_referral_commissions', {
+        p_payment_id: paymentId,
+      });
+      if (commErr) {
+        console.warn('[Paystack] referral commission generation failed (non-fatal):', commErr.message);
+      }
     }
   }
 }

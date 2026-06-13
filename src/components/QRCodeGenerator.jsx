@@ -44,8 +44,9 @@ const STORY_QUILL_STYLES = `
   .sf-story-quill .ql-toolbar .ql-picker-label { padding: 0 6px !important; height: 26px !important; display: flex !important; align-items: center !important; white-space: nowrap !important; }
   .sf-story-quill .ql-container { border: 1px solid #d1d5db !important; border-top: none !important; border-radius: 0 0 12px 12px !important; max-width: 100% !important; overflow: hidden !important; }
   .sf-story-quill .ql-container.ql-snow { font-family: inherit !important; }
-  .sf-story-quill .ql-editor { min-height: 180px !important; font-size: 14px !important; line-height: 1.65 !important; color: #111827 !important; padding: 14px 16px !important; overflow-x: hidden !important; word-break: break-word !important; }
+  .sf-story-quill .ql-editor { min-height: 180px !important; font-size: 14px !important; line-height: 1.65 !important; color: #111827 !important; padding: 14px 16px !important; overflow-wrap: break-word !important; word-break: normal !important; }
   .sf-story-quill .ql-editor.ql-blank::before { color: #9ca3af !important; font-style: italic !important; }
+  .sf-story-quill .ql-editor p { margin: 0 0 0.6em !important; display: block !important; flex-wrap: wrap !important; }
   .sf-story-quill .ql-editor h2 { font-size: 20px !important; font-weight: 700 !important; color: #0F4C3A !important; margin: 12px 0 6px !important; }
   .sf-story-quill .ql-editor h3 { font-size: 16px !important; font-weight: 700 !important; color: #0F4C3A !important; margin: 10px 0 4px !important; }
   .sf-story-quill .ql-editor blockquote { border-left: 3px solid #D4AF37 !important; padding-left: 12px !important; color: #4a7c6f !important; font-style: italic !important; margin: 8px 0 !important; }
@@ -448,8 +449,8 @@ export default function QRCodeGenerator({ onNavigateToBilling, onSaved, planId =
       const qrResult = await consumeQRCode(user.id);
       if (!qrResult.success) { setModal('limit_reached'); setLoading(false); return; }
 
-      // Fire nudge when trial user hits 8/10 QR codes used
-      if (qrResult.plan_id === 'trial' && qrResult.qr_used === 8) {
+      // Fire nudge when trial user hits 3/5 QR codes used
+      if (qrResult.plan_id === 'trial' && qrResult.qr_used === 3) {
         sendTrialUpgradeNudge({ userId: user.id, toEmail: user.email, userName: user.user_metadata?.full_name || user.user_metadata?.business_name });
       }
 
@@ -786,9 +787,18 @@ export default function QRCodeGenerator({ onNavigateToBilling, onSaved, planId =
         {step === 1 && (
           <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
             <div data-guide="artwork-wrap" data-filled={artworkFile ? 'true' : 'false'} className="border border-neutral-300 rounded-xl p-3 sm:p-4 mb-3">
-              <p className="text-xs font-bold uppercase tracking-widest text-neutral-400 mb-1">Artwork <span className="text-red-400">*</span></p>
+              <p className="text-xs font-bold uppercase tracking-widest text-neutral-400 mb-1">Main Artwork <span className="text-red-400">*</span></p>
               <p className="text-xs text-neutral-500 mb-3">Upload the actual photo of the frame artwork. This is the main image shown on the frame page.</p>
               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                {artworkFile && (
+                  <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-neutral-200 flex-shrink-0">
+                    <img
+                      src={URL.createObjectURL(artworkFile)}
+                      alt="Artwork preview"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
                 <label className="bg-neutral-100 text-neutral-700 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer hover:bg-neutral-200 transition-colors text-center">
                   {artworkFile ? 'Change artwork' : 'Upload artwork'}
                   <input type="file" accept="image/jpeg,image/png" onChange={handleArtworkChange} className="hidden" />

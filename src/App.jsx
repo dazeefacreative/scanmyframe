@@ -5,7 +5,9 @@ import { ThemeProvider } from "./context/ThemeContext";
 
 import Home from "./pages/Home";
 import Signin from "./pages/Signin";
+import Partnership from "./pages/Partnership";
 import Dashboard from "./pages/Dashboard";
+import Referrals from "./pages/Referrals";
 import AuthCallback from "./pages/AuthCallback";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -40,6 +42,15 @@ function App() {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
+  // Capture ?ref=<code> from referral links so it can be applied at signup,
+  // even if the user browses around before creating an account.
+  useEffect(() => {
+    const ref = new URLSearchParams(location.search).get('ref');
+    if (ref && !localStorage.getItem('pending_referral_code')) {
+      localStorage.setItem('pending_referral_code', ref.trim());
+    }
+  }, [location.search]);
+
   return (
     <ThemeProvider>
       <AuthProvider>
@@ -48,6 +59,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/frame/:slug" element={<FramePage />} />
           <Route path="/signin" element={<Signin />} />
+          <Route path="/partnership" element={<Partnership />} />
           <Route path="/pricing" element={<Pricing />} />
 
           {/* Blog */}
@@ -80,6 +92,7 @@ function App() {
 
           <Route element={<OnboardingGuard />}>
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/referrals" element={<Referrals />} />
           </Route>
 
           {/* Onboarding — blocked if user has already completed it */}
