@@ -66,6 +66,11 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     if (!supabase || !session?.user) return;
+    // Only apply a pending ?ref= code for brand-new accounts. Otherwise an
+    // existing user signing in with a stray ?ref= link in localStorage could
+    // get incorrectly attributed to a referrer (and granted bonus QR credits).
+    const ageMs = Date.now() - new Date(session.user.created_at).getTime();
+    if (ageMs > 5 * 60 * 1000) return;
     applyPendingReferralCode().catch(() => {});
   }, [session?.user?.id]);
 
