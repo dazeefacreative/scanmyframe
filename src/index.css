@@ -42,15 +42,32 @@ h1, h2, h3, h4, h5, h6 {
 .sf-frame-story a { color: #0F4C3A; text-decoration: underline; overflow-wrap: anywhere; }
 .sf-frame-story ul, .sf-frame-story ol { padding-left: 1.4em; margin: 0.4em 0 0.6em; }
 .sf-frame-story li { margin-bottom: 0.2em; }
+.sf-frame-story ul > li { list-style-type: disc; }
+.sf-frame-story ul ul > li { list-style-type: circle; }
+.sf-frame-story ol > li { list-style-type: decimal; }
+/* Quill exports BOTH bullet and numbered lists as <ol> with a data-list
+   attribute on each <li>. */
+.sf-frame-story ol > li[data-list] { list-style: none; }
+.sf-frame-story ol > li[data-list="bullet"] { list-style-type: disc; display: list-item; }
+.sf-frame-story ol > li[data-list="ordered"] { list-style-type: decimal; display: list-item; }
 .sf-frame-story img { max-width: 100%; display: block; margin: 0.8em 0; image-rendering: auto; }
 .sf-frame-story blockquote { border-left: 3px solid #D4AF37; padding: 8px 12px; margin: 8px 0; font-style: italic; color: #4a7c6f; background: rgba(15,76,58,0.04); border-radius: 0 6px 6px 0; }
 .sf-frame-story--dark { color: #ccc; }
-.sf-frame-story--dark a { color: #D4AF37; }
-.sf-frame-story--dark blockquote { color: #aaa; background: rgba(255,255,255,0.04); }
+/* Quill writes inline color styles directly on elements (h2/h3, p, span,
+   font, etc.) from the editor's color picker - a blanket !important
+   catch-all overrides every inline color in dark mode (author !important
+   beats inline style per spec), with heading rules below overriding back
+   to white. */
+.sf-frame-story--dark * { color: #ccc !important; }
+.sf-frame-story--dark h2, .sf-frame-story--dark h3,
+.sf-frame-story--dark h2 *, .sf-frame-story--dark h3 * { color: #ffffff !important; }
+.sf-frame-story--dark a { color: #D4AF37 !important; }
+.sf-frame-story--dark blockquote { color: #aaa !important; background: rgba(255,255,255,0.04); }
+.sf-frame-story--dark blockquote p, .sf-frame-story--dark blockquote span { color: #aaa !important; }
 
 /* ── Blog post HTML body (from ReactQuill) ── */
 .sf-post-body { color: #2d2d2d; font-size: 1rem; line-height: 1.75; overflow-wrap: normal; word-break: normal; max-width: 100%; }
-.sf-post-body h1, .sf-post-body h2, .sf-post-body h3 { font-family: 'Poltawski Nowy', Georgia, serif; color: #0F4C3A; margin: 1.4em 0 0.4em; display: block; }
+.sf-post-body h1, .sf-post-body h2, .sf-post-body h3 { font-family: 'Poltawski Nowy', Georgia, serif; margin: 1.4em 0 0.4em; display: block; }
 .sf-post-body h1 { font-size: 1.75rem; }
 .sf-post-body h2 { font-size: 1.4rem; }
 .sf-post-body h3 { font-size: 1.15rem; }
@@ -60,14 +77,31 @@ h1, h2, h3, h4, h5, h6 {
 .sf-post-body blockquote { border-left: 4px solid #D4AF37; padding: 12px 16px; margin: 1.2em 0; color: #4a7c6f; font-style: italic; background: rgba(212,175,55,0.06); border-radius: 0 8px 8px 0; }
 .sf-post-body ul, .sf-post-body ol { padding-left: 1.5em; margin: 0 0 1em; }
 .sf-post-body li { margin-bottom: 0.3em; }
+.sf-post-body ul > li { list-style-type: disc; }
+.sf-post-body ul ul > li { list-style-type: circle; }
+.sf-post-body ol > li { list-style-type: decimal; }
+/* Quill exports BOTH bullet and numbered lists as <ol> with a data-list
+   attribute on each <li> - without this the bullet items render as
+   numbered (or, with list-style reset by Tailwind preflight, no marker at all). */
+.sf-post-body ol > li[data-list] { list-style: none; }
+.sf-post-body ol > li[data-list="bullet"] { list-style-type: disc; display: list-item; }
+.sf-post-body ol > li[data-list="ordered"] { list-style-type: decimal; display: list-item; }
 .sf-post-body img { max-width: 100%; display: block; margin: 1em 0; image-rendering: auto; }
 .sf-post-body strong { font-weight: 700; }
 .sf-post-body em { font-style: italic; }
 .sf-post-body iframe { width: 100%; aspect-ratio: 16 / 9; border: none; border-radius: 10px; margin: 1.2em 0; display: block; }
 .sf-post-body--dark { color: #ccc; }
-.sf-post-body--dark h1, .sf-post-body--dark h2, .sf-post-body--dark h3 { color: #ffffff; }
-.sf-post-body--dark a { color: #D4AF37; }
-.sf-post-body--dark blockquote { color: #aaa; background: rgba(212,175,55,0.04); }
+/* ReactQuill often writes inline color styles directly on elements (h1-h3,
+   p, span, font, etc.) from the editor's color picker - a blanket
+   !important catch-all is needed to override every inline color in dark
+   mode (author !important beats inline style per spec), with more specific
+   !important rules below for headings/links/quotes overriding the catch-all. */
+.sf-post-body--dark * { color: #ccc !important; }
+.sf-post-body--dark h1, .sf-post-body--dark h2, .sf-post-body--dark h3,
+.sf-post-body--dark h1 *, .sf-post-body--dark h2 *, .sf-post-body--dark h3 * { color: #ffffff !important; }
+.sf-post-body--dark a { color: #D4AF37 !important; }
+.sf-post-body--dark blockquote { color: #aaa !important; background: rgba(212,175,55,0.04); }
+.sf-post-body--dark blockquote p, .sf-post-body--dark blockquote span { color: #aaa !important; }
 
 @media (hover: none) and (pointer: coarse) {
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),

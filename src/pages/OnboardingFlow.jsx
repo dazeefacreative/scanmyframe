@@ -326,7 +326,7 @@ function StepPlan({ data, onChange, onNext, onBack, onSkip, loading, error, isDa
 
       {/* Plan cards - full width stacked, no shrinking */}
       <div className="flex flex-col gap-4 mb-8">
-        {PLANS.map(plan => {
+        {PLANS.filter(plan => plan.id !== 'basic').map(plan => {
           const selected = data.plan === plan.id;
           return (
             <motion.div

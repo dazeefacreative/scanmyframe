@@ -197,21 +197,6 @@ export default function BlogPost() {
           All articles
         </button>
 
-        {/* Tags */}
-        {post.tags?.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-5">
-            {post.tags.map(tag => (
-              <Link
-                key={tag}
-                to={`/blog?tag=${encodeURIComponent(tag)}`}
-                className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full transition-opacity hover:opacity-70
-                  ${isDark ? 'bg-[#D4AF37]/15 text-[#D4AF37]' : 'bg-secondary/40 text-[#0F4C3A]'}`}>
-                {tag}
-              </Link>
-            ))}
-          </div>
-        )}
-
         {/* Title */}
         <h1 className={`text-3xl md:text-4xl font-bold font-[Poltawski_Nowy,serif] leading-tight mb-4 ${textPrim}`}>
           {post.title}
@@ -244,9 +229,26 @@ export default function BlogPost() {
             dangerouslySetInnerHTML={{ __html: (post.body || '').replace(/&nbsp;| /g, ' ') }}
           />
         )}
+        
+        {/* Tags */}
+        <div className={`mt-16 py-8 border-t ${border} text-center`}>
+          {post.tags?.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {post.tags.map(tag => (
+                <Link
+                  key={tag}
+                  to={`/blog?tag=${encodeURIComponent(tag)}`}
+                  className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full transition-opacity hover:opacity-70
+                    ${isDark ? 'bg-[#ccc]/15 text-[#ccc]' : 'bg-primary/10 text-[#0F4C3A]'}`}>
+                  {tag}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Bottom nav */}
-        <div className={`mt-16 pt-8 border-t ${border} text-center`}>
+        <div className={`pt-8 border-t ${border} text-center`}>
           <Link
             to="/blog"
             className="inline-flex items-center gap-2 bg-[#0F4C3A] text-[#FAF5DD] px-7 py-2.5 rounded-xl text-sm font-bold hover:opacity-90 transition-opacity"

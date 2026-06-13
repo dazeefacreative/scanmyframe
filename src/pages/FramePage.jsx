@@ -137,7 +137,7 @@ function StoryRenderer({ text, textPrim, textSub, isDark }) {
   if (text.trim().startsWith('<')) {
     return (
       <div
-        className={`sf-frame-story text-sm leading-relaxed ${isDark ? 'sf-frame-story--dark' : ''}`}
+        className={`sf-frame-story text-base leading-relaxed ${isDark ? 'sf-frame-story--dark' : ''}`}
         dangerouslySetInnerHTML={{ __html: text.replace(/&nbsp;| /g, ' ') }}
       />
     );
@@ -152,7 +152,7 @@ function StoryRenderer({ text, textPrim, textSub, isDark }) {
   function flushBullets() {
     if (!bulletBuffer.length) return;
     elements.push(
-      <ul key={key++} className={`list-disc list-outside ml-5 space-y-1 text-sm leading-relaxed ${textPrim}`}>
+      <ul key={key++} className={`list-disc list-outside ml-5 space-y-1 text-base leading-relaxed ${textPrim}`}>
         {bulletBuffer.map((item, i) => <li key={i}>{item}</li>)}
       </ul>
     );
@@ -164,10 +164,10 @@ function StoryRenderer({ text, textPrim, textSub, isDark }) {
     if (/^# /.test(line))        { flushBullets(); elements.push(<h2 key={key++} className={`text-xl font-bold font-[Poltawski_Nowy,serif] mt-5 mb-1 ${textPrim}`}>{line.slice(2)}</h2>); }
     else if (/^## /.test(line))  { flushBullets(); elements.push(<h3 key={key++} className={`text-base font-bold mt-4 mb-1 ${textPrim}`}>{line.slice(3)}</h3>); }
     else if (/^- /.test(line))   { bulletBuffer.push(line.slice(2)); }
-    else if (/^> /.test(line))   { flushBullets(); elements.push(<blockquote key={key++} className={`border-l-4 border-[#D4AF37] pl-4 py-2 pr-2 rounded-r-xl italic text-sm leading-relaxed ${isDark ? 'text-[#aaa] bg-[#1a1a1a]' : 'text-[#4a7c6f] bg-[#f0f7f4]'}`}>{line.slice(2)}</blockquote>); }
+    else if (/^> /.test(line))   { flushBullets(); elements.push(<blockquote key={key++} className={`border-l-4 border-[#D4AF37] pl-4 py-2 pr-2 rounded-r-xl italic text-base leading-relaxed ${isDark ? 'text-[#aaa] bg-[#1a1a1a]' : 'text-[#4a7c6f] bg-[#f0f7f4]'}`}>{line.slice(2)}</blockquote>); }
     else if (/^---$/.test(line.trim())) { flushBullets(); elements.push(<hr key={key++} className={`border-none h-px my-2 ${isDark ? 'bg-white/10' : 'bg-[#0F4C3A]/10'}`} />); }
     else if (line.trim() === '') { flushBullets(); }
-    else                         { flushBullets(); elements.push(<p key={key++} className={`text-sm leading-relaxed ${textPrim}`}>{line}</p>); }
+    else                         { flushBullets(); elements.push(<p key={key++} className={`text-base leading-relaxed ${textPrim}`}>{line}</p>); }
   }
 
   flushBullets();
@@ -272,7 +272,6 @@ function FrameReactions({ frameId, isDark, textSub }) {
 
   return (
     <div className="flex items-center gap-3">
-      <span className={`text-[10px] font-bold uppercase tracking-widest ${textSub}`}>React</span>
       <ReactionButtons likes={likes} dislikes={dislikes} mine={mine} onReact={handleReact} isDark={isDark} />
     </div>
   );
@@ -288,8 +287,8 @@ function CommentNode({ node, depth, reactions, replyingTo, replyTarget,
 
   const rxn        = reactions[node.id] ?? { likes: 0, dislikes: 0, mine: null };
   const isRoot     = depth === 0;
-  const avatarBg   = isRoot ? '#0F4C3A' : '#D4AF37';
-  const avatarTx   = isRoot ? '#FAF5DD' : '#0F4C3A';
+  const avatarBg   = isRoot ? (isDark ? '#D4AF37' : '#0F4C3A') : '#D4AF37';
+  const avatarTx   = isRoot ? (isDark ? '#0F4C3A' : '#FAF5DD') : '#0F4C3A';
   const avatarSz   = isRoot ? 'w-7 h-7 text-xs' : 'w-6 h-6 text-[10px]';
   const indent     = Math.min(depth, 3) * 20;
   const childCount = node.children?.length ?? 0;
@@ -320,7 +319,7 @@ function CommentNode({ node, depth, reactions, replyingTo, replyTarget,
             </div>
             <span className={`${isRoot ? 'text-sm' : 'text-xs'} font-semibold ${textPrim}`}>{node.name}</span>
             {node.is_vendor && (
-              <span className="text-[9px] font-bold tracking-wide px-1.5 py-0.5 rounded-full bg-[#0F4C3A] text-[#D4AF37]">
+              <span className={`text-[9px] font-bold tracking-wide px-1.5 py-0.5 rounded-full ${isDark ? 'bg-gold text-primary' : 'bg-[#0F4C3A] text-[#D4AF37]'}`}>
                 Frame Vendor
               </span>
             )}
@@ -398,14 +397,14 @@ function ReplyForm({ target, replyName, replyText, setReplyName, setReplyText, o
       <div className="flex flex-col gap-2">
         {isVendor ? (
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center bg-[#0F4C3A]">
+            <div className={`w-7 h-7 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center ${isDark ? 'bg-gold' : 'bg-[#0F4C3A]'}`}>
               {vendorProfile?.business_logo
                 ? <img src={vendorProfile.business_logo} alt={vendorName} className="w-full h-full object-cover" />
-                : <span className="text-[10px] font-bold text-[#FAF5DD]">{(vendorName || 'V')[0].toUpperCase()}</span>
+                : <span className={`text-[10px] font-bold ${isDark ? 'text-primary' : 'text-[#FAF5DD]'}`}>{(vendorName || 'V')[0].toUpperCase()}</span>
               }
             </div>
             <span className={`text-xs font-semibold ${textPrim}`}>{vendorName}</span>
-            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#0F4C3A] text-[#D4AF37]">Frame Vendor</span>
+            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isDark ? 'bg-gold text-primary' : 'bg-[#0F4C3A] text-[#D4AF37]'}`}>Frame Vendor</span>
           </div>
         ) : (
           <input type="text" placeholder="Your name" value={replyName} maxLength={60}
@@ -425,16 +424,20 @@ function ReplyForm({ target, replyName, replyText, setReplyName, setReplyText, o
 }
 
 // ─── Comments section ─────────────────────────────────────────────────────────
-function CommentsSection({ frameId, isDark, border, cardBg, textPrim, textSub }) {
+function CommentsSection({ frameId, frameOwnerId, isDark, border, cardBg, textPrim, textSub }) {
   const { user }  = useAuth();
 
-  // Fetch vendor profile once when logged in
+  // Only the signed-in user who owns this frame is treated as its vendor.
+  // Other signed-in visitors (including partners) comment as regular guests.
+  const isOwner = !!user && user.id === frameOwnerId;
+
+  // Fetch vendor profile once when logged in as the frame's owner
   const [vendorProfile, setVendorProfile] = useState(null);
   useEffect(() => {
-    if (!user) return;
+    if (!isOwner) return;
     supabase.from('users').select('full_name, business_name, business_logo').eq('id', user.id).single()
       .then(({ data }) => { if (data) setVendorProfile(data); });
-  }, [user?.id]);
+  }, [isOwner, user?.id]);
 
   const vendorName = vendorProfile
     ? (vendorProfile.business_name || vendorProfile.full_name || user?.email || '')
@@ -515,7 +518,7 @@ function CommentsSection({ frameId, isDark, border, cardBg, textPrim, textSub })
     e.preventDefault();
     // Honeypot: bots fill hidden fields, humans don't
     if (honeypot) { setName(''); setComment(''); return; }
-    const displayName = user ? vendorName : name.trim();
+    const displayName = isOwner ? vendorName : name.trim();
     if (!displayName || !comment.trim()) return;
     setSubmitting(true); setError('');
     const { data, error: err } = await supabase
@@ -525,8 +528,8 @@ function CommentsSection({ frameId, isDark, border, cardBg, textPrim, textSub })
         name:       displayName,
         comment:    comment.trim(),
         parent_id:  null,
-        is_vendor:  !!user,
-        avatar_url: user ? (vendorProfile?.business_logo || null) : null,
+        is_vendor:  isOwner,
+        avatar_url: isOwner ? (vendorProfile?.business_logo || null) : null,
       })
       .select().single();
     if (err) { setError('Could not post comment. Please try again.'); }
@@ -554,7 +557,7 @@ function CommentsSection({ frameId, isDark, border, cardBg, textPrim, textSub })
   async function handleReplySubmit() {
     if (!replyName.trim() || !replyText.trim()) return;
     setReplySubmitting(true);
-    const displayReplyName = user ? vendorName : replyName.trim();
+    const displayReplyName = isOwner ? vendorName : replyName.trim();
     if (!displayReplyName || !replyText.trim()) { setReplySubmitting(false); return; }
     const { data, error: err } = await supabase
       .from('frame_comments')
@@ -563,8 +566,8 @@ function CommentsSection({ frameId, isDark, border, cardBg, textPrim, textSub })
         name:       displayReplyName,
         comment:    replyText.trim(),
         parent_id:  replyingTo,
-        is_vendor:  !!user,
-        avatar_url: user ? (vendorProfile?.business_logo || null) : null,
+        is_vendor:  isOwner,
+        avatar_url: isOwner ? (vendorProfile?.business_logo || null) : null,
       })
       .select().single();
     if (!err && data) {
@@ -606,17 +609,17 @@ function CommentsSection({ frameId, isDark, border, cardBg, textPrim, textSub })
           tabIndex={-1} autoComplete="off" aria-hidden="true"
           style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }}
         />
-        {/* Name row - locked to vendor identity when signed in */}
-        {user ? (
+        {/* Name row - locked to vendor identity when the frame owner is signed in */}
+        {isOwner ? (
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center bg-[#0F4C3A]">
+            <div className={`w-8 h-8 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center ${isDark ? 'bg-gold' : 'bg-[#0F4C3A]'}`}>
               {vendorProfile?.business_logo
                 ? <img src={vendorProfile.business_logo} alt={vendorName} className="w-full h-full object-cover" />
-                : <span className="text-xs font-bold text-[#FAF5DD]">{(vendorName || 'V')[0].toUpperCase()}</span>
+                : <span className={`text-xs font-bold ${isDark ? 'text-primary' : 'text-[#FAF5DD]'}`}>{(vendorName || 'V')[0].toUpperCase()}</span>
               }
             </div>
             <span className={`text-sm font-semibold ${textPrim}`}>{vendorName}</span>
-            <span className="text-[9px] font-bold tracking-wide px-1.5 py-0.5 rounded-full bg-[#0F4C3A] text-[#D4AF37]">Frame Vendor</span>
+            <span className={`text-[9px] font-bold tracking-wide px-1.5 py-0.5 rounded-full ${isDark ? 'bg-gold text-primary' : 'bg-[#0F4C3A] text-[#D4AF37]'}`}>Frame Vendor</span>
           </div>
         ) : (
           <input type="text" placeholder="Your name" value={name} maxLength={60}
@@ -626,7 +629,7 @@ function CommentsSection({ frameId, isDark, border, cardBg, textPrim, textSub })
           maxLength={500} rows={3} onChange={e => setComment(e.target.value)}
           className={`${inputCls} resize-none`} required />
         {error && <p className="text-xs text-red-500">{error}</p>}
-        <button type="submit" disabled={submitting || (!user && !name.trim()) || !comment.trim()}
+        <button type="submit" disabled={submitting || (!isOwner && !name.trim()) || !comment.trim()}
           className={`self-start px-6 py-2.5 rounded-xl text-sm font-bold transition-opacity
             disabled:opacity-40 hover:opacity-90
             ${isDark ? 'bg-[#FAF5DD] text-[#0F4C3A]' : 'bg-[#0F4C3A] text-[#FAF5DD]'}`}>
@@ -661,7 +664,7 @@ function CommentsSection({ frameId, isDark, border, cardBg, textPrim, textSub })
               textSub={textSub}
               isDark={isDark}
               inputCls={inputCls}
-              isVendor={!!user}
+              isVendor={isOwner}
               vendorName={vendorName}
               vendorProfile={vendorProfile}
             />
@@ -929,24 +932,20 @@ export default function FramePage() {
       </header>
 
       {/* Content */}
-      <main className="max-w-6xl mx-auto px-6 py-10 flex flex-col gap-7">
+      <main className="max-w-3xl mx-auto px-6 py-10 flex flex-col gap-7">
         
         {/* Image gallery */}
         <ImageGallery images={allImages} title={frame.title} cardRing={cardRing} isDark={isDark} />
 
-        {/* Title + reactions */}
-        <div className="flex flex-col gap-3">
-          <h1 className={`text-3xl font-bold ${textPrim} font-[Poltawski_Nowy,serif] leading-tight`}>{frame.title}</h1>
-          <FrameReactions frameId={frame.id} isDark={isDark} textSub={textSub} />
-        </div>
-        
+        {/* Title */}
 
+        <h1 className={`text-3xl font-bold ${textPrim} font-[Poltawski_Nowy,serif] leading-tight`}>{frame.title}</h1>
 
 
         {/* Story */}
         {frame.description && (
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] mb-3">The Story</p>
+            <p className="text-md font-bold uppercase tracking-widest text-[#D4AF37] mb-3">The Story</p>
             <StoryRenderer text={frame.description} textPrim={textPrim} textSub={textSub} isDark={isDark} />
           </div>
         )}
@@ -958,21 +957,23 @@ export default function FramePage() {
             <video src={video.media_url} controls className="w-full" />
           </div>
         )}
+        
+        <FrameReactions frameId={frame.id} isDark={isDark} textSub={textSub} />
 
         <hr className={`${isDark? 'text-secondary' : 'text-primary'}`}/>
 
         {/*owner, size and feature */}
         <div className="text-sm flex flex-col gap-2">
-          <span className={`${textSub}`}>Frame Owner: {frame.client_name}</span>
+          <span className={`${textPrim}`}>Frame Owner: {frame.client_name}</span>
           {width && height && (
-            <span className={`${textSub} rounded-full tracking-wide`}>
+            <span className={`${textPrim} rounded-full tracking-wide`}>
               Frame Size: {width}" × {height}"
             </span>
           )}
           <div className="flex flex-wrap gap-2 items-center">
-          <span className={`${isDark ? 'text-[#b0b0b0]' : 'text-[#4a7c6f]'}`}>Frame features:</span>
+          <span className={`${textPrim}`}>Frame features:</span>
             {features.map(tag => (
-              <span key={tag} className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full border ${isDark ? 'border-white/15 text-[#b0b0b0]' : 'border-[#0F4C3A]/20 text-[#4a7c6f]'}`}>
+              <span key={tag} className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full border ${textPrim} ${isDark ? 'border-white/15' : 'border-[#0F4C3A]/20'}`}>
                 {tag}
               </span>
             ))}
@@ -1065,6 +1066,7 @@ export default function FramePage() {
           <div className={`pt-4 border-t ${border}`}>
             <CommentsSection
               frameId={frame.id}
+              frameOwnerId={frame.user_id}
               isDark={isDark}
               border={border}
               cardBg={cardBg}
