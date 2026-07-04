@@ -798,6 +798,52 @@ function PasswordGate({ frameId, frameTitle, isDark, onUnlocked }) {
   );
 }
 
+// ─── Video Intro Overlay — takes over the screen on every visit, then hands off
+//     to the inline player at the same playback position ─────────────────────
+function VideoIntro({ src, onDone }) {
+  const videoRef = useRef(null);
+  const [aspect, setAspect] = useState(null); // 'portrait' | 'landscape'
+  const [muted, setMuted] = useState(false);
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
+  function close() {
+    onDone(videoRef.current?.currentTime || 0);
+  }
+
+  function handleLoadedMetadata(e) {
+    const v = e.target;
+    setAspect(v.videoHeight > v.videoWidth ? 'portrait' : 'landscape');
+    // Try to autoplay with sound first; browsers that block it will reject
+    // the promise, so fall back to a muted autoplay (always allowed).
+    v.play().catch(() => {
+      v.muted = true;
+      setMuted(true);
+      v.play().catch(() => {});
+    });
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center">
+      <video
+        ref={videoRef}
+        src={src}
+        autoPlay
+        muted={muted}
+        controls
+        playsInline
+        onLoadedMetadata={handleLoadedMetadata}
+        onEnded={close}
+        onError={close}
+        className={aspect === 'portrait' ? 'h-full w-full object-cover' : 'w-full max-h-full object-contain'}
+      />
+    </div>
+  );
+}
+
 export default function FramePage() {
   const { slug }                        = useParams();
   const { isDark, toggleTheme }         = useTheme();
@@ -806,6 +852,9 @@ export default function FramePage() {
   const [notFound,       setNotFound]   = useState(false);
   const [unlocked,       setUnlocked]   = useState(false);
   const [vendorPlanId,   setVendorPlanId] = useState('free');
+  const [showIntro,      setShowIntro]  = useState(false);
+  const lastVideoTimeRef                = useRef(0);
+  const inlineVideoRef                  = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -817,6 +866,10 @@ export default function FramePage() {
         setNotFound(true);
       } else {
         setFrame(data);
+        // Show the video intro once per session per frame
+        if (sessionStorage.getItem(`sf_intro_seen_${data.id}`) !== '1') {
+          setShowIntro(true);
+        }
         // Check session unlock before recording a scan
         const alreadyUnlocked = !data.is_password_protected ||
           sessionStorage.getItem(`sf_unlocked_${data.id}`) === '1';
@@ -839,6 +892,12 @@ export default function FramePage() {
 
     return () => { cancelled = true; };
   }, [slug]);
+
+  useEffect(() => {
+    if (!showIntro && inlineVideoRef.current) {
+      inlineVideoRef.current.currentTime = lastVideoTimeRef.current;
+    }
+  }, [showIntro]);
 
   const isBusinessOrTrial = ['business', 'trial'].includes(vendorPlanId);
   const isPro             = vendorPlanId === 'pro';
@@ -903,6 +962,18 @@ export default function FramePage() {
   return (
     <div className={`min-h-screen ${pageBg}`}>
 
+      {/* Video intro - takes over the screen on every visit, then hands off to the inline player */}
+      {video && showIntro && (
+        <VideoIntro
+          src={video.media_url}
+          onDone={(t) => {
+            lastVideoTimeRef.current = t;
+            setShowIntro(false);
+            sessionStorage.setItem(`sf_intro_seen_${frame.id}`, '1');
+          }}
+        />
+      )}
+
       {/* Header */}
       <header className={`border-b ${border} px-6 py-4 flex items-center justify-between max-w-3xl mx-auto`}>
         {isBusinessOrTrial && businessLogo && 
@@ -954,7 +1025,7 @@ export default function FramePage() {
         {video && (
           <div className={`rounded-2xl overflow-hidden ring-1 ${cardRing} ${cardBg}`}>
             <p className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] px-6 pt-5 pb-3">Event Video</p>
-            <video src={video.media_url} controls className="w-full" />
+            <video ref={inlineVideoRef} src={video.media_url} controls playsInline className="w-full" />
           </div>
         )}
         
