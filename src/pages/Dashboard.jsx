@@ -220,9 +220,10 @@ function FrameCard({ frame, isDark, onEdit, onDelete }) {
 
   return (
     <motion.div layout initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }}
-      style={{ background: t.cardBg(isDark), border: `1px solid ${t.border(isDark)}`, borderRadius: 16, overflow: 'hidden' }}>
-      {/* Thumbnail */}
-      <div style={{ height: 120, background: '#0F4C3A', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+      className="db-frame-card"
+      style={{ background: t.cardBg(isDark), border: `1px solid ${t.border(isDark)}`, borderRadius: 16, overflow: 'hidden', display: 'flex' }}>
+      {/* Thumbnail - left */}
+      <div className="db-frame-card-img" style={{ width: 130, flexShrink: 0, background: '#0F4C3A', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
         {frame.media_url ?
           <img src={frame.media_url} alt="Frame thumbnail" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         : <Icon path={icons.frame} size={36} style={{ color: '#D4AF37', opacity: 0.5 }} />
@@ -239,27 +240,30 @@ function FrameCard({ frame, isDark, onEdit, onDelete }) {
             }}>{frame.status || 'inactive'}</span>
         </div>
       </div>
-      {/* Body */}
-      <div style={{ padding: '14px 16px' }}>
-        <p style={{ fontWeight: 700, fontSize: 14, color: t.textPrimary(isDark), fontFamily: 'Poltawski Nowy, serif', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      {/* Details - right */}
+      <div style={{ flex: 1, minWidth: 0, padding: '16px 20px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <p style={{ fontWeight: 700, fontSize: 16, color: t.textPrimary(isDark), fontFamily: 'Poltawski Nowy, serif', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {frame.title}
         </p>
-        <p style={{ fontSize: 11, color: t.textMuted(isDark), marginBottom: 10, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <p style={{ fontSize: 12, color: t.textMuted(isDark), marginBottom: 10, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           /{frame.frame_slug}
         </p>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: t.textMuted(isDark), marginBottom: 12 }}>
-          <Icon path={icons.scan} size={11} />
-          {frame.total_scans ?? 0} scans
-          <span style={{ margin: '0 2px' }}>&middot;</span>
-          {new Date(frame.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 6, rowGap: 2, fontSize: 12, color: t.textMuted(isDark), marginBottom: 14 }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}>
+            <Icon path={icons.scan} size={12} />
+            {frame.total_scans ?? 0} scans
+          </span>
+          <span style={{ whiteSpace: 'nowrap' }}>
+            &middot; {new Date(frame.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+          </span>
         </div>
-        <div style={{ display: 'flex', gap: 6 }}>
-          <button style={btnBase} onClick={() => onEdit(frame)}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button style={{ ...btnBase, flex: 'initial', padding: '7px 16px' }} onClick={() => onEdit(frame)}
             onMouseEnter={e => e.currentTarget.style.background = t.hoverBg(isDark)}
             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
             <Icon path={icons.edit} size={11} /> Edit
           </button>
-          <button style={{ ...btnBase, ...(copied ? { borderColor: '#4ade80', color: '#4ade80' } : {}) }} onClick={handleCopy}
+          <button style={{ ...btnBase, flex: 'initial', padding: '7px 16px', ...(copied ? { borderColor: '#4ade80', color: '#4ade80' } : {}) }} onClick={handleCopy}
             onMouseEnter={e => { if (!copied) e.currentTarget.style.background = t.hoverBg(isDark); }}
             onMouseLeave={e => { if (!copied) e.currentTarget.style.background = 'transparent'; }}>
             <Icon path={copied ? icons.check : icons.copy} size={11} />
@@ -739,7 +743,7 @@ function OverviewTab({ stats, frames, isDark, onNavigate, canViewAnalytics, noti
         {frames.length === 0
           ? <EmptyFrames onCreateFrame={() => onNavigate('create')} isDark={isDark} />
           : <div className="db-frame-grid">
-              {frames.slice(0, 3).map(frame => (
+              {frames.slice(0, 4).map(frame => (
                 <FrameCard key={frame.id} frame={frame} isDark={isDark} onEdit={() => onNavigate('frames')} onDelete={() => {}} />
               ))}
             </div>
@@ -2574,7 +2578,8 @@ export default function Dashboard() {
           .db-stat-grid      { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; }
           .db-stat-value     { font-size:26px; margin:0; }
           .db-actions-grid   { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
-          .db-frame-grid     { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; }
+          .db-frame-grid     { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+          .db-frame-card-img { aspect-ratio:2/3; height:auto; }
           .db-overview-twoup { display:grid; grid-template-columns:2fr 1fr; gap:16px; }
           .db-settings-grid  { display:grid; grid-template-columns:180px 1fr; gap:24px; align-items:flex-start; }
           .db-brand-grid     { display:grid; grid-template-columns:1fr auto; gap:24px; align-items:flex-start; }
@@ -2590,10 +2595,16 @@ export default function Dashboard() {
           .db-logo-row     { display:flex; align-items:center; gap:14px; }
           .db-overview-frame-right { display:flex; align-items:center; gap:10px; flex-shrink:0; padding-left:16px; }
 
+          /* ─── Mid (... 1100px) ─── */
+          @media(max-width:1100px){
+            .db-frame-grid     { grid-template-columns:repeat(2,1fr); }
+          }
+
           /* ?"??"? Tablet (... 768px) ?"??"? */
           @media(max-width:768px){
             .db-main           { padding:20px 16px; }
             .db-overview-twoup { grid-template-columns:1fr; }
+            .db-frame-grid     { grid-template-columns:1fr; }
           }
 
           /* ?"??"? Mobile (... 600px) ?"??"? */
@@ -2603,7 +2614,8 @@ export default function Dashboard() {
             .db-tab-h2        { font-size:19px; }
             .db-stat-grid     { grid-template-columns:repeat(2,1fr); gap:10px; }
             .db-stat-value    { font-size:18px !important; }
-            .db-frame-grid    { grid-template-columns:1fr; gap:12px; }
+            .db-frame-grid    { gap:12px; }
+            .db-frame-card-img { width:90px!important; }
             .db-actions-grid  { grid-template-columns:1fr; gap:8px; }
             .db-frames-hdr    { flex-direction:column; }
             .db-search-row    { width:100%; }
