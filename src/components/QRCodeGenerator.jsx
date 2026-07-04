@@ -402,7 +402,7 @@ export default function QRCodeGenerator({ onNavigateToBilling, onSaved, planId =
     const file = e.target.files[0];
     setVideoError('');
     if (!file) return;
-    if (!['video/mpeg', 'video/mp4'].includes(file.type)) { setVideoError('Only MPEG/MP4 files are allowed.'); return; }
+    if (!['video/mpeg', 'video/mp4', 'video/quicktime'].includes(file.type)) { setVideoError('Only MPEG/MP4/MOV files are allowed.'); return; }
     if (file.size > vidMaxBytes) { setVideoError(`Max file size is ${vidMaxMB}MB on your plan.`); return; }
     setVideoFile(file);
   }
@@ -818,9 +818,9 @@ export default function QRCodeGenerator({ onNavigateToBilling, onSaved, planId =
               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                 <label className="bg-neutral-100 text-neutral-700 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer hover:bg-neutral-200 transition-colors text-center">
                   {videoFile ? 'Change video' : 'Upload video'}
-                  <input type="file" accept="video/mp4,video/mpeg" onChange={handleVideoChange} className="hidden" />
+                  <input type="file" accept="video/mp4,video/mpeg,video/quicktime,.mov" onChange={handleVideoChange} className="hidden" />
                 </label>
-                <span className="text-xs text-neutral-400">MP4/MPEG, max {vidMaxMB}MB</span>
+                <span className="text-xs text-neutral-400">MP4/MPEG/MOV, max {vidMaxMB}MB</span>
               </div>
               {videoFile && <p className="text-xs text-emerald-600 mt-2">{videoFile.name}</p>}
               {videoError && <p className="text-xs text-red-500 mt-1">{videoError}</p>}

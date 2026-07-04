@@ -6,6 +6,16 @@ import { supabase } from '../services/supabaseClient';
 import { uploadMedia, addMediaToFrame } from '../services/supabaseHelpers';
 import FramePreview from './FramePreview';
 
+function describeVideoUrl(url) {
+  try {
+    const path = decodeURIComponent(new URL(url).pathname);
+    const ext = path.split('.').pop().toUpperCase();
+    return `${ext} video attached`;
+  } catch {
+    return 'Video attached';
+  }
+}
+
 function quillLinkHandler(value) {
   if (value) {
     const href = prompt('Enter URL:');
@@ -238,6 +248,7 @@ export default function FrameEditor({ editingFrame, onSaved }) {
   const [newExtraFiles,    setNewExtraFiles]     = useState([]);
   const [existingExtras,   setExistingExtras]   = useState([]);
   const [videoFile,        setVideoFile]        = useState(null);
+  const [existingVideoUrl, setExistingVideoUrl]  = useState(null);
   const [artworkError,     setArtworkError]     = useState('');
   const [videoError,       setVideoError]       = useState('');
   const [errors,           setErrors]           = useState({});
@@ -271,6 +282,7 @@ export default function FrameEditor({ editingFrame, onSaved }) {
     setNewExtraFiles([]);
     setDeletedExtraIds([]);
     setVideoFile(null);
+    setExistingVideoUrl(null);
     setStep(0);
 
     async function loadMedia() {
@@ -278,10 +290,11 @@ export default function FrameEditor({ editingFrame, onSaved }) {
         .from('media')
         .select('id, media_url, media_type')
         .eq('frame_id', editingFrame.id)
-        .in('media_type', ['extra_image', 'image']);
+        .in('media_type', ['extra_image', 'image', 'video']);
       if (data) {
         setExistingExtras(data.filter(m => m.media_type === 'extra_image'));
         setExistingArtworkUrl(data.find(m => m.media_type === 'image')?.media_url || null);
+        setExistingVideoUrl(data.find(m => m.media_type === 'video')?.media_url || null);
       }
     }
     loadMedia();
@@ -306,7 +319,7 @@ export default function FrameEditor({ editingFrame, onSaved }) {
     const file = e.target.files[0];
     setVideoError('');
     if (!file) return;
-    if (!['video/mpeg', 'video/mp4'].includes(file.type)) { setVideoError('Only MPEG/MP4 files are allowed.'); return; }
+    if (!['video/mpeg', 'video/mp4', 'video/quicktime'].includes(file.type)) { setVideoError('Only MPEG/MP4/MOV files are allowed.'); return; }
     if (file.size > 20 * 1024 * 1024) { setVideoError('Max file size is 20MB.'); return; }
     setVideoFile(file);
   }
@@ -536,10 +549,18 @@ export default function FrameEditor({ editingFrame, onSaved }) {
             <div className="border border-[#d1d5db] rounded-xl p-3 sm:p-4 mb-3">
               <label className={labelCls}>Video <span className="normal-case font-normal text-[#9ca3af]">(optional)</span></label>
               <p className="text-sm text-[#374151] mb-3 leading-relaxed">Optionally replace the attached video. Leave empty to keep the existing one.</p>
+              {existingVideoUrl && !videoFile && (
+                <div className="flex items-center gap-2 mb-3 bg-[#f0f7f4] border border-[#0F4C3A]/15 rounded-lg px-3 py-2">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F4C3A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                    <polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                  </svg>
+                  <span className="text-xs text-[#0F4C3A] break-all">{describeVideoUrl(existingVideoUrl)}</span>
+                </div>
+              )}
               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                 <label className="inline-block bg-[#e5e7eb] text-[#374151] px-4 py-2 rounded-lg text-sm font-medium cursor-pointer whitespace-nowrap hover:bg-[#d1d5db] transition-colors text-center">
-                  {videoFile ? 'Change video' : 'Replace video'}
-                  <input type="file" accept="video/mp4,video/mpeg" onChange={handleVideoChange} className="hidden" />
+                  {videoFile ? 'Change video' : existingVideoUrl ? 'Replace video' : 'Upload video'}
+                  <input type="file" accept="video/mp4,video/mpeg,video/quicktime,.mov" onChange={handleVideoChange} className="hidden" />
                 </label>
                 <span className="text-xs text-[#6b7280] break-all">{videoFile ? videoFile.name : 'mpeg/mp4 · max 20MB'}</span>
               </div>

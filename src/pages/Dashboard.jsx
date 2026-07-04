@@ -2122,7 +2122,7 @@ export default function Dashboard() {
       setLoadingData(true);
       try {
       const [framesRes, profileRes, subscriptionRes, notificationRes] = await Promise.all([
-        supabase.from('frames').select('*, analytics(total_scans), media(media_url)').eq('user_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('frames').select('*, analytics(total_scans), media(media_url, media_type)').eq('user_id', user.id).order('created_at', { ascending: false }),
         supabase.from('users').select('*').eq('id', user.id).single(),
         supabase.from('subscriptions').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1).single(),
         supabase.from('notification').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
@@ -2131,7 +2131,7 @@ export default function Dashboard() {
         framesRes.data.map(f => ({
           ...f,
           total_scans: Array.isArray(f.analytics) ? f.analytics.reduce((s, r) => s + (r.total_scans || 0), 0) : (f.analytics?.total_scans ?? 0),
-          media_url: f.media?.[0]?.media_url || null,
+          media_url: f.media?.find(m => m.media_type === 'image')?.media_url || null,
           width: f.size?.width || 0,
           height: f.size?.height || 0
         }))
@@ -2341,11 +2341,11 @@ export default function Dashboard() {
   const handleDeleteFrame = (frameId) => setFrames(prev => prev.filter(f => f.id !== frameId));
 
   const refetchFrames = async () => {
-    const { data } = await supabase.from('frames').select('*, analytics(total_scans), media(media_url)').eq('user_id', user.id).order('created_at', { ascending: false });
+    const { data } = await supabase.from('frames').select('*, analytics(total_scans), media(media_url, media_type)').eq('user_id', user.id).order('created_at', { ascending: false });
     if (data) setFrames(data.map(f => ({
       ...f,
       total_scans: Array.isArray(f.analytics) ? f.analytics.reduce((s, r) => s + (r.total_scans || 0), 0) : f.analytics?.total_scans || 0,
-      media_url: f.media?.[0]?.media_url || null,
+      media_url: f.media?.find(m => m.media_type === 'image')?.media_url || null,
       width: f.size?.width || 0,
       height: f.size?.height || 0,
     })));
