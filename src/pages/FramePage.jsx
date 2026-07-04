@@ -20,17 +20,20 @@ import { useAuth } from '../context/AuthContext';
 import scanMyFrameLogo from '../assets/images/Scanframe alt.png';
 import scanMyFrameLogoAlt from '../assets/images/Scanframe.png';
 
-// ─── Image Gallery (manual swipe, no auto-slide) ──────────────────────────────
-function ImageGallery({ images, title, cardRing, isDark }) {
+// ─── Media Gallery (manual swipe, no auto-slide) - video slide first, then photos ──
+// A fixed aspect-ratio box keeps slide height constant when swiping between a
+// landscape video and portrait photos. Photos fill the box (object-cover, cropped
+// at the edges - fine for artwork shots). Video never gets cropped: it's shown
+// letterboxed on black (object-contain), same convention as YouTube/Netflix,
+// so a landscape video simply gets black bars top/bottom inside the box.
+function ImageGallery({ media, title, cardRing, isDark }) {
   const [current, setCurrent] = useState(0);
   const [fading,  setFading]  = useState(false);
   const touchStartX = useRef(null);
-  const imgRef      = useRef(null);
 
   function goTo(next) {
     if (next === current) return;
     setFading(true);
-    // Brief dim, then swap src - the img element stays alive so height is preserved
     setTimeout(() => {
       setCurrent(next);
       setFading(false);
@@ -41,90 +44,103 @@ function ImageGallery({ images, title, cardRing, isDark }) {
   function onTouchEnd(e) {
     if (touchStartX.current === null) return;
     const delta = touchStartX.current - e.changedTouches[0].clientX;
-    if (delta > 40 && current < images.length - 1) goTo(current + 1);
+    if (delta > 40 && current < media.length - 1) goTo(current + 1);
     if (delta < -40 && current > 0) goTo(current - 1);
     touchStartX.current = null;
   }
 
-  if (images.length === 0) return null;
+  if (media.length === 0) return null;
 
-  if (images.length === 1) {
-    return (
-      <div className={`rounded-2xl overflow-hidden ring-2 ${cardRing} shadow-xl`}>
-        <img src={images[0].media_url} alt={title} className="w-full object-cover max-h-[560px]" />
-      </div>
-    );
-  }
+  const item    = media[current];
+  const isVideo = item.media_type === 'video';
 
   return (
     <div>
       {/* Swipe container */}
       <div
-        className={`relative rounded-2xl overflow-hidden ring-2 ${cardRing} shadow-xl select-none`}
+        className={`relative aspect-[4/5] rounded-2xl overflow-hidden ring-2 ${cardRing} shadow-xl select-none bg-black`}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-        {/* No key={current} - keep the same DOM element so height never collapses */}
-        <img
-          ref={imgRef}
-          src={images[current].media_url}
-          alt={`${title} ${current + 1}`}
-          className="w-full object-cover max-h-[560px]"
-          style={{ opacity: fading ? 0.4 : 1, transition: 'opacity 0.15s ease' }}
-        />
-
-        {/* Left / Right arrow buttons */}
-        {current > 0 && (
-          <button
-            onClick={() => goTo(current - 1)}
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition-colors"
-            aria-label="Previous image"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M15 18l-6-6 6-6"/>
-            </svg>
-          </button>
-        )}
-        {current < images.length - 1 && (
-          <button
-            onClick={() => goTo(current + 1)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition-colors"
-            aria-label="Next image"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 18l6-6-6-6"/>
-            </svg>
-          </button>
-        )}
-
-        {/* Counter badge */}
-        <span className="absolute bottom-3 right-3 text-[11px] font-bold bg-black/50 text-white px-2.5 py-1 rounded-full">
-          {current + 1} / {images.length}
-        </span>
-      </div>
-
-      {/* Swipe hint (only shown when there are multiple images) */}
-      <p className="text-center text-[11px] text-[#888] mt-2 flex items-center justify-center gap-1">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/>
-        </svg>
-        Swipe or use arrows to browse images
-      </p>
-
-      {/* Dot indicators */}
-      <div className="flex justify-center gap-1.5 mt-2">
-        {images.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => goTo(i)}
-            className={`rounded-full transition-all duration-300 ${
-              i === current
-                ? `w-5 h-2 ${isDark ? 'bg-white' : 'bg-[#0F4C3A]'}`
-                : `w-2 h-2 ${isDark ? 'bg-white/25' : 'bg-[#0F4C3A]/25'}`
-            }`}
+        {isVideo ? (
+          <video
+            key={item.media_url}
+            src={item.media_url}
+            controls
+            playsInline
+            className="absolute inset-0 w-full h-full object-contain bg-black"
+            style={{ opacity: fading ? 0.4 : 1, transition: 'opacity 0.15s ease' }}
           />
-        ))}
+        ) : (
+          <img
+            key={item.media_url}
+            src={item.media_url}
+            alt={`${title} ${current + 1}`}
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ opacity: fading ? 0.4 : 1, transition: 'opacity 0.15s ease' }}
+          />
+        )}
+
+        {media.length > 1 && (
+          <>
+            {/* Left / Right arrow buttons */}
+            {current > 0 && (
+              <button
+                onClick={() => goTo(current - 1)}
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition-colors"
+                aria-label="Previous"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 18l-6-6 6-6"/>
+                </svg>
+              </button>
+            )}
+            {current < media.length - 1 && (
+              <button
+                onClick={() => goTo(current + 1)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition-colors"
+                aria-label="Next"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
+              </button>
+            )}
+
+            {/* Counter badge */}
+            <span className="absolute bottom-3 right-3 text-[11px] font-bold bg-black/50 text-white px-2.5 py-1 rounded-full">
+              {current + 1} / {media.length}
+            </span>
+          </>
+        )}
       </div>
+
+      {media.length > 1 && (
+        <>
+          {/* Swipe hint */}
+          <p className="text-center text-[11px] text-[#888] mt-2 flex items-center justify-center gap-1">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/>
+            </svg>
+            Swipe or use arrows to browse
+          </p>
+
+          {/* Dot indicators */}
+          <div className="flex justify-center gap-1.5 mt-2">
+            {media.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => goTo(i)}
+                className={`rounded-full transition-all duration-300 ${
+                  i === current
+                    ? `w-5 h-2 ${isDark ? 'bg-white' : 'bg-[#0F4C3A]'}`
+                    : `w-2 h-2 ${isDark ? 'bg-white/25' : 'bg-[#0F4C3A]/25'}`
+                }`}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -798,52 +814,6 @@ function PasswordGate({ frameId, frameTitle, isDark, onUnlocked }) {
   );
 }
 
-// ─── Video Intro Overlay — takes over the screen on every visit, then hands off
-//     to the inline player at the same playback position ─────────────────────
-function VideoIntro({ src, onDone }) {
-  const videoRef = useRef(null);
-  const [aspect, setAspect] = useState(null); // 'portrait' | 'landscape'
-  const [muted, setMuted] = useState(false);
-
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
-  }, []);
-
-  function close() {
-    onDone(videoRef.current?.currentTime || 0);
-  }
-
-  function handleLoadedMetadata(e) {
-    const v = e.target;
-    setAspect(v.videoHeight > v.videoWidth ? 'portrait' : 'landscape');
-    // Try to autoplay with sound first; browsers that block it will reject
-    // the promise, so fall back to a muted autoplay (always allowed).
-    v.play().catch(() => {
-      v.muted = true;
-      setMuted(true);
-      v.play().catch(() => {});
-    });
-  }
-
-  return (
-    <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center">
-      <video
-        ref={videoRef}
-        src={src}
-        autoPlay
-        muted={muted}
-        controls
-        playsInline
-        onLoadedMetadata={handleLoadedMetadata}
-        onEnded={close}
-        onError={close}
-        className={aspect === 'portrait' ? 'h-full w-full object-cover' : 'w-full max-h-full object-contain'}
-      />
-    </div>
-  );
-}
-
 export default function FramePage() {
   const { slug }                        = useParams();
   const { isDark, toggleTheme }         = useTheme();
@@ -852,9 +822,6 @@ export default function FramePage() {
   const [notFound,       setNotFound]   = useState(false);
   const [unlocked,       setUnlocked]   = useState(false);
   const [vendorPlanId,   setVendorPlanId] = useState('free');
-  const [showIntro,      setShowIntro]  = useState(false);
-  const lastVideoTimeRef                = useRef(0);
-  const inlineVideoRef                  = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -866,10 +833,6 @@ export default function FramePage() {
         setNotFound(true);
       } else {
         setFrame(data);
-        // Show the video intro once per session per frame
-        if (sessionStorage.getItem(`sf_intro_seen_${data.id}`) !== '1') {
-          setShowIntro(true);
-        }
         // Check session unlock before recording a scan
         const alreadyUnlocked = !data.is_password_protected ||
           sessionStorage.getItem(`sf_unlocked_${data.id}`) === '1';
@@ -892,12 +855,6 @@ export default function FramePage() {
 
     return () => { cancelled = true; };
   }, [slug]);
-
-  useEffect(() => {
-    if (!showIntro && inlineVideoRef.current) {
-      inlineVideoRef.current.currentTime = lastVideoTimeRef.current;
-    }
-  }, [showIntro]);
 
   const isBusinessOrTrial = ['business', 'trial'].includes(vendorPlanId);
   const isPro             = vendorPlanId === 'pro';
@@ -944,11 +901,11 @@ export default function FramePage() {
     );
   }
 
-  // Separate artwork, extra images, video
+  // Gallery order: video first, then the main artwork, then extra images
   const artwork     = frame.media?.find(m => m.media_type === 'image');
   const extraImages = frame.media?.filter(m => m.media_type === 'extra_image') || [];
-  const allImages   = artwork ? [artwork, ...extraImages] : extraImages;
   const video       = frame.media?.find(m => m.media_type === 'video');
+  const allMedia    = [video, artwork, ...extraImages].filter(Boolean);
   const width       = frame.size?.width  || frame.width;
   const height      = frame.size?.height || frame.height;
   const creatorName    = frame.users?.business_name || frame.users?.full_name || null;
@@ -961,18 +918,6 @@ export default function FramePage() {
 
   return (
     <div className={`min-h-screen ${pageBg}`}>
-
-      {/* Video intro - takes over the screen on every visit, then hands off to the inline player */}
-      {video && showIntro && (
-        <VideoIntro
-          src={video.media_url}
-          onDone={(t) => {
-            lastVideoTimeRef.current = t;
-            setShowIntro(false);
-            sessionStorage.setItem(`sf_intro_seen_${frame.id}`, '1');
-          }}
-        />
-      )}
 
       {/* Header */}
       <header className={`border-b ${border} px-6 py-4 flex items-center justify-between max-w-3xl mx-auto`}>
@@ -1005,8 +950,8 @@ export default function FramePage() {
       {/* Content */}
       <main className="max-w-3xl mx-auto px-6 py-10 flex flex-col gap-7">
         
-        {/* Image gallery */}
-        <ImageGallery images={allImages} title={frame.title} cardRing={cardRing} isDark={isDark} />
+        {/* Media gallery - video, then artwork, then extra images */}
+        <ImageGallery media={allMedia} title={frame.title} cardRing={cardRing} isDark={isDark} />
 
         {/* Title */}
 
@@ -1021,14 +966,6 @@ export default function FramePage() {
           </div>
         )}
 
-        {/* Video */}
-        {video && (
-          <div className={`rounded-2xl overflow-hidden ring-1 ${cardRing} ${cardBg}`}>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] px-6 pt-5 pb-3">Event Video</p>
-            <video ref={inlineVideoRef} src={video.media_url} controls playsInline className="w-full" />
-          </div>
-        )}
-        
         <FrameReactions frameId={frame.id} isDark={isDark} textSub={textSub} />
 
         <hr className={`${isDark? 'text-secondary' : 'text-primary'}`}/>
